@@ -1,0 +1,63 @@
+{
+  "name": "joanna",
+  "version": "1.0.0",
+  "description": "Personal AI Assistant Super Bot - Intelligent task management and workflow automation for solo entrepreneurs",
+  "main": "index.js",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "supabase:start": "supabase start",
+    "supabase:stop": "supabase stop",
+    "supabase:status": "supabase status",
+    "supabase:reset": "supabase db reset",
+    "supabase:migrate": "supabase db push",
+    "supabase:generate-types": "supabase gen types typescript --local > types/database.types.ts",
+    "supabase:functions:deploy": "supabase functions deploy"
+  },
+  "keywords": [
+    "ai",
+    "assistant",
+    "automation",
+    "workflow",
+    "task-management",
+    "supabase",
+    "nextjs"
+  ],
+  "author": "alanredmond23-bit",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4",
+    "@supabase/ssr": "^0.5.1",
+    "next": "^14.2.15",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "openai": "^4.68.4",
+    "@anthropic-ai/sdk": "^0.31.0",
+    "zod": "^3.23.8",
+    "date-fns": "^4.1.0",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.8.6",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@types/uuid": "^10.0.0",
+    "typescript": "^5.6.3",
+    "eslint": "^8.57.1",
+    "eslint-config-next": "^14.2.15",
+    "jest": "^29.7.0",
+    "@testing-library/react": "^16.0.1",
+    "@testing-library/jest-dom": "^6.6.3",
+    "supabase": "^1.200.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
