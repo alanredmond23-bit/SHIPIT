@@ -9,6 +9,8 @@ import { createDbClient } from './db/client';
 import { TaskGraphService } from './services/task-graph';
 import { SupervisorDispatch } from './services/supervisor-dispatch';
 import { ArtifactManager } from './services/artifact-manager';
+import { FileProcessorService } from './services/file-processor';
+import { MemoryService } from './services/memory-service';
 import { EventEmitter } from './events/emitter';
 
 const logger = pino({ level: process.env.LOG_LEVEL || 'info' });
@@ -23,6 +25,7 @@ const config = {
     user: process.env.DATABASE_USER || 'postgres',
     password: process.env.DATABASE_PASSWORD || 'postgres',
   },
+  anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
 };
 
 async function bootstrap() {
@@ -41,6 +44,8 @@ async function bootstrap() {
     taskGraph: new TaskGraphService(db, events, logger),
     supervisor: new SupervisorDispatch(db, events, logger),
     artifacts: new ArtifactManager(db, logger),
+    fileProcessor: new FileProcessorService(logger, process.env.UPLOAD_DIR || './uploads'),
+    memory: new MemoryService(db, logger, config.anthropicApiKey),
   };
 
   // WebSocket for real-time updates
@@ -57,7 +62,7 @@ async function bootstrap() {
     });
   });
 
-  setupRoutes(app, services, logger);
+  setupRoutes(app, services, logger, db);
 
   // Health check
   app.get('/health', (_, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));

@@ -1,13 +1,36 @@
 import { Express, Request, Response } from 'express';
 import { Logger } from 'pino';
+import { handleChatStream, handleListModels } from './chat';
+import { createFileRoutes } from './files';
+import { setupMemoryRoutes } from './memory';
 
 interface Services {
   taskGraph: any;
   supervisor: any;
   artifacts: any;
+  fileProcessor?: any;
+  memory?: any;
 }
 
-export function setupRoutes(app: Express, services: Services, logger: Logger) {
+export function setupRoutes(app: Express, services: Services, logger: Logger, db?: any) {
+  // ============================================================================
+  // Chat API - Streaming LLM endpoints
+  // ============================================================================
+
+  // POST /api/chat - Stream chat completions with Claude, GPT, or Gemini
+  app.post('/api/chat', async (req: Request, res: Response) => {
+    await handleChatStream(req, res, logger);
+  });
+
+  // GET /api/models - List available models
+  app.get('/api/models', async (req: Request, res: Response) => {
+    await handleListModels(req, res, logger);
+  });
+
+  // ============================================================================
+  // Task Management API
+  // ============================================================================
+
   // Projects
   app.post('/api/projects', async (req: Request, res: Response) => {
     try {
@@ -164,4 +187,25 @@ export function setupRoutes(app: Express, services: Services, logger: Logger) {
       res.status(500).json({ error: { message: error.message } });
     }
   });
+
+  // ============================================================================
+  // File Upload and Analysis API
+  // ============================================================================
+
+  // File upload and analysis routes
+  if (services.fileProcessor && db) {
+    const fileRoutes = createFileRoutes(db, services.fileProcessor, logger);
+    app.use('/api/files', fileRoutes);
+    logger.info('File routes registered');
+  }
+
+  // ============================================================================
+  // Memory/Personalization API
+  // ============================================================================
+
+  // Memory management routes
+  if (services.memory) {
+    setupMemoryRoutes(app, services.memory, logger);
+    logger.info('Memory routes registered');
+  }
 }
