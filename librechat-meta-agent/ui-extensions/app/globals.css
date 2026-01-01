@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom);
+}
+
+body {
+  padding-top: var(--safe-area-inset-top);
+  padding-bottom: var(--safe-area-inset-bottom);
+}
+
+/* Touch-friendly tap targets */
+.tap-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Smooth scrolling for iOS */
+.scroll-container {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+}
+
+/* Status colors */
+.status-queued { @apply bg-slate-600; }
+.status-running { @apply bg-blue-500 animate-pulse; }
+.status-blocked { @apply bg-amber-500; }
+.status-needs_review { @apply bg-purple-500; }
+.status-revision_required { @apply bg-orange-500; }
+.status-done { @apply bg-green-500; }
+
+/* Card styling */
+.card {
+  @apply bg-slate-900 rounded-2xl p-4 shadow-lg border border-slate-800;
+}
+
+/* Button styling */
+.btn-primary {
+  @apply bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-medium py-3 px-6 rounded-xl transition-colors tap-target;
+}
+
+.btn-secondary {
+  @apply bg-slate-800 hover:bg-slate-700 active:bg-slate-900 text-white font-medium py-3 px-6 rounded-xl transition-colors tap-target;
+}
