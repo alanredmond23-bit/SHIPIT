@@ -1,0 +1,25 @@
+name: "Meta Master Agent"
+id: "supervisor-v1"
+version: "1.0.0"
+
+model:
+  provider: "anthropic"
+  default: "claude-sonnet-4-20250514"
+  temperature: 0.3
+  max_tokens: 8192
+
+capabilities:
+  - task_management
+  - agent_orchestration
+  - model_escalation
+  - memory_management
+  - artifact_management
+  - budget_tracking
+
+behavior:
+  on_task_failure:
+    max_retries: 3
+    escalation_threshold: 2
+  on_budget_exceeded:
+    action: "pause_and_report"
+  progress_interval_seconds: 30
