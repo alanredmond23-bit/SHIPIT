@@ -1,0 +1,91 @@
+# Multi-stage build for Meta Agent Next.js UI
+# Stage 1: Dependencies
+FROM node:20-alpine AS deps
+
+WORKDIR /app
+
+# Install dependencies for node-gyp
+RUN apk add --no-cache libc6-compat
+
+# Copy package files
+COPY ui-extensions/package*.json ./
+
+# Install dependencies
+RUN npm ci && \
+    npm cache clean --force
+
+# Stage 2: Builder
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Build arguments
+ARG NODE_ENV=production
+ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_WS_URL
+
+# Install dependencies for node-gyp
+RUN apk add --no-cache libc6-compat
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy source files
+COPY ui-extensions/ ./
+
+# Set build-time environment variables
+ENV NODE_ENV=${NODE_ENV} \
+    NEXT_TELEMETRY_DISABLED=1 \
+    NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL} \
+    NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL}
+
+# Update next.config.js to enable standalone output
+RUN echo "/** @type {import('next').NextConfig} */\nconst nextConfig = {\n  reactStrictMode: true,\n  output: 'standalone',\n  async headers() {\n    return [\n      {\n        source: '/(.*)',\n        headers: [\n          { key: 'X-Content-Type-Options', value: 'nosniff' },\n          { key: 'X-Frame-Options', value: 'DENY' },\n          { key: 'X-XSS-Protection', value: '1; mode=block' },\n        ],\n      },\n    ];\n  },\n};\n\nmodule.exports = nextConfig;" > next.config.js
+
+# Build the application
+RUN npm run build
+
+# Stage 3: Runner
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+# Install wget for health checks
+RUN apk add --no-cache wget ca-certificates tini
+
+# Create non-root user
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+# Set environment to production
+ENV NODE_ENV=production \
+    NEXT_TELEMETRY_DISABLED=1 \
+    PORT=3000 \
+    HOSTNAME="0.0.0.0"
+
+# Copy public assets
+COPY --from=builder /app/public ./public
+
+# Copy standalone build
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Create health check endpoint
+RUN mkdir -p pages/api && \
+    echo "export default function handler(req, res) { res.status(200).json({ status: 'ok' }); }" > pages/api/health.js || true
+
+# Switch to non-root user
+USER nextjs
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD wget -qO- http://localhost:3000/api/health || exit 1
+
+# Use tini as entrypoint for proper signal handling
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# Start the application
+CMD ["node", "server.js"]
