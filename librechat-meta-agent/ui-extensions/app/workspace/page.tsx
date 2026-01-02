@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { UnifiedNav, MainContent } from '@/components/Navigation/UnifiedNav';
-import { WorkspaceHub } from '@/components/GoogleWorkspace/WorkspaceHub';
+import WorkspaceHub from '@/components/GoogleWorkspace/WorkspaceHub';
 
 export default function WorkspacePage() {
   return (

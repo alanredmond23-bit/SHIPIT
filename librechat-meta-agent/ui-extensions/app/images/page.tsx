@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { UnifiedNav, MainContent } from '@/components/Navigation/UnifiedNav';
-import { ImageGenerator } from '@/components/ImageGen/ImageGenerator';
+import ImageGenerator from '@/components/ImageGen/ImageGenerator';
 
 export default function ImagesPage() {
   return (

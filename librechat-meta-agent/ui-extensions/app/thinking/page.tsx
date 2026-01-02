@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { UnifiedNav, MainContent } from '@/components/Navigation/UnifiedNav';
-import { ExtendedThinking } from '@/components/ThinkingPanel/ExtendedThinking';
+import ExtendedThinking from '@/components/ThinkingPanel/ExtendedThinking';
 
 export default function ThinkingPage() {
   return (
