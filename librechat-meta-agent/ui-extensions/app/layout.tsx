@@ -3,13 +3,13 @@ import './globals.css';
 import { Providers } from './providers';
 
 export const metadata: Metadata = {
-  title: 'Mission Control - Meta Agent',
-  description: 'AI Agent Orchestration Dashboard',
+  title: 'Meta Agent - AI-Powered Assistant',
+  description: 'The most advanced AI assistant with Extended Thinking, Deep Research, Image/Video Generation, Voice Chat, Computer Use, and more.',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Mission Control',
+    title: 'Meta Agent',
   },
 };
 
@@ -18,7 +18,8 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
-  themeColor: '#1e1b4b',
+  viewportFit: 'cover',
+  themeColor: '#0f172a',
 };
 
 export default function RootLayout({
@@ -31,6 +32,7 @@ export default function RootLayout({
       <head>
         <link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body className="bg-slate-950 text-white antialiased">
         <Providers>{children}</Providers>

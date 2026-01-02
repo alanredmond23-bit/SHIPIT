@@ -1,0 +1,20 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="64" cy="64" r="60" fill="#007ACC"/>
+
+  <!-- Chat bubble -->
+  <path d="M 40 45 Q 40 35 50 35 L 80 35 Q 90 35 90 45 L 90 65 Q 90 75 80 75 L 55 75 L 45 85 L 45 75 Q 40 75 40 65 Z" fill="white"/>
+
+  <!-- Code brackets -->
+  <path d="M 50 50 L 55 55 L 50 60" stroke="#007ACC" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M 75 50 L 70 55 L 75 60" stroke="#007ACC" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- AI sparkle -->
+  <circle cx="85" cy="40" r="3" fill="#FFD700"/>
+  <path d="M 85 34 L 85 46 M 79 40 L 91 40" stroke="#FFD700" stroke-width="1.5"/>
+
+  <!-- Dots indicating typing/thinking -->
+  <circle cx="55" cy="65" r="2.5" fill="#007ACC"/>
+  <circle cx="62.5" cy="65" r="2.5" fill="#007ACC"/>
+  <circle cx="70" cy="65" r="2.5" fill="#007ACC"/>
+</svg>

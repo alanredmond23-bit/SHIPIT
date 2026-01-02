@@ -1,0 +1,162 @@
+{
+  "name": "librechat-meta-agent",
+  "displayName": "LibreChat Meta Agent",
+  "description": "AI-powered coding assistant with extended thinking, research, and more",
+  "version": "1.0.0",
+  "publisher": "librechat",
+  "engines": {
+    "vscode": "^1.80.0"
+  },
+  "categories": [
+    "AI",
+    "Programming Languages",
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "librechat.chat",
+        "title": "LibreChat: Open Chat"
+      },
+      {
+        "command": "librechat.explainCode",
+        "title": "LibreChat: Explain Selected Code"
+      },
+      {
+        "command": "librechat.refactorCode",
+        "title": "LibreChat: Refactor Selected Code"
+      },
+      {
+        "command": "librechat.generateTests",
+        "title": "LibreChat: Generate Tests"
+      },
+      {
+        "command": "librechat.fixBug",
+        "title": "LibreChat: Fix Bug"
+      },
+      {
+        "command": "librechat.addComments",
+        "title": "LibreChat: Add Comments"
+      },
+      {
+        "command": "librechat.generateCode",
+        "title": "LibreChat: Generate Code from Description"
+      },
+      {
+        "command": "librechat.review",
+        "title": "LibreChat: Review Code"
+      },
+      {
+        "command": "librechat.extendedThinking",
+        "title": "LibreChat: Extended Thinking"
+      },
+      {
+        "command": "librechat.research",
+        "title": "LibreChat: Deep Research"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "librechat.chat",
+        "key": "ctrl+shift+l",
+        "mac": "cmd+shift+l"
+      },
+      {
+        "command": "librechat.explainCode",
+        "key": "ctrl+shift+e",
+        "mac": "cmd+shift+e"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "librechat.explainCode",
+          "when": "editorHasSelection",
+          "group": "librechat"
+        },
+        {
+          "command": "librechat.refactorCode",
+          "when": "editorHasSelection",
+          "group": "librechat"
+        },
+        {
+          "command": "librechat.generateTests",
+          "when": "editorHasSelection",
+          "group": "librechat"
+        }
+      ]
+    },
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "librechat",
+          "title": "LibreChat",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "librechat": [
+        {
+          "type": "webview",
+          "id": "librechat.chatView",
+          "name": "Chat"
+        },
+        {
+          "id": "librechat.historyView",
+          "name": "History"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "LibreChat Meta Agent",
+      "properties": {
+        "librechat.serverUrl": {
+          "type": "string",
+          "default": "http://localhost:3001",
+          "description": "LibreChat orchestrator server URL"
+        },
+        "librechat.apiKey": {
+          "type": "string",
+          "description": "API key for authentication"
+        },
+        "librechat.defaultModel": {
+          "type": "string",
+          "default": "claude-3-5-sonnet",
+          "description": "Default AI model to use"
+        },
+        "librechat.autoSuggest": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable auto-suggestions while typing"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "webpack --mode production",
+    "watch": "webpack --mode development --watch",
+    "package": "vsce package",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^18.0.0",
+    "@types/vscode": "^1.80.0",
+    "@typescript-eslint/eslint-plugin": "^6.0.0",
+    "@typescript-eslint/parser": "^6.0.0",
+    "eslint": "^8.45.0",
+    "ts-loader": "^9.4.4",
+    "typescript": "^5.1.6",
+    "webpack": "^5.88.2",
+    "webpack-cli": "^5.1.4",
+    "@vscode/vsce": "^2.19.0"
+  },
+  "dependencies": {
+    "axios": "^1.4.0"
+  }
+}

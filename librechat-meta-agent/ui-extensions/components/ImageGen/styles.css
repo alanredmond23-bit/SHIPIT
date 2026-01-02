@@ -1,0 +1,233 @@
+/* Image Generator Styles */
+
+.card {
+  @apply bg-slate-900/50 backdrop-blur-sm border border-slate-800 rounded-xl p-4 shadow-lg;
+}
+
+.btn-primary {
+  @apply bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-medium px-6 py-3 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-purple-500/30;
+}
+
+.btn-secondary {
+  @apply bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-medium px-4 py-2 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+/* Custom range slider */
+input[type='range'] {
+  @apply appearance-none bg-slate-700 h-2 rounded-full outline-none;
+}
+
+input[type='range']::-webkit-slider-thumb {
+  @apply appearance-none w-4 h-4 bg-purple-500 rounded-full cursor-pointer hover:bg-purple-600 transition-colors;
+}
+
+input[type='range']::-moz-range-thumb {
+  @apply w-4 h-4 bg-purple-500 rounded-full cursor-pointer hover:bg-purple-600 transition-colors border-0;
+}
+
+/* Animation for image generation */
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(168, 85, 247, 0.6);
+  }
+}
+
+.generating {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Smooth transitions */
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Grid masonry effect for images */
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+  grid-auto-flow: dense;
+}
+
+/* Loading shimmer effect */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.loading-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(30, 41, 59, 0.4) 0%,
+    rgba(51, 65, 85, 0.6) 50%,
+    rgba(30, 41, 59, 0.4) 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-slate-900;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-700 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-600;
+}
+
+/* Image zoom on hover */
+.image-hover-zoom {
+  overflow: hidden;
+}
+
+.image-hover-zoom img {
+  transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.image-hover-zoom:hover img {
+  transform: scale(1.1);
+}
+
+/* Floating action buttons */
+.fab {
+  @apply fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-full shadow-2xl flex items-center justify-center text-white hover:scale-110 transition-transform z-40;
+}
+
+/* Toast notifications */
+.toast {
+  @apply fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-900 border border-slate-700 rounded-lg px-6 py-3 shadow-2xl z-50 flex items-center gap-3;
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translate(-50%, 100%);
+    opacity: 0;
+  }
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+/* Backdrop blur effect */
+.backdrop-blur-glass {
+  backdrop-filter: blur(12px);
+  background: rgba(15, 23, 42, 0.8);
+}
+
+/* Gradient text */
+.gradient-text {
+  @apply bg-gradient-to-r from-purple-400 to-indigo-400 bg-clip-text text-transparent;
+}
+
+/* Style preset cards */
+.style-preset-card {
+  @apply relative overflow-hidden transition-all duration-300;
+}
+
+.style-preset-card::before {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-br from-purple-500/20 to-indigo-500/20 opacity-0 transition-opacity duration-300;
+}
+
+.style-preset-card:hover::before,
+.style-preset-card.active::before {
+  opacity: 1;
+}
+
+/* Image lightbox */
+.lightbox-overlay {
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.lightbox-content {
+  animation: scaleIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Drag and drop zone */
+.dropzone-active {
+  @apply ring-2 ring-purple-500 bg-purple-500/10;
+}
+
+/* Provider badge colors */
+.provider-dalle {
+  @apply bg-green-500/20 text-green-400;
+}
+
+.provider-stability {
+  @apply bg-blue-500/20 text-blue-400;
+}
+
+.provider-replicate {
+  @apply bg-orange-500/20 text-orange-400;
+}
+
+/* Success/error states */
+.state-success {
+  @apply bg-green-500/20 text-green-400 border-green-500/30;
+}
+
+.state-error {
+  @apply bg-red-500/20 text-red-400 border-red-500/30;
+}
+
+.state-pending {
+  @apply bg-yellow-500/20 text-yellow-400 border-yellow-500/30;
+}
+
+/* Grid auto-fit responsive */
+@media (min-width: 640px) {
+  .responsive-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1536px) {
+  .responsive-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
