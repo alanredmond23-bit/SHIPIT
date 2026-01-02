@@ -1,1 +1,3 @@
-export { VoiceChat } from './VoiceChat';
+import VoiceChat from './VoiceChat';
+export { VoiceChat };
+export default VoiceChat;

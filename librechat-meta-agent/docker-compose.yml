@@ -9,9 +9,9 @@ services:
     ports:
       - "5433:5432"
     environment:
-      POSTGRES_USER: postgres
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
-      POSTGRES_DB: librechat_meta
+      POSTGRES_DB: ${POSTGRES_DB:-librechat_meta}
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./schemas:/docker-entrypoint-initdb.d:ro
@@ -47,17 +47,49 @@ services:
     ports:
       - "3100:3100"
     environment:
-      NODE_ENV: production
+      NODE_ENV: ${NODE_ENV:-production}
       PORT: 3100
+
+      # Database
       DATABASE_HOST: postgres
       DATABASE_PORT: 5432
-      DATABASE_NAME: librechat_meta
-      DATABASE_USER: postgres
+      DATABASE_NAME: ${POSTGRES_DB:-librechat_meta}
+      DATABASE_USER: ${POSTGRES_USER:-postgres}
       DATABASE_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-librechat_meta}
+
+      # Redis
       REDIS_URL: redis://redis:6379
+
+      # AI Provider API Keys
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
-      CORS_ORIGINS: http://localhost:3000,http://localhost:3080
-      LOG_LEVEL: info
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      MISTRAL_API_KEY: ${MISTRAL_API_KEY}
+      XAI_API_KEY: ${XAI_API_KEY}
+
+      # Authentication
+      JWT_SECRET: ${JWT_SECRET}
+      SESSION_EXPIRY_HOURS: ${SESSION_EXPIRY_HOURS:-24}
+      BCRYPT_ROUNDS: ${BCRYPT_ROUNDS:-12}
+
+      # Supabase (optional)
+      SUPABASE_URL: ${SUPABASE_URL}
+      SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
+      SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_ROLE_KEY}
+
+      # Server config
+      CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:3000,http://localhost:3080}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      RATE_LIMIT_WINDOW_MS: ${RATE_LIMIT_WINDOW_MS:-60000}
+      RATE_LIMIT_MAX_REQUESTS: ${RATE_LIMIT_MAX_REQUESTS:-100}
+
+      # External services
+      WESTLAW_API_KEY: ${WESTLAW_API_KEY}
+      LEXISNEXIS_API_KEY: ${LEXISNEXIS_API_KEY}
+      SLACK_BOT_TOKEN: ${SLACK_BOT_TOKEN}
+
     depends_on:
       postgres:
         condition: service_healthy
@@ -79,8 +111,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      NODE_ENV: production
-      NEXT_PUBLIC_API_URL: http://localhost:3100
+      NODE_ENV: ${NODE_ENV:-production}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:3100}
+      NEXT_PUBLIC_APP_NAME: ${NEXT_PUBLIC_APP_NAME:-Meta Agent}
+      NEXT_PUBLIC_ENABLE_AUTH: ${NEXT_PUBLIC_ENABLE_AUTH:-true}
     depends_on:
       - orchestrator
 

@@ -1,1 +1,3 @@
-export { ComputerUse } from './ComputerUse';
+import ComputerUse from './ComputerUse';
+export { ComputerUse };
+export default ComputerUse;
