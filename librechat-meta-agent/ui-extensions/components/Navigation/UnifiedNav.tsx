@@ -119,6 +119,11 @@ export function UnifiedNav() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
 
+  // Close drawer when route changes
+  React.useEffect(() => {
+    setIsOpen(false);
+  }, [pathname]);
+
   const renderNavItem = (item: NavItem) => {
     const Icon = Icons[item.icon];
     const isActive = pathname === item.href;
@@ -130,9 +135,10 @@ export function UnifiedNav() {
         onClick={() => setIsOpen(false)}
         className={`
           flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200
+          min-h-[44px] touch-manipulation
           ${isActive
             ? 'bg-white/10 shadow-lg'
-            : 'hover:bg-white/5'
+            : 'hover:bg-white/5 active:bg-white/10'
           }
         `}
       >
@@ -159,17 +165,18 @@ export function UnifiedNav() {
   return (
     <>
       {/* Mobile Header */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-lg border-b border-slate-800">
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-lg border-b border-slate-800 safe-top">
         <div className="flex items-center justify-between px-4 h-14">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
               <Icons.Brain />
             </div>
             <span className="font-bold text-lg">Meta Agent</span>
           </div>
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center touch-manipulation active:scale-95"
+            aria-label={isOpen ? 'Close menu' : 'Open menu'}
           >
             {isOpen ? <Icons.Close /> : <Icons.Menu />}
           </button>
@@ -179,18 +186,21 @@ export function UnifiedNav() {
       {/* Mobile Overlay */}
       {isOpen && (
         <div
-          className="lg:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+          className="lg:hidden fixed inset-0 z-40 bg-black/60 backdrop-blur-sm"
           onClick={() => setIsOpen(false)}
+          aria-hidden="true"
         />
       )}
 
       {/* Sidebar */}
       <aside className={`
-        fixed top-0 left-0 h-full w-72 bg-slate-900/95 backdrop-blur-lg border-r border-slate-800 z-50
+        fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-slate-900/98 backdrop-blur-xl border-r border-slate-800 z-50
         transform transition-transform duration-300 ease-out
-        lg:transform-none
-        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-      `}>
+        lg:w-72 lg:transform-none
+        ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}
+      `}
+      aria-hidden={!isOpen && 'true'}>
+
         {/* Logo */}
         <div className="hidden lg:flex items-center gap-3 px-6 h-16 border-b border-slate-800">
           <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/25">
@@ -203,7 +213,7 @@ export function UnifiedNav() {
         </div>
 
         {/* Nav Content */}
-        <nav className="h-[calc(100%-4rem)] lg:h-[calc(100%-4rem)] overflow-y-auto py-4 px-3 mt-14 lg:mt-0">
+        <nav className="h-[calc(100%-4rem)] lg:h-[calc(100%-4rem)] overflow-y-auto overscroll-contain py-4 px-3 mt-14 lg:mt-0 scroll-smooth">
           {/* Main Section */}
           <div className="mb-6">
             <h3 className="px-4 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
@@ -235,7 +245,7 @@ export function UnifiedNav() {
           </div>
 
           {/* Quick Stats */}
-          <div className="mx-3 mt-6 p-4 rounded-xl bg-gradient-to-br from-slate-800 to-slate-800/50 border border-slate-700">
+          <div className="mx-3 mt-6 p-4 rounded-xl bg-gradient-to-br from-slate-800 to-slate-800/50 border border-slate-700 mb-safe">
             <h4 className="font-medium text-sm mb-3">Today's Usage</h4>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -260,8 +270,8 @@ export function UnifiedNav() {
       </aside>
 
       {/* Bottom Navigation for Mobile */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-lg border-t border-slate-800 pb-safe">
-        <div className="flex justify-around py-2">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900/98 backdrop-blur-xl border-t border-slate-800 safe-bottom">
+        <div className="flex justify-around items-center px-2 py-2">
           {[mainNavItems[0], mainNavItems[1], mainNavItems[2], createNavItems[0], toolsNavItems[1]].map((item) => {
             const Icon = Icons[item.icon];
             const isActive = pathname === item.href;
@@ -270,12 +280,15 @@ export function UnifiedNav() {
                 key={item.href}
                 href={item.href}
                 className={`
-                  flex flex-col items-center gap-1 px-3 py-1 rounded-lg transition-colors
-                  ${isActive ? item.color : 'text-slate-500'}
+                  flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl transition-all duration-200
+                  min-w-[56px] min-h-[56px] touch-manipulation active:scale-95
+                  ${isActive ? `${item.color} bg-white/10` : 'text-slate-500 hover:text-slate-300 active:bg-white/5'}
                 `}
               >
-                <Icon />
-                <span className="text-[10px] font-medium">{item.name}</span>
+                <div className={`transition-transform ${isActive ? 'scale-110' : ''}`}>
+                  <Icon />
+                </div>
+                <span className="text-[10px] font-medium truncate max-w-[56px]">{item.name}</span>
               </Link>
             );
           })}
@@ -287,8 +300,10 @@ export function UnifiedNav() {
 
 export function MainContent({ children }: { children: React.ReactNode }) {
   return (
-    <main className="lg:ml-72 min-h-screen pt-14 lg:pt-0 pb-20 lg:pb-0">
-      {children}
+    <main className="lg:ml-72 min-h-screen pt-14 lg:pt-0 pb-20 lg:pb-4 safe-bottom">
+      <div className="max-w-full overflow-x-hidden">
+        {children}
+      </div>
     </main>
   );
 }
