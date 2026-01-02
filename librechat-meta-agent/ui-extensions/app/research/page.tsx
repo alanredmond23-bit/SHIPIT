@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { UnifiedNav, MainContent } from '@/components/Navigation/UnifiedNav';
-import { DeepResearch } from '@/components/Research/DeepResearch';
+import DeepResearch from '@/components/Research/DeepResearch';
 
 export default function ResearchPage() {
   return (

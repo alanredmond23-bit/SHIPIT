@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { UnifiedNav, MainContent } from '@/components/Navigation/UnifiedNav';
-import { VideoGenerator } from '@/components/VideoGen/VideoGenerator';
+import VideoGenerator from '@/components/VideoGen/VideoGenerator';
 
 export default function VideosPage() {
   return (

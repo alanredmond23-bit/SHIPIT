@@ -1,1 +1,1 @@
-export { default as TaskScheduler } from './TaskScheduler';
+export { TaskScheduler } from './TaskScheduler';
