@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Monitor,
   X,
+  XCircle,
   MousePointer,
   Type,
   ArrowDown,
@@ -23,6 +24,8 @@ import {
   Minimize2,
   ChevronDown,
   ChevronUp,
+  ChevronRight,
+  ChevronLeft,
   RefreshCw,
   ZoomIn,
   ZoomOut,

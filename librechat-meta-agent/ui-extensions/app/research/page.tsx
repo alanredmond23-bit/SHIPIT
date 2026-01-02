@@ -10,7 +10,7 @@ export default function ResearchPage() {
       <UnifiedNav />
       <MainContent>
         <div className="h-[calc(100vh-3.5rem)] lg:h-screen">
-          <DeepResearch apiBaseUrl="/api" />
+          <DeepResearch />
         </div>
       </MainContent>
     </>
