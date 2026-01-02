@@ -3,6 +3,7 @@ import { Logger } from 'pino';
 import { handleChatStream, handleListModels } from './chat';
 import { createFileRoutes } from './files';
 import { setupMemoryRoutes } from './memory';
+import { createComputerRoutes } from './computer';
 
 interface Services {
   taskGraph: any;
@@ -208,4 +209,13 @@ export function setupRoutes(app: Express, services: Services, logger: Logger, db
     setupMemoryRoutes(app, services.memory, logger);
     logger.info('Memory routes registered');
   }
+
+  // ============================================================================
+  // Computer Use API - Browser & Desktop Automation
+  // ============================================================================
+
+  // Computer Use routes
+  const computerRoutes = createComputerRoutes(logger);
+  app.use('/api/computer', computerRoutes);
+  logger.info('Computer Use routes registered');
 }

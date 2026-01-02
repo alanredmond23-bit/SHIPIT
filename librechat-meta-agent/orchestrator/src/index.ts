@@ -5,7 +5,7 @@ import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import pino from 'pino';
 import { setupRoutes } from './api/routes';
-import { createDbClient } from './db/client';
+import { createDbClient, setPool } from './db';
 import { TaskGraphService } from './services/task-graph';
 import { SupervisorDispatch } from './services/supervisor-dispatch';
 import { ArtifactManager } from './services/artifact-manager';
@@ -38,6 +38,7 @@ async function bootstrap() {
   app.use(express.json({ limit: '10mb' }));
 
   const db = await createDbClient(config.database);
+  setPool(db); // Make pool available globally for services
   const events = new EventEmitter();
 
   const services = {
