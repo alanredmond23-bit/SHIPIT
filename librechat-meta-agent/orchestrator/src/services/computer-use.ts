@@ -15,7 +15,7 @@ import { EventEmitter } from 'events';
 import { BrowserEngine } from './computer/browser-engine';
 import { ScreenAnalyzer } from './computer/screen-analyzer';
 import { TaskPlanner } from './computer/task-planner';
-import { pool } from '../db';
+import { getPool } from '../db';
 
 export interface ComputerSession {
   id: string;
@@ -526,7 +526,7 @@ export class ComputerUseEngine extends EventEmitter {
       session.endedAt = new Date();
 
       // Update database
-      await pool.query(
+      await getPool().query(
         'UPDATE computer_sessions SET status = $1, ended_at = $2 WHERE id = $3',
         ['ended', session.endedAt, sessionId]
       );
@@ -568,7 +568,7 @@ export class ComputerUseEngine extends EventEmitter {
    * Save session to database
    */
   private async saveSessionToDB(session: ComputerSession): Promise<void> {
-    await pool.query(
+    await getPool().query(
       `INSERT INTO computer_sessions (id, user_id, type, status, config, started_at, metadata)
        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [
@@ -587,7 +587,7 @@ export class ComputerUseEngine extends EventEmitter {
    * Save action to database
    */
   private async saveActionToDB(sessionId: string, action: ComputerAction): Promise<void> {
-    await pool.query(
+    await getPool().query(
       `INSERT INTO computer_actions (id, session_id, action_type, params, result, screenshot_url, created_at)
        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
       [
@@ -624,7 +624,7 @@ export class ComputerUseEngine extends EventEmitter {
    * Get session history
    */
   async getSessionHistory(sessionId: string): Promise<ComputerAction[]> {
-    const result = await pool.query(
+    const result = await getPool().query(
       'SELECT * FROM computer_actions WHERE session_id = $1 ORDER BY created_at ASC',
       [sessionId]
     );
