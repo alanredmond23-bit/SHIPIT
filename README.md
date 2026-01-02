@@ -1,236 +1,237 @@
-# Joanna - AI Personal Assistant
+# Meta Agent - Complete AI Platform
 
-> **Your intelligent personal assistant for task management, workflow automation, and AI-powered productivity**
+> **The most feature-complete AI platform matching and exceeding Claude Desktop, ChatGPT, and Gemini**
 
-Joanna is a next-generation AI assistant designed specifically for solo entrepreneurs and one-person teams. It combines intelligent task management, customizable workflow automation, and multi-agent AI orchestration to help you stay organized and productive.
+Meta Agent is a next-generation AI platform built on LibreChat, featuring 16 advanced capabilities including extended thinking, deep research, multimodal generation, and visual workflow automation.
 
-## ✨ Features
+## 🚀 Features (16 Total)
 
-### 🤖 Multi-Agent AI System
-- **Specialized AI Agents**: Task Manager, Workflow Orchestrator, Research Assistant, and more
-- **Intelligent Routing**: Automatically selects the right agent for your request
-- **Context-Aware**: Remembers your preferences and learns from interactions
-- **Semantic Search**: Vector-powered knowledge base with intelligent retrieval
+### 🧠 AI Reasoning
+| Feature | Description |
+|---------|-------------|
+| **Extended Thinking** | Visual thought trees, confidence scoring, self-critique loops, 6 reasoning templates |
+| **Deep Research** | 10+ parallel sources, knowledge graphs, citation management (APA/MLA/Chicago/IEEE) |
 
-### ✅ Intelligent Task Management
-- **Smart Prioritization**: AI-powered task priority suggestions
-- **Dependency Detection**: Automatically identifies task relationships
-- **Hierarchical Tasks**: Support for subtasks and task breakdowns
-- **Deadline Tracking**: Never miss important due dates
+### 🎨 Multimodal Generation
+| Feature | Description |
+|---------|-------------|
+| **Image Generation** | DALL-E 3, Stability AI, Replicate with style presets |
+| **Video Generation** | Runway Gen-3, Pika Labs, Replicate with camera controls |
+| **Voice Conversation** | Real-time WebSocket, Whisper STT, ElevenLabs TTS, 15+ voices |
 
-### 🔄 Workflow Automation
-- **Visual Workflow Builder**: Create state-machine based workflows
-- **Multiple Triggers**: Manual, scheduled, event-based, or AI-suggested
-- **Conditional Logic**: Smart branching based on context
-- **Execution Logging**: Complete audit trail of all workflow runs
+### 🔧 Automation & Integration
+| Feature | Description |
+|---------|-------------|
+| **Computer Use** | Playwright browser automation, vision-based screen analysis |
+| **Visual Workflow Builder** | Drag-and-drop state machine with conditions and triggers |
+| **Scheduled Tasks** | Cron-based automation, 9 action types, execution history |
+| **Google Workspace** | Gmail, Calendar, Drive, Docs, Sheets integration |
+| **VS Code Extension** | IDE integration with inline AI assistance |
 
-### 💾 Supabase Backend
-- **PostgreSQL Database**: Robust, scalable data storage
-- **Row Level Security**: Your data is protected and isolated
-- **Real-time Updates**: Live synchronization across devices
-- **S3-Compatible Storage**: File uploads with metadata indexing
-
-### 🧠 Vector-Powered Knowledge Base
-- **Semantic Search**: Find information by meaning, not just keywords
-- **Document Embeddings**: AI-powered document understanding
-- **Context Retrieval**: Relevant information surfaces automatically
+### 🛡️ Enterprise Features
+| Feature | Description |
+|---------|-------------|
+| **Row Level Security** | Multi-tenant data isolation on all 15+ tables |
+| **Audit Trail** | Complete task/project history with change tracking |
+| **Conversation History** | Persistent chat with semantic search |
+| **File Storage** | 9 organized buckets with quotas and RLS |
+| **Custom Personas** | GPT/Gem-style with knowledge bases and marketplace |
+| **Semantic Search** | pgvector-powered similarity search across all content |
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────┐
-│                   Frontend                      │
-│         Next.js 14 + TypeScript + React         │
-└─────────────────┬───────────────────────────────┘
-                  │
-┌─────────────────┴───────────────────────────────┐
-│              Edge Functions (API)               │
-│  • task-processor  • workflow-engine           │
-│  • ai-orchestrator • knowledge-indexer          │
-└─────────────────┬───────────────────────────────┘
-                  │
-┌─────────────────┴───────────────────────────────┐
-│            Supabase PostgreSQL                  │
-│  • Tasks  • Workflows  • Agents                │
-│  • Conversations  • Knowledge  • Storage        │
-│  • pgvector for embeddings                     │
-└─────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                     Frontend (Next.js 14)                    │
+│  Dashboard | Thinking | Research | Images | Videos | Voice  │
+│  Workflows | Tasks | Workspace | Computer | Personas        │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+┌──────────────────────────┴──────────────────────────────────┐
+│                  Orchestrator (Express + WS)                 │
+│  TaskGraph | Supervisor | Artifacts | Memory | Workflows    │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+┌──────────────────────────┴──────────────────────────────────┐
+│                PostgreSQL + pgvector                         │
+│  17 Schema Files | RLS Policies | Audit Triggers            │
+└─────────────────────────────────────────────────────────────┘
 ```
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- **Node.js** 18+ and npm 9+
-- **Supabase Account** ([Sign up free](https://supabase.com))
-- **OpenAI API Key** (for embeddings and GPT models)
-- **Anthropic API Key** (optional, for Claude models)
-
-### Quick Start
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/alanredmond23-bit/SHIPIT.git
-   cd SHIPIT
-   ```
-
-2. **Run setup script**
-   ```bash
-   chmod +x scripts/setup.sh
-   ./scripts/setup.sh
-   ```
-
-3. **Configure environment variables**
-   ```bash
-   cp .env.local.example .env.local
-   # Edit .env.local with your API keys
-   ```
-
-4. **Run database migrations**
-   ```bash
-   npm run supabase:migrate
-   ```
-
-5. **Start development server**
-   ```bash
-   npm run dev
-   ```
-
-6. **Open your browser**
-   Navigate to [http://localhost:3000](http://localhost:3000)
 
 ## 📁 Project Structure
 
 ```
-JOANNA/
-├── .github/workflows/      # CI/CD pipelines
-├── supabase/
-│   ├── migrations/         # Database migrations
-│   ├── schemas/           # Declarative schemas
-│   ├── functions/         # Edge Functions
-│   │   ├── task-processor/
-│   │   ├── workflow-engine/
-│   │   └── ai-orchestrator/
-│   └── config.toml        # Supabase configuration
-├── src/
-│   ├── core/              # Core AI logic
-│   │   ├── agents/        # AI agent implementations
-│   │   └── orchestrator/  # Multi-agent coordination
-│   ├── workflows/         # Workflow engine
-│   ├── tasks/             # Task management
-│   └── api/               # API routes
-├── lib/
-│   ├── supabase/          # Supabase clients
-│   ├── ai/                # AI integrations (OpenAI, Anthropic)
-│   └── utils/             # Shared utilities
-├── types/                 # TypeScript types
-├── docs/                  # Documentation
-│   ├── architecture.md
-│   ├── workflows.md
-│   └── api.md
-└── scripts/               # Utility scripts
+SHIPIT/
+├── librechat-meta-agent/           # Main application
+│   ├── orchestrator/               # Backend services
+│   │   ├── src/
+│   │   │   ├── api/               # REST endpoints
+│   │   │   ├── services/          # Business logic
+│   │   │   │   ├── task-graph.ts
+│   │   │   │   ├── supervisor-dispatch.ts
+│   │   │   │   ├── workflow-engine.ts
+│   │   │   │   ├── memory-service.ts
+│   │   │   │   └── ...
+│   │   │   └── types/             # TypeScript types
+│   │   └── package.json
+│   │
+│   ├── ui-extensions/             # Frontend (Next.js)
+│   │   ├── app/                   # Pages
+│   │   │   ├── page.tsx           # Dashboard
+│   │   │   ├── thinking/          # Extended Thinking
+│   │   │   ├── research/          # Deep Research
+│   │   │   ├── images/            # Image Generation
+│   │   │   ├── videos/            # Video Generation
+│   │   │   ├── voice/             # Voice Chat
+│   │   │   ├── workflows/         # Workflow Builder
+│   │   │   ├── tasks/             # Task Scheduler
+│   │   │   ├── workspace/         # Google Workspace
+│   │   │   ├── computer/          # Computer Use
+│   │   │   └── personas/          # Custom Personas
+│   │   ├── components/            # React components
+│   │   └── package.json
+│   │
+│   ├── schemas/                   # Database schemas (17 files)
+│   │   ├── 001_initial_schema.sql
+│   │   ├── ...
+│   │   ├── 013_rls_policies.sql
+│   │   ├── 014_task_history.sql
+│   │   ├── 015_workflow_state_machine.sql
+│   │   ├── 016_conversations.sql
+│   │   └── 017_storage_buckets.sql
+│   │
+│   └── vscode-extension/          # VS Code integration
+│
+└── archive/joanna/                # Archived Joanna project
 ```
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+
+- PostgreSQL 15+ with pgvector
+- API Keys: Anthropic, OpenAI (optional), Google (optional)
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/alanredmond23-bit/SHIPIT.git
+cd SHIPIT/librechat-meta-agent
+
+# Install orchestrator dependencies
+cd orchestrator && npm install
+
+# Install UI dependencies
+cd ../ui-extensions && npm install
+
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your API keys
+
+# Run database migrations
+psql -f ../schemas/*.sql
+
+# Start the orchestrator
+cd ../orchestrator && npm run dev
+
+# Start the UI (in another terminal)
+cd ../ui-extensions && npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000)
 
 ## 🗄️ Database Schema
 
 ### Core Tables
+- `meta_projects` - Project management
+- `meta_workstreams` - Workstream organization
+- `meta_tasks` - Task tracking with dependencies
+- `meta_task_runs` - Execution history
+- `meta_artifacts` - Generated outputs
+- `meta_memory_facts` - Semantic memory with embeddings
 
-- **profiles** - User profiles and preferences
-- **agents** - AI agent configurations
-- **tasks** - Task management with priorities and dependencies
-- **workflows** - Workflow definitions and state machines
-- **workflow_states** - Individual workflow states
-- **workflow_transitions** - State transitions with conditions
-- **conversations** - AI conversation history
-- **messages** - Individual messages with embeddings
-- **knowledge_items** - User knowledge base
+### Feature Tables
+- `thinking_sessions` - Extended thinking logs
+- `research_sessions` - Research with sources
+- `generated_images` - Image generation history
+- `generated_videos` - Video generation history
+- `voice_sessions` - Voice conversation logs
+- `computer_sessions` - Browser automation sessions
+- `personas` - Custom AI personas
+- `google_workspace_connections` - OAuth connections
+- `scheduled_tasks` - Automation schedules
 
-### Storage Buckets
+### Workflow Tables
+- `meta_workflows` - Workflow definitions
+- `meta_workflow_states` - State machine states
+- `meta_workflow_transitions` - State transitions
+- `meta_workflow_instances` - Running instances
+- `meta_workflow_logs` - Execution logs
 
-- `user-uploads` - User uploaded files
-- `task-attachments` - Files attached to tasks
-- `workflow-templates` - Workflow templates
-- `agent-artifacts` - AI-generated content
-- `knowledge-base` - Knowledge documents
-
-## 🧪 Development
-
-### Available Scripts
-
-```bash
-npm run dev                    # Start development server
-npm run build                  # Build for production
-npm run start                  # Start production server
-npm run lint                   # Run ESLint
-npm run type-check             # TypeScript type checking
-npm test                       # Run tests
-npm run supabase:start         # Start local Supabase
-npm run supabase:migrate       # Apply migrations
-npm run supabase:generate-types # Generate TypeScript types
-```
-
-### Running Tests
-
-```bash
-npm test                       # Run all tests
-npm run test:watch            # Watch mode
-npm run test:coverage         # Generate coverage report
-```
-
-## 📚 Documentation
-
-- **[Architecture Guide](docs/architecture.md)** - System architecture and design decisions
-- **[Workflow System](docs/workflows.md)** - How to create and manage workflows
-- **[API Reference](docs/api.md)** - Complete API documentation
+### Security & History
+- `meta_task_history` - Audit trail
+- `meta_project_history` - Change tracking
+- `meta_conversations` - Chat history
+- `meta_messages` - Message storage
+- `meta_file_metadata` - File tracking
+- `meta_storage_quotas` - Usage limits
 
 ## 🔐 Security
 
-- **Row Level Security (RLS)** - All database tables are protected with RLS policies
-- **JWT Authentication** - Supabase Auth with secure token management
-- **API Key Protection** - Service role keys never exposed to client
+- **Row Level Security (RLS)** on all tables
+- **JWT Authentication** via Supabase/custom auth
+- **API Key Protection** - Server-side only
+- **Audit Logging** - Complete change history
 - **Data Encryption** - At rest and in transit
+
+## 📊 Comparison with Competitors
+
+| Feature | Meta Agent | Claude Desktop | ChatGPT | Gemini |
+|---------|:----------:|:--------------:|:-------:|:------:|
+| Extended Thinking | ✅ Visual | ✅ Text | ❌ | ✅ Text |
+| Deep Research | ✅ 10+ sources | ❌ | ✅ | ✅ |
+| Image Generation | ✅ Multi-provider | ❌ | ✅ | ✅ |
+| Video Generation | ✅ Multi-provider | ❌ | ❌ | ✅ |
+| Voice Chat | ✅ | ❌ | ✅ | ✅ |
+| Computer Use | ✅ | ✅ | ❌ | ❌ |
+| Custom Personas | ✅ | ❌ | ✅ | ✅ |
+| Workflow Builder | ✅ Visual | ❌ | ❌ | ❌ |
+| Task Scheduler | ✅ | ❌ | ❌ | ❌ |
+| IDE Extension | ✅ | ✅ | ❌ | ❌ |
+| Google Workspace | ✅ | ❌ | ❌ | ✅ |
+| RLS Security | ✅ | N/A | N/A | N/A |
+| Audit Trail | ✅ | ❌ | ❌ | ❌ |
+| Self-Hostable | ✅ | ❌ | ❌ | ❌ |
+
+## 📈 Stats
+
+- **~52,000+ lines** of TypeScript/SQL
+- **17 database schemas**
+- **16 major features**
+- **130+ source files**
+- **Self-hostable** - Full control over your data
 
 ## 🛣️ Roadmap
 
-- [x] Core database schema and migrations
-- [x] Multi-agent AI orchestration
-- [x] Task management system
-- [x] Workflow automation engine
-- [x] Vector-powered knowledge base
-- [ ] Web UI with Next.js
-- [ ] Real-time collaboration features
-- [ ] Visual workflow builder
-- [ ] Mobile applications (iOS/Android)
-- [ ] Integration hub (Calendar, Email, Slack, etc.)
-- [ ] Custom agent training
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+- [x] 10 core features (thinking, research, images, video, voice, computer, personas, workspace, tasks, vscode)
+- [x] 6 enterprise features (RLS, audit, workflows, conversations, storage, search)
+- [ ] Real-time collaboration
+- [ ] Mobile applications
+- [ ] Plugin marketplace
+- [ ] Custom model training
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT License - See LICENSE file for details.
 
 ## 🙏 Acknowledgments
 
-- **[Supabase](https://supabase.com)** - Backend infrastructure
-- **[OpenAI](https://openai.com)** - GPT models and embeddings
+- **[LibreChat](https://librechat.ai)** - Base chat platform
 - **[Anthropic](https://anthropic.com)** - Claude AI models
-- **[Next.js](https://nextjs.org)** - React framework
-
-## 📧 Contact
-
-**Alan Redmond** - [@alanredmond23-bit](https://github.com/alanredmond23-bit)
-
-**Project Link**: [https://github.com/alanredmond23-bit/SHIPIT](https://github.com/alanredmond23-bit/SHIPIT)
+- **[OpenAI](https://openai.com)** - GPT models and DALL-E
+- **[Supabase](https://supabase.com)** - Database infrastructure
 
 ---
 
-**Built with ❤️ for solo entrepreneurs and one-person teams**
+**Built with ❤️ as the most complete open-source AI platform**
