@@ -1,15 +1,27 @@
-export {
-  useMediaQuery,
-  useIsMobile,
-  useIsTablet,
-  useIsDesktop,
-  useIsSmallMobile,
-  useIsMediumMobile,
-  useIsLargeMobile,
-  useIsTouchDevice,
-  useScreenSize,
-  useViewportSize,
-  useOrientation,
-} from './useMediaQuery';
+// Functional Engine Hooks
+export { useDecisionEngine } from './useDecisionEngine';
+export { useBenchmarkEngine } from './useBenchmarkEngine';
+export { useMCPManager } from './useMCPManager';
 
-export type { ScreenSize, Orientation } from './useMediaQuery';
+// Re-export types
+export type {
+  DecisionSession,
+  DecisionStep,
+  DecisionOption,
+  DecisionResult,
+  BiasWarning,
+} from './useDecisionEngine';
+
+export type {
+  BenchmarkScore,
+  ModelBenchmarks,
+  ModelComparison,
+  BenchmarkRecommendation,
+} from './useBenchmarkEngine';
+
+export type {
+  MCPServer,
+  MCPServerConfig,
+  MCPInstallation,
+  MCPHealthCheck,
+} from './useMCPManager';
