@@ -47,17 +47,17 @@ export default function ToolsPage() {
   const [activeView, setActiveView] = useState<View>('tools');
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-stone-50">
       {/* Header */}
-      <header className="bg-slate-900/80 backdrop-blur-lg border-b border-slate-800 px-4 py-4 sticky top-0 z-50">
+      <header className="bg-white/80 backdrop-blur-lg border-b border-stone-200 px-4 py-4 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-indigo-600/20 rounded-xl">
               <Wrench className="w-6 h-6 text-indigo-400" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-white">MCP Tools</h1>
-              <p className="text-sm text-slate-400">Model Context Protocol Integration</p>
+              <h1 className="text-xl font-bold text-stone-900">MCP Tools</h1>
+              <p className="text-sm text-stone-500">Model Context Protocol Integration</p>
             </div>
           </div>
 
@@ -75,8 +75,8 @@ export default function ToolsPage() {
                 className={clsx(
                   'px-4 py-2 rounded-lg text-sm font-medium transition-colors whitespace-nowrap',
                   activeView === view.id
-                    ? 'bg-indigo-600 text-white'
-                    : 'bg-slate-800 text-slate-400 hover:text-white'
+                    ? 'bg-indigo-600 text-stone-900'
+                    : 'bg-stone-100 text-stone-500 hover:text-stone-900'
                 )}
               >
                 {view.label}
@@ -127,17 +127,17 @@ function ToolsListView() {
       <div className="card">
         <div className="flex items-center gap-2 mb-4">
           <Server className="w-5 h-5 text-indigo-400" />
-          <h2 className="font-semibold text-white">MCP Servers</h2>
+          <h2 className="font-semibold text-stone-900">MCP Servers</h2>
         </div>
         <div className="space-y-2">
           {servers?.data?.map((server: any) => (
             <div
               key={server.id}
-              className="flex items-center justify-between p-3 bg-slate-800/50 rounded-lg"
+              className="flex items-center justify-between p-3 bg-stone-100/50 rounded-lg"
             >
               <div>
-                <div className="font-medium text-white">{server.name}</div>
-                <div className="text-xs text-slate-500">{server.url}</div>
+                <div className="font-medium text-stone-900">{server.name}</div>
+                <div className="text-xs text-stone-400">{server.url}</div>
               </div>
               <div
                 className={clsx(
@@ -146,21 +146,21 @@ function ToolsListView() {
                     ? 'bg-green-500/20 text-green-400'
                     : server.status === 'error'
                     ? 'bg-red-500/20 text-red-400'
-                    : 'bg-slate-600/20 text-slate-400'
+                    : 'bg-stone-200 text-stone-500'
                 )}
               >
                 {server.status}
               </div>
             </div>
           )) || (
-            <div className="text-center py-4 text-slate-500">No servers connected</div>
+            <div className="text-center py-4 text-stone-400">No servers connected</div>
           )}
         </div>
       </div>
 
       {/* Available Tools */}
       <div>
-        <h2 className="font-semibold text-white mb-4 flex items-center gap-2">
+        <h2 className="font-semibold text-stone-900 mb-4 flex items-center gap-2">
           <Zap className="w-5 h-5 text-indigo-400" />
           Available Tools ({tools?.data?.length || 0})
         </h2>
@@ -168,7 +168,7 @@ function ToolsListView() {
           {tools?.data?.map((tool: any) => (
             <ToolCard key={tool.name} tool={tool} />
           )) || (
-            <div className="col-span-2 text-center py-8 text-slate-500">
+            <div className="col-span-2 text-center py-8 text-stone-400">
               No tools available
             </div>
           )}
@@ -204,21 +204,21 @@ function ToolCard({ tool }: { tool: any }) {
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between">
-              <h3 className="font-medium text-white">
+              <h3 className="font-medium text-stone-900">
                 {tool.name.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
               </h3>
               <ChevronRight
                 className={clsx(
-                  'w-4 h-4 text-slate-400 transition-transform',
+                  'w-4 h-4 text-stone-500 transition-transform',
                   expanded && 'rotate-90'
                 )}
               />
             </div>
-            <p className="text-sm text-slate-400 mt-1 line-clamp-2">
+            <p className="text-sm text-stone-500 mt-1 line-clamp-2">
               {tool.description}
             </p>
             <div className="flex items-center gap-2 mt-2">
-              <span className="px-2 py-0.5 bg-slate-800 rounded text-xs text-slate-400">
+              <span className="px-2 py-0.5 bg-stone-100 rounded text-xs text-stone-500">
                 {tool.server}
               </span>
             </div>
@@ -226,10 +226,10 @@ function ToolCard({ tool }: { tool: any }) {
         </div>
 
         {expanded && (
-          <div className="mt-4 pt-4 border-t border-slate-800">
-            <div className="text-sm text-slate-300">
+          <div className="mt-4 pt-4 border-t border-stone-200">
+            <div className="text-sm text-stone-700">
               <div className="font-medium mb-2">Input Schema</div>
-              <pre className="bg-slate-950 p-3 rounded-lg overflow-x-auto text-xs">
+              <pre className="bg-stone-50 p-3 rounded-lg overflow-x-auto text-xs">
                 {JSON.stringify(tool.inputSchema || {}, null, 2)}
               </pre>
             </div>
@@ -251,15 +251,15 @@ function TestToolsView() {
   return (
     <div className="space-y-6">
       <div className="card">
-        <h2 className="font-semibold text-white mb-4">Select Tool to Test</h2>
+        <h2 className="font-semibold text-stone-900 mb-4">Select Tool to Test</h2>
         <div className="flex gap-2">
           <button
             onClick={() => setSelectedTool('web_search')}
             className={clsx(
               'flex-1 p-4 rounded-xl transition-colors',
               selectedTool === 'web_search'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-slate-800 text-slate-400 hover:text-white'
+                ? 'bg-indigo-600 text-stone-900'
+                : 'bg-stone-100 text-stone-500 hover:text-stone-900'
             )}
           >
             <Search className="w-6 h-6 mx-auto mb-2" />
@@ -270,8 +270,8 @@ function TestToolsView() {
             className={clsx(
               'flex-1 p-4 rounded-xl transition-colors',
               selectedTool === 'code_executor'
-                ? 'bg-indigo-600 text-white'
-                : 'bg-slate-800 text-slate-400 hover:text-white'
+                ? 'bg-indigo-600 text-stone-900'
+                : 'bg-stone-100 text-stone-500 hover:text-stone-900'
             )}
           >
             <Code className="w-6 h-6 mx-auto mb-2" />
@@ -303,7 +303,7 @@ function TestToolsView() {
       {/* Result Display */}
       {testResult && (
         <div>
-          <h2 className="font-semibold text-white mb-4">Execution Result</h2>
+          <h2 className="font-semibold text-stone-900 mb-4">Execution Result</h2>
           <ToolResult result={testResult} loading={isExecuting} />
         </div>
       )}
@@ -355,20 +355,20 @@ function WebSearchTest({ onExecute, onStart }: any) {
 
   return (
     <div className="card">
-      <h2 className="font-semibold text-white mb-4">Test Web Search</h2>
+      <h2 className="font-semibold text-stone-900 mb-4">Test Web Search</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm text-slate-400 mb-2">Search Query</label>
+          <label className="block text-sm text-stone-500 mb-2">Search Query</label>
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Enter search query..."
-            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full bg-stone-100 border border-stone-200 rounded-xl px-4 py-3 text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
         <div>
-          <label className="block text-sm text-slate-400 mb-2">
+          <label className="block text-sm text-stone-500 mb-2">
             Max Results: {maxResults}
           </label>
           <input
@@ -452,10 +452,10 @@ function CodeExecutorTest({ onExecute, onStart }: any) {
 
   return (
     <div className="card">
-      <h2 className="font-semibold text-white mb-4">Test Code Executor</h2>
+      <h2 className="font-semibold text-stone-900 mb-4">Test Code Executor</h2>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm text-slate-400 mb-2">Language</label>
+          <label className="block text-sm text-stone-500 mb-2">Language</label>
           <div className="flex gap-2">
             <button
               type="button"
@@ -466,8 +466,8 @@ function CodeExecutorTest({ onExecute, onStart }: any) {
               className={clsx(
                 'flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                 language === 'python'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-slate-800 text-slate-400 hover:text-white'
+                  ? 'bg-indigo-600 text-stone-900'
+                  : 'bg-stone-100 text-stone-500 hover:text-stone-900'
               )}
             >
               Python
@@ -481,8 +481,8 @@ function CodeExecutorTest({ onExecute, onStart }: any) {
               className={clsx(
                 'flex-1 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                 language === 'javascript'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-slate-800 text-slate-400 hover:text-white'
+                  ? 'bg-indigo-600 text-stone-900'
+                  : 'bg-stone-100 text-stone-500 hover:text-stone-900'
               )}
             >
               JavaScript
@@ -490,17 +490,17 @@ function CodeExecutorTest({ onExecute, onStart }: any) {
           </div>
         </div>
         <div>
-          <label className="block text-sm text-slate-400 mb-2">Code</label>
+          <label className="block text-sm text-stone-500 mb-2">Code</label>
           <textarea
             value={code}
             onChange={(e) => setCode(e.target.value)}
             placeholder="Enter code to execute..."
             rows={8}
-            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none font-mono text-sm"
+            className="w-full bg-stone-100 border border-stone-200 rounded-xl px-4 py-3 text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none font-mono text-sm"
           />
         </div>
         <div>
-          <label className="block text-sm text-slate-400 mb-2">
+          <label className="block text-sm text-stone-500 mb-2">
             Timeout: {timeout}ms
           </label>
           <input
@@ -555,7 +555,7 @@ function HistoryView() {
 
   return (
     <div className="space-y-3">
-      <h2 className="font-semibold text-white mb-4 flex items-center gap-2">
+      <h2 className="font-semibold text-stone-900 mb-4 flex items-center gap-2">
         <Clock className="w-5 h-5 text-indigo-400" />
         Execution History
       </h2>
@@ -569,19 +569,19 @@ function HistoryView() {
                 <XCircle className="w-5 h-5 text-red-400" />
               )}
               <div>
-                <div className="font-medium text-white">
+                <div className="font-medium text-stone-900">
                   {item.toolName.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
                 </div>
-                <div className="text-xs text-slate-500">
+                <div className="text-xs text-stone-400">
                   {new Date(item.timestamp).toLocaleString()}
                 </div>
               </div>
             </div>
-            <div className="text-sm text-slate-400">{item.duration}ms</div>
+            <div className="text-sm text-stone-500">{item.duration}ms</div>
           </div>
         </div>
       )) || (
-        <div className="text-center py-12 text-slate-500">
+        <div className="text-center py-12 text-stone-400">
           <Clock className="w-12 h-12 mx-auto mb-3 opacity-50" />
           <p>No execution history</p>
         </div>
@@ -599,33 +599,33 @@ function SettingsView() {
       <div className="card">
         <div className="flex items-center gap-2 mb-4">
           <Settings className="w-5 h-5 text-indigo-400" />
-          <h2 className="font-semibold text-white">Tool Settings</h2>
+          <h2 className="font-semibold text-stone-900">Tool Settings</h2>
         </div>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm text-slate-400 mb-2">
+            <label className="block text-sm text-stone-500 mb-2">
               Default Timeout (ms)
             </label>
             <input
               type="number"
               defaultValue={5000}
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full bg-stone-100 border border-stone-200 rounded-xl px-4 py-3 text-stone-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
           <div>
-            <label className="block text-sm text-slate-400 mb-2">
+            <label className="block text-sm text-stone-500 mb-2">
               Rate Limit (requests/min)
             </label>
             <input
               type="number"
               defaultValue={10}
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full bg-stone-100 border border-stone-200 rounded-xl px-4 py-3 text-stone-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <div className="text-sm font-medium text-white">Enable Caching</div>
-              <div className="text-xs text-slate-500">Cache tool results</div>
+              <div className="text-sm font-medium text-stone-900">Enable Caching</div>
+              <div className="text-xs text-stone-400">Cache tool results</div>
             </div>
             <button className="px-4 py-2 bg-indigo-600 rounded-lg text-sm font-medium">
               Enabled
@@ -635,14 +635,14 @@ function SettingsView() {
       </div>
 
       <div className="card">
-        <h2 className="font-semibold text-white mb-4">MCP Server Configuration</h2>
+        <h2 className="font-semibold text-stone-900 mb-4">MCP Server Configuration</h2>
         <div className="space-y-3">
           <div>
-            <label className="block text-sm text-slate-400 mb-2">Server URL</label>
+            <label className="block text-sm text-stone-500 mb-2">Server URL</label>
             <input
               type="text"
               placeholder="http://localhost:3100"
-              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="w-full bg-stone-100 border border-stone-200 rounded-xl px-4 py-3 text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
           </div>
           <button className="btn-primary w-full">

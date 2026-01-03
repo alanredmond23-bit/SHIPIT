@@ -138,7 +138,7 @@ function TreeNode({
     )}>
       {/* Connection Line */}
       {depth > 0 && !isHorizontal && (
-        <div className="absolute left-[-20px] top-0 w-[20px] h-[24px] border-l-2 border-b-2 border-slate-700 rounded-bl-lg" />
+        <div className="absolute left-[-20px] top-0 w-[20px] h-[24px] border-l-2 border-b-2 border-stone-200 rounded-bl-lg" />
       )}
 
       {/* Node Card */}
@@ -150,7 +150,7 @@ function TreeNode({
           hasChildren && isExpanded && !isHorizontal && 'mb-4',
           isMobile ? 'w-[280px] sm:w-auto' : 'w-full',
           {
-            'bg-slate-800/50 border-slate-700': !isActive,
+            'bg-stone-100/50 border-stone-200': !isActive,
             'bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border-indigo-500': isActive,
           }
         )}
@@ -168,7 +168,7 @@ function TreeNode({
                 e.stopPropagation();
                 onToggle(node.id);
               }}
-              className="flex-shrink-0 p-1 hover:bg-slate-700/50 rounded touch-manipulation min-w-[32px] min-h-[32px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
+              className="flex-shrink-0 p-1 hover:bg-stone-200/50 rounded touch-manipulation min-w-[32px] min-h-[32px] sm:min-w-0 sm:min-h-0 flex items-center justify-center"
             >
               {isExpanded ? (
                 <ChevronDown className="w-4 h-4" />
@@ -196,11 +196,11 @@ function TreeNode({
           <div className="flex-1 min-w-0">
             {/* Type & Confidence */}
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <span className="text-[10px] sm:text-xs font-semibold uppercase tracking-wider text-stone-500">
                 {node.type}
               </span>
               <div className="flex items-center gap-1">
-                <div className="w-12 sm:w-16 h-2 bg-slate-700 rounded-full overflow-hidden">
+                <div className="w-12 sm:w-16 h-2 bg-stone-200 rounded-full overflow-hidden">
                   <div
                     className={clsx(
                       'h-full transition-all duration-500',
@@ -219,12 +219,12 @@ function TreeNode({
             </div>
 
             {/* Thought Content */}
-            <p className="text-xs sm:text-sm text-slate-200 leading-relaxed mb-2 line-clamp-3 sm:line-clamp-none">
+            <p className="text-xs sm:text-sm text-stone-600 leading-relaxed mb-2 line-clamp-3 sm:line-clamp-none">
               {node.content}
             </p>
 
             {/* Metadata */}
-            <div className="flex items-center gap-2 text-[10px] sm:text-xs text-slate-500 flex-wrap">
+            <div className="flex items-center gap-2 text-[10px] sm:text-xs text-stone-400 flex-wrap">
               <span>{node.metadata.tokens} tokens</span>
               <span>•</span>
               <span>{formatDuration(node.metadata.duration)}</span>
@@ -313,7 +313,7 @@ export function ThinkingTree({
   if (!rootNode) {
     return (
       <div className={`flex items-center justify-center h-full ${className}`}>
-        <div className="text-center text-slate-400">
+        <div className="text-center text-stone-500">
           <Brain className="w-12 h-12 mx-auto mb-4 opacity-50" />
           <p>No thought tree available</p>
         </div>
@@ -338,7 +338,7 @@ export function ThinkingTree({
 
       {/* Expand/Collapse All - Mobile friendly */}
       <div className="sticky bottom-4 left-0 right-0 flex justify-center mt-4 pb-safe">
-        <div className="flex gap-2 bg-slate-900/95 backdrop-blur-xl rounded-full shadow-lg p-2 border border-slate-800">
+        <div className="flex gap-2 bg-white/95 backdrop-blur-xl rounded-full shadow-lg p-2 border border-stone-200">
           <button
             onClick={() => {
               const allIds = Array.from(nodes.keys());
@@ -350,7 +350,7 @@ export function ThinkingTree({
           </button>
           <button
             onClick={() => setExpandedNodes(new Set([rootNodeId]))}
-            className="px-4 py-2 bg-slate-800 hover:bg-slate-700 active:bg-slate-600 text-slate-300 rounded-full text-xs sm:text-sm font-medium transition-colors touch-manipulation"
+            className="px-4 py-2 bg-stone-100 hover:bg-stone-200 active:bg-stone-300 text-stone-700 rounded-full text-xs sm:text-sm font-medium transition-colors touch-manipulation"
           >
             Collapse All
           </button>

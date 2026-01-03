@@ -262,7 +262,7 @@ export default function PersonaChat({
 
   if (!persona) {
     return (
-      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950">
+      <div className="flex items-center justify-center h-screen bg-gradient-to-br from-stone-50 via-stone-50 to-stone-50">
         <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
       </div>
     );
@@ -292,21 +292,21 @@ export default function PersonaChat({
     .map(([key]) => key);
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white">
+    <div className="flex flex-col h-screen bg-gradient-to-br from-stone-50 via-stone-50 to-stone-50 text-stone-900">
       {/* Header */}
-      <div className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-sm">
+      <div className="border-b border-stone-200 bg-white/50 backdrop-blur-sm">
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center overflow-hidden">
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-teal-500 flex items-center justify-center overflow-hidden">
               {persona.avatar_url ? (
                 <img src={persona.avatar_url} alt={persona.name} className="w-full h-full object-cover" />
               ) : (
-                <Sparkles className="w-6 h-6 text-white" />
+                <Sparkles className="w-6 h-6 text-stone-900" />
               )}
             </div>
             <div>
               <h1 className="text-lg font-semibold">{persona.name}</h1>
-              <p className="text-sm text-slate-400 line-clamp-1">{persona.description}</p>
+              <p className="text-sm text-stone-500 line-clamp-1">{persona.description}</p>
             </div>
           </div>
 
@@ -314,7 +314,7 @@ export default function PersonaChat({
             {/* Capabilities Badge */}
             <button
               onClick={() => setShowInfo(!showInfo)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-lg hover:bg-slate-800 transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 bg-stone-100/50 rounded-lg hover:bg-stone-100 transition-colors"
             >
               <div className="flex items-center gap-1">
                 {enabledCapabilities.slice(0, 3).map((cap) => (
@@ -323,7 +323,7 @@ export default function PersonaChat({
                   </span>
                 ))}
                 {enabledCapabilities.length > 3 && (
-                  <span className="text-xs text-slate-400">+{enabledCapabilities.length - 3}</span>
+                  <span className="text-xs text-stone-500">+{enabledCapabilities.length - 3}</span>
                 )}
               </div>
               <ChevronDown className={clsx('w-4 h-4 transition-transform', showInfo && 'rotate-180')} />
@@ -336,7 +336,7 @@ export default function PersonaChat({
                 'p-2 rounded-lg transition-colors',
                 isLiked
                   ? 'text-red-400 bg-red-500/20 hover:bg-red-500/30'
-                  : 'hover:bg-slate-800'
+                  : 'hover:bg-stone-100'
               )}
             >
               <Heart className={clsx('w-5 h-5', isLiked && 'fill-current')} />
@@ -345,7 +345,7 @@ export default function PersonaChat({
             {/* Fork Button */}
             <button
               onClick={handleFork}
-              className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+              className="p-2 hover:bg-stone-100 rounded-lg transition-colors"
             >
               <GitFork className="w-5 h-5" />
             </button>
@@ -354,7 +354,7 @@ export default function PersonaChat({
             {onClose && (
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-slate-800 rounded-lg transition-colors"
+                className="p-2 hover:bg-stone-100 rounded-lg transition-colors"
               >
                 <ChevronDown className="w-5 h-5" />
               </button>
@@ -364,11 +364,11 @@ export default function PersonaChat({
 
         {/* Info Panel */}
         {showInfo && (
-          <div className="px-6 py-4 border-t border-slate-800 bg-slate-800/30">
+          <div className="px-6 py-4 border-t border-stone-200 bg-stone-100/30">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {/* Capabilities */}
               <div>
-                <h3 className="text-xs font-semibold text-slate-400 mb-2">CAPABILITIES</h3>
+                <h3 className="text-xs font-semibold text-stone-500 mb-2">CAPABILITIES</h3>
                 <div className="flex flex-wrap gap-1">
                   {enabledCapabilities.map((cap) => (
                     <span
@@ -384,14 +384,14 @@ export default function PersonaChat({
 
               {/* Personality */}
               <div>
-                <h3 className="text-xs font-semibold text-slate-400 mb-2">PERSONALITY</h3>
+                <h3 className="text-xs font-semibold text-stone-500 mb-2">PERSONALITY</h3>
                 <div className="text-sm space-y-1">
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Tone:</span>
+                    <span className="text-stone-500">Tone:</span>
                     <span className="capitalize">{persona.personality.tone}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-400">Style:</span>
+                    <span className="text-stone-500">Style:</span>
                     <span className="capitalize">{persona.personality.verbosity}</span>
                   </div>
                 </div>
@@ -399,14 +399,14 @@ export default function PersonaChat({
 
               {/* Stats */}
               <div>
-                <h3 className="text-xs font-semibold text-slate-400 mb-2">STATS</h3>
+                <h3 className="text-xs font-semibold text-stone-500 mb-2">STATS</h3>
                 <div className="text-sm space-y-1">
                   <div className="flex items-center gap-2">
-                    <MessageSquare className="w-3.5 h-3.5 text-slate-400" />
+                    <MessageSquare className="w-3.5 h-3.5 text-stone-500" />
                     <span>{persona.stats.conversations_count} chats</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Heart className="w-3.5 h-3.5 text-slate-400" />
+                    <Heart className="w-3.5 h-3.5 text-stone-500" />
                     <span>{persona.stats.likes_count} likes</span>
                   </div>
                 </div>
@@ -414,8 +414,8 @@ export default function PersonaChat({
 
               {/* Category */}
               <div>
-                <h3 className="text-xs font-semibold text-slate-400 mb-2">CATEGORY</h3>
-                <span className="inline-block px-3 py-1 bg-slate-700 rounded-full text-sm capitalize">
+                <h3 className="text-xs font-semibold text-stone-500 mb-2">CATEGORY</h3>
+                <span className="inline-block px-3 py-1 bg-stone-200 rounded-full text-sm capitalize">
                   {persona.category}
                 </span>
               </div>
@@ -428,28 +428,28 @@ export default function PersonaChat({
       <div className="flex-1 overflow-y-auto px-6 py-6 scroll-container">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full">
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-6">
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-teal-500 flex items-center justify-center mb-6">
               {persona.avatar_url ? (
                 <img src={persona.avatar_url} alt={persona.name} className="w-full h-full object-cover rounded-full" />
               ) : (
-                <Sparkles className="w-10 h-10 text-white" />
+                <Sparkles className="w-10 h-10 text-stone-900" />
               )}
             </div>
             <h2 className="text-2xl font-bold mb-2">Chat with {persona.name}</h2>
-            <p className="text-slate-400 text-center max-w-md mb-8">
+            <p className="text-stone-500 text-center max-w-md mb-8">
               {persona.description}
             </p>
 
             {/* Starter Prompts */}
             {persona.starter_prompts.length > 0 && (
               <div className="w-full max-w-2xl">
-                <p className="text-sm text-slate-400 mb-3">Try these prompts:</p>
+                <p className="text-sm text-stone-500 mb-3">Try these prompts:</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {persona.starter_prompts.map((prompt, index) => (
                     <button
                       key={index}
                       onClick={() => handleStarterPrompt(prompt)}
-                      className="px-4 py-3 bg-slate-800/50 hover:bg-slate-800 border border-slate-700 hover:border-indigo-500 rounded-xl transition-all text-left text-sm group"
+                      className="px-4 py-3 bg-stone-100/50 hover:bg-stone-100 border border-stone-200 hover:border-indigo-500 rounded-xl transition-all text-left text-sm group"
                     >
                       <div className="flex items-start gap-2">
                         <Sparkles className="w-4 h-4 text-indigo-400 flex-shrink-0 mt-0.5" />
@@ -472,11 +472,11 @@ export default function PersonaChat({
                 )}
               >
                 {message.role === 'assistant' && (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-teal-500 flex items-center justify-center flex-shrink-0">
                     {persona.avatar_url ? (
                       <img src={persona.avatar_url} alt={persona.name} className="w-full h-full object-cover rounded-full" />
                     ) : (
-                      <Sparkles className="w-4 h-4 text-white" />
+                      <Sparkles className="w-4 h-4 text-stone-900" />
                     )}
                   </div>
                 )}
@@ -486,7 +486,7 @@ export default function PersonaChat({
                     'group relative max-w-[70%] rounded-2xl px-4 py-3',
                     message.role === 'user'
                       ? 'bg-indigo-600'
-                      : 'bg-slate-800/50 border border-slate-700'
+                      : 'bg-stone-100/50 border border-stone-200'
                   )}
                 >
                   <div className="prose prose-invert prose-sm max-w-none">
@@ -495,10 +495,10 @@ export default function PersonaChat({
 
                   {/* Message Actions */}
                   <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="flex items-center gap-1 bg-slate-800 border border-slate-700 rounded-lg p-1">
+                    <div className="flex items-center gap-1 bg-stone-100 border border-stone-200 rounded-lg p-1">
                       <button
                         onClick={() => handleCopyMessage(message.content)}
-                        className="p-1 hover:bg-slate-700 rounded"
+                        className="p-1 hover:bg-stone-200 rounded"
                         title="Copy"
                       >
                         <Copy className="w-3.5 h-3.5" />
@@ -506,14 +506,14 @@ export default function PersonaChat({
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
+                  <div className="flex items-center gap-2 mt-2 text-xs text-stone-400">
                     <span>{message.timestamp.toLocaleTimeString()}</span>
                   </div>
                 </div>
 
                 {message.role === 'user' && (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-slate-700 to-slate-600 flex items-center justify-center flex-shrink-0">
-                    <User className="w-4 h-4 text-white" />
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-stone-200 to-stone-200 flex items-center justify-center flex-shrink-0">
+                    <User className="w-4 h-4 text-stone-900" />
                   </div>
                 )}
               </div>
@@ -521,11 +521,11 @@ export default function PersonaChat({
 
             {isStreaming && (
               <div className="flex gap-4">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                  <Loader2 className="w-4 h-4 text-white animate-spin" />
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-teal-500 flex items-center justify-center">
+                  <Loader2 className="w-4 h-4 text-stone-900 animate-spin" />
                 </div>
-                <div className="bg-slate-800/50 border border-slate-700 rounded-2xl px-4 py-3">
-                  <div className="flex items-center gap-2 text-slate-400">
+                <div className="bg-stone-100/50 border border-stone-200 rounded-2xl px-4 py-3">
+                  <div className="flex items-center gap-2 text-stone-500">
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span className="text-sm">Thinking...</span>
                   </div>
@@ -546,7 +546,7 @@ export default function PersonaChat({
       )}
 
       {/* Input Area */}
-      <div className="border-t border-slate-800 bg-slate-900/50 backdrop-blur-sm px-6 py-4">
+      <div className="border-t border-stone-200 bg-white/50 backdrop-blur-sm px-6 py-4">
         <div className="max-w-4xl mx-auto">
           <div className="relative">
             <textarea
@@ -557,7 +557,7 @@ export default function PersonaChat({
               placeholder={`Message ${persona.name}...`}
               rows={1}
               disabled={isStreaming}
-              className="w-full px-4 py-3 pr-12 bg-slate-800 rounded-xl border border-slate-700 focus:border-indigo-500 focus:outline-none resize-none disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full px-4 py-3 pr-12 bg-stone-100 rounded-xl border border-stone-200 focus:border-indigo-500 focus:outline-none resize-none disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
                 minHeight: '52px',
                 maxHeight: '200px',
@@ -569,8 +569,8 @@ export default function PersonaChat({
               className={clsx(
                 'absolute right-2 bottom-2 p-2 rounded-lg transition-all',
                 inputMessage.trim() && !isStreaming
-                  ? 'bg-indigo-600 hover:bg-indigo-500 text-white'
-                  : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                  ? 'bg-indigo-600 hover:bg-indigo-500 text-stone-900'
+                  : 'bg-stone-200 text-stone-400 cursor-not-allowed'
               )}
             >
               {isStreaming ? (
@@ -580,7 +580,7 @@ export default function PersonaChat({
               )}
             </button>
           </div>
-          <p className="text-xs text-slate-500 mt-2 text-center">
+          <p className="text-xs text-stone-400 mt-2 text-center">
             Press Enter to send, Shift+Enter for new line
           </p>
         </div>

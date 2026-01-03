@@ -14,10 +14,13 @@ export type FrameworkType =
   | 'bcg_matrix'
   | 'checklist';
 
+export type StepType = 'input' | 'options' | 'scoring' | 'analysis' | 'result';
+
 export type DecisionStep = {
   id: string;
   name: string;
   description: string;
+  type: StepType;
   completed: boolean;
   data: Record<string, any>;
 };
@@ -38,13 +41,14 @@ export type DecisionOption = {
   pros: string[];
   cons: string[];
   score: number;
+  scores: Record<string, number>;
 };
 
 export type DecisionResult = {
   framework: FrameworkType;
   recommendation: string;
   confidence: number;
-  reasoning: string;
+  reasoning: string[];
   scores: Record<string, number>;
   biasAlerts: BiasAlert[];
   timestamp: string;
@@ -69,46 +73,50 @@ export type DecisionSession = {
 
 const FRAMEWORK_STEPS: Record<FrameworkType, Omit<DecisionStep, 'completed' | 'data'>[]> = {
   regret_minimization: [
-    { id: 'define', name: 'Define the Decision', description: 'Clearly state what you are deciding' },
-    { id: 'project', name: 'Project to Age 80', description: 'Imagine yourself at 80 looking back' },
-    { id: 'inaction', name: 'Regret of Inaction', description: 'Rate: How much will you regret NOT doing this?' },
-    { id: 'action', name: 'Regret of Action', description: 'Rate: How much will you regret doing this if it fails?' },
-    { id: 'compare', name: 'Compare & Decide', description: 'Which regret is worse? Make your decision' },
+    { id: 'define', name: 'Define the Decision', type: 'input', description: 'Clearly state what you are deciding' },
+    { id: 'options', name: 'List Your Options', type: 'options', description: 'Add the options you are considering' },
+    { id: 'inaction', name: 'Regret of Inaction', type: 'scoring', description: 'Rate: How much will you regret NOT doing this?' },
+    { id: 'action', name: 'Regret of Action', type: 'scoring', description: 'Rate: How much will you regret doing this if it fails?' },
+    { id: 'compare', name: 'Compare & Decide', type: 'analysis', description: 'Which regret is worse? Make your decision' },
+    { id: 'result', name: 'Final Recommendation', type: 'result', description: 'Your personalized recommendation' },
   ],
   type1_type2: [
-    { id: 'identify', name: 'Identify Decision', description: 'What decision needs to be made?' },
-    { id: 'reversibility', name: 'Assess Reversibility', description: 'Can this decision be undone?' },
-    { id: 'cost', name: 'Reversal Cost', description: 'What would it cost to reverse this decision?' },
-    { id: 'classify', name: 'Classify', description: 'Is this Type 1 (irreversible) or Type 2 (reversible)?' },
-    { id: 'process', name: 'Choose Process', description: 'Determine the appropriate decision process' },
+    { id: 'identify', name: 'Identify Decision', type: 'input', description: 'What decision needs to be made?' },
+    { id: 'options', name: 'List Your Options', type: 'options', description: 'Add the options you are considering' },
+    { id: 'reversibility', name: 'Assess Reversibility', type: 'input', description: 'Can this decision be undone?' },
+    { id: 'cost', name: 'Reversal Cost', type: 'input', description: 'What would it cost to reverse this decision?' },
+    { id: 'classify', name: 'Classify', type: 'analysis', description: 'Is this Type 1 (irreversible) or Type 2 (reversible)?' },
+    { id: 'result', name: 'Decision Process', type: 'result', description: 'Your personalized recommendation' },
   ],
   inversion: [
-    { id: 'goal', name: 'Define Success', description: 'What does success look like?' },
-    { id: 'invert', name: 'Invert the Question', description: 'How could this fail spectacularly?' },
-    { id: 'failures', name: 'List Failure Modes', description: 'Enumerate all ways this could fail' },
-    { id: 'avoid', name: 'Avoidance Strategies', description: 'How do you prevent each failure mode?' },
-    { id: 'guardrails', name: 'Build Guardrails', description: 'Implement safeguards against top risks' },
+    { id: 'goal', name: 'Define Success', type: 'input', description: 'What does success look like?' },
+    { id: 'options', name: 'List Your Options', type: 'options', description: 'Add the options you are considering' },
+    { id: 'invert', name: 'Invert the Question', type: 'input', description: 'How could this fail spectacularly?' },
+    { id: 'failures', name: 'List Failure Modes', type: 'input', description: 'Enumerate all ways this could fail' },
+    { id: 'guardrails', name: 'Build Guardrails', type: 'analysis', description: 'Implement safeguards against top risks' },
+    { id: 'result', name: 'Final Recommendation', type: 'result', description: 'Your personalized recommendation' },
   ],
   mece: [
-    { id: 'problem', name: 'State the Problem', description: 'Clearly define what you are solving' },
-    { id: 'brainstorm', name: 'Brainstorm Categories', description: 'List all possible categories' },
-    { id: 'exclusive', name: 'Check Mutual Exclusivity', description: 'Ensure no overlap between categories' },
-    { id: 'exhaustive', name: 'Check Exhaustiveness', description: 'Ensure all possibilities are covered' },
-    { id: 'refine', name: 'Refine Structure', description: 'Adjust categories as needed' },
+    { id: 'problem', name: 'State the Problem', type: 'input', description: 'Clearly define what you are solving' },
+    { id: 'options', name: 'List Your Options', type: 'options', description: 'Add the options you are considering' },
+    { id: 'exclusive', name: 'Check Mutual Exclusivity', type: 'scoring', description: 'Ensure no overlap between categories' },
+    { id: 'exhaustive', name: 'Check Exhaustiveness', type: 'analysis', description: 'Ensure all possibilities are covered' },
+    { id: 'result', name: 'Final Recommendation', type: 'result', description: 'Your personalized recommendation' },
   ],
   bcg_matrix: [
-    { id: 'list', name: 'List Items', description: 'Identify all products, projects, or options' },
-    { id: 'growth', name: 'Assess Growth', description: 'Rate market/opportunity growth (low/high)' },
-    { id: 'share', name: 'Assess Share/Strength', description: 'Rate relative strength (low/high)' },
-    { id: 'plot', name: 'Plot on Matrix', description: 'Place each in appropriate quadrant' },
-    { id: 'strategy', name: 'Determine Strategy', description: 'Apply quadrant-specific strategies' },
+    { id: 'list', name: 'List Items', type: 'input', description: 'Identify all products, projects, or options' },
+    { id: 'options', name: 'Add Options', type: 'options', description: 'Add the items to analyze' },
+    { id: 'growth', name: 'Assess Growth', type: 'scoring', description: 'Rate market/opportunity growth (low/high)' },
+    { id: 'share', name: 'Assess Share/Strength', type: 'scoring', description: 'Rate relative strength (low/high)' },
+    { id: 'strategy', name: 'Determine Strategy', type: 'analysis', description: 'Apply quadrant-specific strategies' },
+    { id: 'result', name: 'Final Recommendation', type: 'result', description: 'Your personalized recommendation' },
   ],
   checklist: [
-    { id: 'type', name: 'Identify Decision Type', description: 'What category of decision is this?' },
-    { id: 'criteria', name: 'Define Criteria', description: 'List all criteria that must be checked' },
-    { id: 'check', name: 'Work Through Items', description: 'Systematically check each item' },
-    { id: 'anomalies', name: 'Note Anomalies', description: 'Flag anything unusual or concerning' },
-    { id: 'decide', name: 'Make Decision', description: 'Proceed if all critical items pass' },
+    { id: 'type', name: 'Identify Decision Type', type: 'input', description: 'What category of decision is this?' },
+    { id: 'options', name: 'List Your Options', type: 'options', description: 'Add the options you are considering' },
+    { id: 'criteria', name: 'Define Criteria', type: 'input', description: 'List all criteria that must be checked' },
+    { id: 'check', name: 'Work Through Items', type: 'scoring', description: 'Systematically check each item' },
+    { id: 'decide', name: 'Make Decision', type: 'result', description: 'Proceed if all critical items pass' },
   ],
 };
 
@@ -162,7 +170,8 @@ export function useDecisionEngine() {
 
   // Start a new decision session
   const startSession = useCallback(
-    (title: string, description: string, framework: FrameworkType) => {
+    (framework: FrameworkType, title?: string, description?: string) => {
+      const defaultTitle = `${framework.replace(/_/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase())} Decision`;
       const steps = FRAMEWORK_STEPS[framework].map((step) => ({
         ...step,
         completed: false,
@@ -171,8 +180,8 @@ export function useDecisionEngine() {
 
       const newSession: DecisionSession = {
         id: `session_${Date.now()}`,
-        title,
-        description,
+        title: title || defaultTitle,
+        description: description || `Making a decision using the ${framework.replace(/_/g, ' ')} framework`,
         framework,
         currentStep: 0,
         steps,
@@ -191,14 +200,17 @@ export function useDecisionEngine() {
 
   // Update step data
   const updateStepData = useCallback(
-    (stepId: string, data: Record<string, any>) => {
+    (data: Record<string, any>, stepId?: string) => {
       if (!session) return;
+
+      const targetStepId = stepId || session.steps[session.currentStep]?.id;
+      if (!targetStepId) return;
 
       setSession((prev) => {
         if (!prev) return prev;
 
         const updatedSteps = prev.steps.map((step) =>
-          step.id === stepId
+          step.id === targetStepId
             ? { ...step, data: { ...step.data, ...data } }
             : step
         );
@@ -251,13 +263,14 @@ export function useDecisionEngine() {
 
   // Add a decision option
   const addOption = useCallback(
-    (option: Omit<DecisionOption, 'id' | 'score'>) => {
+    (option: Omit<DecisionOption, 'id' | 'score' | 'scores'>) => {
       if (!session) return;
 
       const newOption: DecisionOption = {
         ...option,
         id: `option_${Date.now()}`,
         score: 0,
+        scores: {},
       };
 
       setSession((prev) => {
@@ -274,14 +287,16 @@ export function useDecisionEngine() {
 
   // Update option score
   const updateOptionScore = useCallback(
-    (optionId: string, score: number) => {
+    (optionId: string, stepId: string, score: number) => {
       if (!session) return;
 
       setSession((prev) => {
         if (!prev) return prev;
 
         const updatedOptions = prev.options.map((opt) =>
-          opt.id === optionId ? { ...opt, score } : opt
+          opt.id === optionId
+            ? { ...opt, score, scores: { ...opt.scores, [stepId]: score } }
+            : opt
         );
 
         return {
@@ -293,6 +308,30 @@ export function useDecisionEngine() {
     },
     [session]
   );
+
+  // Remove a decision option
+  const removeOption = useCallback(
+    (optionId: string) => {
+      if (!session) return;
+
+      setSession((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          options: prev.options.filter((opt) => opt.id !== optionId),
+          updatedAt: new Date().toISOString(),
+        };
+      });
+    },
+    [session]
+  );
+
+  // Reset the session
+  const resetSession = useCallback(() => {
+    setSession(null);
+    setError(null);
+    setIsProcessing(false);
+  }, []);
 
   // Calculate Regret Minimization result
   const calculateRegretMinimization = useCallback(() => {
@@ -385,7 +424,7 @@ export function useDecisionEngine() {
     setTimeout(() => {
       let recommendation = '';
       let confidence = 0;
-      let reasoning = '';
+      let reasoning: string[] = [];
       const scores: Record<string, number> = {};
 
       // Framework-specific calculations
@@ -394,7 +433,11 @@ export function useDecisionEngine() {
         if (result) {
           recommendation = result.recommendation;
           confidence = result.confidence;
-          reasoning = `Inaction regret: ${result.inactionScore}/10, Action regret: ${result.actionScore}/10`;
+          reasoning = [
+            `Inaction regret score: ${result.inactionScore}/10`,
+            `Action regret score: ${result.actionScore}/10`,
+            result.shouldDo ? 'The regret of not trying outweighs the risk of failure' : 'The potential downsides outweigh the benefits of action'
+          ];
           scores['inaction_regret'] = result.inactionScore;
           scores['action_regret'] = result.actionScore;
         }
@@ -403,7 +446,11 @@ export function useDecisionEngine() {
         if (result) {
           recommendation = result.recommendation;
           confidence = result.isReversible ? 80 : 60;
-          reasoning = `Decision Type: ${result.decisionType}, Reversible: ${result.isReversible}, Cost: ${result.reversalCost}`;
+          reasoning = [
+            `Decision Type: ${result.decisionType}`,
+            `Reversible: ${result.isReversible ? 'Yes' : 'No'}`,
+            `Reversal Cost: ${result.reversalCost}`
+          ];
         }
       } else {
         // Default for other frameworks
@@ -411,7 +458,11 @@ export function useDecisionEngine() {
         if (topOption) {
           recommendation = `Recommended: ${topOption.name}`;
           confidence = Math.min(topOption.score * 10, 100);
-          reasoning = `Highest scored option with ${topOption.pros.length} pros and ${topOption.cons.length} cons`;
+          reasoning = [
+            `Highest scored option overall`,
+            `${topOption.pros.length} identified advantages`,
+            `${topOption.cons.length} identified risks`
+          ];
         }
       }
 
@@ -524,9 +575,11 @@ export function useDecisionEngine() {
     completeStep,
     previousStep,
     addOption,
+    removeOption,
     updateOptionScore,
     generateResult,
     exportToMarkdown,
+    resetSession,
 
     // Utilities
     detectBiases,

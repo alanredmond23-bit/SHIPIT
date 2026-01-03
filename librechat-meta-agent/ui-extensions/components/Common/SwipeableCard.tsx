@@ -22,12 +22,12 @@ export interface SwipeableCardProps {
 }
 
 const colorClasses: Record<SwipeAction['color'], string> = {
-  red: 'bg-red-600 text-white',
-  blue: 'bg-blue-600 text-white',
-  green: 'bg-green-600 text-white',
-  yellow: 'bg-yellow-600 text-white',
-  purple: 'bg-purple-600 text-white',
-  gray: 'bg-slate-600 text-white',
+  red: 'bg-red-600 text-stone-900',
+  blue: 'bg-blue-600 text-stone-900',
+  green: 'bg-green-600 text-stone-900',
+  yellow: 'bg-yellow-600 text-stone-900',
+  purple: 'bg-teal-500 text-stone-900',
+  gray: 'bg-stone-200 text-stone-900',
 };
 
 export function SwipeableCard({
@@ -195,7 +195,7 @@ export function SwipeableCard({
       <div
         ref={cardRef}
         className={clsx(
-          'swipeable-card relative bg-slate-900',
+          'swipeable-card relative bg-white',
           isSwiping && 'swiping',
           disabled && 'opacity-50 cursor-not-allowed'
         )}
@@ -217,7 +217,7 @@ export function SwipeableCard({
       {/* Swipe Hint */}
       {!isSwiping && !actionTriggered && (leftActions.length > 0 || rightActions.length > 0) && (
         <div className="absolute bottom-1 left-1/2 -translate-x-1/2 pointer-events-none">
-          <div className="flex items-center gap-2 px-2 py-1 bg-slate-800/80 backdrop-blur-sm rounded-full text-[10px] text-slate-400">
+          <div className="flex items-center gap-2 px-2 py-1 bg-stone-100/80 backdrop-blur-sm rounded-full text-[10px] text-stone-500">
             {leftActions.length > 0 && <span>← Swipe</span>}
             {leftActions.length > 0 && rightActions.length > 0 && <span>•</span>}
             {rightActions.length > 0 && <span>Swipe →</span>}

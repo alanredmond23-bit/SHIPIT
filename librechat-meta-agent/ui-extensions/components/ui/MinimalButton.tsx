@@ -1,10 +1,12 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 
 interface MinimalButtonProps {
   children: React.ReactNode;
   onClick?: () => void;
+  href?: string;
   disabled?: boolean;
   icon?: React.ReactNode;
   iconPosition?: 'left' | 'right';
@@ -15,27 +17,26 @@ interface MinimalButtonProps {
 export function MinimalButton({
   children,
   onClick,
+  href,
   disabled = false,
   icon,
   iconPosition = 'right',
   underline = true,
   className = '',
 }: MinimalButtonProps) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={disabled}
-      className={`
-        inline-flex items-center gap-2
-        text-warm-800 font-medium text-sm
-        transition-all duration-200
-        hover:text-warm-900
-        focus:outline-none focus:text-teal-600
-        disabled:opacity-50 disabled:cursor-not-allowed
-        group
-        ${className}
-      `}
-    >
+  const buttonClasses = `
+    inline-flex items-center gap-2
+    text-warm-800 font-medium text-sm
+    transition-all duration-200
+    hover:text-warm-900
+    focus:outline-none focus:text-teal-600
+    disabled:opacity-50 disabled:cursor-not-allowed
+    group
+    ${className}
+  `;
+
+  const content = (
+    <>
       {icon && iconPosition === 'left' && (
         <span className="transition-transform group-hover:-translate-x-0.5">
           {icon}
@@ -61,6 +62,24 @@ export function MinimalButton({
           {icon}
         </span>
       )}
+    </>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className={buttonClasses}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={buttonClasses}
+    >
+      {content}
     </button>
   );
 }

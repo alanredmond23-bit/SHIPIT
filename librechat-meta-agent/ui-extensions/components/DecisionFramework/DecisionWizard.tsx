@@ -16,13 +16,13 @@ import {
   Lightbulb,
   Scale,
 } from 'lucide-react';
-import { useDecisionEngine, DecisionFrameworkType } from '@/hooks/useDecisionEngine';
+import { useDecisionEngine, type FrameworkType } from '@/hooks/useDecisionEngine';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { AccentButton } from '@/components/ui/AccentButton';
 import { MinimalButton } from '@/components/ui/MinimalButton';
 import { GeometricDecor } from '@/components/ui/GeometricDecor';
 
-const FRAMEWORKS: { id: DecisionFrameworkType; name: string; icon: React.ElementType; description: string }[] = [
+const FRAMEWORKS: { id: FrameworkType; name: string; icon: React.ElementType; description: string }[] = [
   {
     id: 'regret_minimization',
     name: 'Regret Minimization',
@@ -80,7 +80,7 @@ export function DecisionWizard() {
     resetSession,
   } = useDecisionEngine();
 
-  const [selectedFramework, setSelectedFramework] = useState<DecisionFrameworkType | null>(null);
+  const [selectedFramework, setSelectedFramework] = useState<FrameworkType | null>(null);
   const [optionInput, setOptionInput] = useState('');
 
   // Start a new session with selected framework
@@ -93,7 +93,7 @@ export function DecisionWizard() {
   // Handle option add
   const handleAddOption = () => {
     if (optionInput.trim()) {
-      addOption(optionInput.trim());
+      addOption({ name: optionInput.trim(), description: '', pros: [], cons: [] });
       setOptionInput('');
     }
   };
@@ -206,7 +206,7 @@ export function DecisionWizard() {
 
         {/* Current Step */}
         <div className="bg-white border border-warm-200 rounded-2xl p-8 mb-6">
-          <h2 className="text-2xl font-light text-warm-900 mb-2">{currentStep.title}</h2>
+          <h2 className="text-2xl font-light text-warm-900 mb-2">{currentStep.name}</h2>
           <p className="text-warm-500 mb-6">{currentStep.description}</p>
 
           {/* Step Content based on type */}
@@ -281,14 +281,14 @@ export function DecisionWizard() {
 
           {currentStep.type === 'analysis' && (
             <div className="space-y-4">
-              {session.frameworkType === 'regret_minimization' && (
+              {session.framework === 'regret_minimization' && (
                 <div className="p-4 bg-teal-50 border border-teal-100 rounded-xl">
                   <p className="text-sm text-teal-700">
                     Imagine yourself at age 80, looking back. Which choice would you regret NOT making?
                   </p>
                 </div>
               )}
-              {session.frameworkType === 'type1_type2' && (
+              {session.framework === 'type1_type2' && (
                 <div className="space-y-2">
                   {calculateType1Type2() && (
                     <div className={`p-4 rounded-xl ${
@@ -348,7 +348,7 @@ export function DecisionWizard() {
                 <ul className="mt-2 space-y-1">
                   {biases.map((bias, i) => (
                     <li key={i} className="text-sm text-amber-700">
-                      <strong>{bias.type}:</strong> {bias.suggestion}
+                      <strong>{bias.name}:</strong> {bias.mitigation}
                     </li>
                   ))}
                 </ul>

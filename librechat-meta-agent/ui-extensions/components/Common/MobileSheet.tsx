@@ -170,19 +170,19 @@ export function MobileSheet({
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
-            <div className="w-12 h-1.5 bg-slate-700 rounded-full" />
+            <div className="w-12 h-1.5 bg-stone-200 rounded-full" />
           </div>
         )}
 
         {/* Header */}
         {(title || description) && (
-          <div className="px-6 pb-4 border-b border-slate-800">
+          <div className="px-6 pb-4 border-b border-stone-200">
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 min-w-0">
                 {title && (
                   <h2
                     id="sheet-title"
-                    className="text-lg sm:text-xl font-bold text-white mb-1"
+                    className="text-lg sm:text-xl font-bold text-stone-900 mb-1"
                   >
                     {title}
                   </h2>
@@ -190,7 +190,7 @@ export function MobileSheet({
                 {description && (
                   <p
                     id="sheet-description"
-                    className="text-sm text-slate-400"
+                    className="text-sm text-stone-500"
                   >
                     {description}
                   </p>
@@ -198,7 +198,7 @@ export function MobileSheet({
               </div>
               <button
                 onClick={onClose}
-                className="flex-shrink-0 p-2 hover:bg-slate-800 active:bg-slate-700 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
+                className="flex-shrink-0 p-2 hover:bg-stone-100 active:bg-stone-200 rounded-lg transition-colors touch-manipulation min-w-[44px] min-h-[44px] flex items-center justify-center"
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />
@@ -221,7 +221,7 @@ export function MobileSheet({
                 onClick={() => setSnapPoint(index)}
                 className={clsx(
                   'w-1.5 h-1.5 rounded-full transition-all touch-manipulation',
-                  index === snapPoint ? 'bg-indigo-500 w-4' : 'bg-slate-700'
+                  index === snapPoint ? 'bg-indigo-500 w-4' : 'bg-stone-200'
                 )}
                 aria-label={`Snap to ${snapPoints[index]}%`}
               />

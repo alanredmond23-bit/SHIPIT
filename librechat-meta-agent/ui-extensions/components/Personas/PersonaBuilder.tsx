@@ -277,11 +277,11 @@ export default function PersonaBuilder({
               <div className="mb-6">
                 <label className="block text-sm font-medium mb-2">Avatar</label>
                 <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center overflow-hidden">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-teal-500 flex items-center justify-center overflow-hidden">
                     {avatarUrl ? (
                       <img src={avatarUrl} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
-                      <User className="w-10 h-10 text-white" />
+                      <User className="w-10 h-10 text-stone-900" />
                     )}
                   </div>
                   <div className="flex-1">
@@ -290,9 +290,9 @@ export default function PersonaBuilder({
                       value={avatarUrl}
                       onChange={(e) => setAvatarUrl(e.target.value)}
                       placeholder="Enter image URL or upload..."
-                      className="w-full px-4 py-2 bg-slate-800 rounded-lg border border-slate-700 focus:border-indigo-500 focus:outline-none"
+                      className="w-full px-4 py-2 bg-stone-100 rounded-lg border border-stone-200 focus:border-indigo-500 focus:outline-none"
                     />
-                    <p className="text-xs text-slate-400 mt-1">
+                    <p className="text-xs text-stone-500 mt-1">
                       Paste an image URL or upload a file
                     </p>
                   </div>
@@ -309,7 +309,7 @@ export default function PersonaBuilder({
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   placeholder="e.g., Code Reviewer, Study Buddy, Creative Writer"
-                  className="w-full px-4 py-2 bg-slate-800 rounded-lg border border-slate-700 focus:border-indigo-500 focus:outline-none"
+                  className="w-full px-4 py-2 bg-stone-100 rounded-lg border border-stone-200 focus:border-indigo-500 focus:outline-none"
                 />
               </div>
 
@@ -319,7 +319,7 @@ export default function PersonaBuilder({
                 <select
                   value={category}
                   onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-4 py-2 bg-slate-800 rounded-lg border border-slate-700 focus:border-indigo-500 focus:outline-none"
+                  className="w-full px-4 py-2 bg-stone-100 rounded-lg border border-stone-200 focus:border-indigo-500 focus:outline-none"
                 >
                   {CATEGORIES.map((cat) => (
                     <option key={cat} value={cat.toLowerCase()}>
@@ -339,7 +339,7 @@ export default function PersonaBuilder({
                   onChange={(e) => setDescription(e.target.value)}
                   placeholder="Describe what this persona does and how it helps users..."
                   rows={3}
-                  className="w-full px-4 py-2 bg-slate-800 rounded-lg border border-slate-700 focus:border-indigo-500 focus:outline-none resize-none"
+                  className="w-full px-4 py-2 bg-stone-100 rounded-lg border border-stone-200 focus:border-indigo-500 focus:outline-none resize-none"
                 />
               </div>
 
@@ -353,9 +353,9 @@ export default function PersonaBuilder({
                   onChange={(e) => setSystemPrompt(e.target.value)}
                   placeholder="You are a helpful assistant who..."
                   rows={6}
-                  className="w-full px-4 py-2 bg-slate-800 rounded-lg border border-slate-700 focus:border-indigo-500 focus:outline-none resize-none font-mono text-sm"
+                  className="w-full px-4 py-2 bg-stone-100 rounded-lg border border-stone-200 focus:border-indigo-500 focus:outline-none resize-none font-mono text-sm"
                 />
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-stone-500 mt-1">
                   This defines how the AI behaves and responds
                 </p>
               </div>
@@ -372,12 +372,12 @@ export default function PersonaBuilder({
                       value={prompt}
                       onChange={(e) => handleUpdateStarterPrompt(index, e.target.value)}
                       placeholder="e.g., Help me review this code..."
-                      className="flex-1 px-4 py-2 bg-slate-800 rounded-lg border border-slate-700 focus:border-indigo-500 focus:outline-none"
+                      className="flex-1 px-4 py-2 bg-stone-100 rounded-lg border border-stone-200 focus:border-indigo-500 focus:outline-none"
                     />
                     {starterPrompts.length > 1 && (
                       <button
                         onClick={() => handleRemoveStarterPrompt(index)}
-                        className="p-2 hover:bg-slate-700 rounded-lg"
+                        className="p-2 hover:bg-stone-200 rounded-lg"
                       >
                         <X className="w-5 h-5" />
                       </button>
@@ -415,11 +415,11 @@ export default function PersonaBuilder({
                         'px-4 py-3 rounded-lg border-2 transition-all text-left',
                         personality.tone === tone
                           ? 'border-indigo-500 bg-indigo-500/20'
-                          : 'border-slate-700 hover:border-slate-600'
+                          : 'border-stone-200 hover:border-stone-300'
                       )}
                     >
                       <div className="font-medium capitalize">{tone}</div>
-                      <div className="text-xs text-slate-400 mt-1">
+                      <div className="text-xs text-stone-500 mt-1">
                         {tone === 'formal' && 'Professional and respectful'}
                         {tone === 'casual' && 'Friendly and relaxed'}
                         {tone === 'playful' && 'Fun and lighthearted'}
@@ -444,11 +444,11 @@ export default function PersonaBuilder({
                       'px-4 py-3 rounded-lg border-2 transition-all',
                       personality.verbosity === verbosity
                         ? 'border-indigo-500 bg-indigo-500/20'
-                        : 'border-slate-700 hover:border-slate-600'
+                        : 'border-stone-200 hover:border-stone-300'
                     )}
                   >
                     <div className="font-medium capitalize">{verbosity}</div>
-                    <div className="text-xs text-slate-400 mt-1">
+                    <div className="text-xs text-stone-500 mt-1">
                       {verbosity === 'concise' && 'Brief responses'}
                       {verbosity === 'balanced' && 'Moderate detail'}
                       {verbosity === 'detailed' && 'Thorough explanations'}
@@ -476,7 +476,7 @@ export default function PersonaBuilder({
                 }
                 className="w-full accent-indigo-500"
               />
-              <div className="flex justify-between text-xs text-slate-400 mt-1">
+              <div className="flex justify-between text-xs text-stone-500 mt-1">
                 <span>Factual & Precise</span>
                 <span>Creative & Varied</span>
               </div>
@@ -488,7 +488,7 @@ export default function PersonaBuilder({
         return (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold mb-4">Enable Capabilities</h3>
-            <p className="text-sm text-slate-400 mb-6">
+            <p className="text-sm text-stone-500 mb-6">
               Choose which features this persona can use
             </p>
 
@@ -543,7 +543,7 @@ export default function PersonaBuilder({
                     'flex items-start gap-4 p-4 rounded-lg border-2 transition-all text-left',
                     capabilities[key as keyof CapabilitiesConfig]
                       ? 'border-indigo-500 bg-indigo-500/20'
-                      : 'border-slate-700 hover:border-slate-600'
+                      : 'border-stone-200 hover:border-stone-300'
                   )}
                 >
                   <div
@@ -551,7 +551,7 @@ export default function PersonaBuilder({
                       'p-2 rounded-lg',
                       capabilities[key as keyof CapabilitiesConfig]
                         ? 'bg-indigo-500/30'
-                        : 'bg-slate-800'
+                        : 'bg-stone-100'
                     )}
                   >
                     <Icon className="w-5 h-5" />
@@ -563,7 +563,7 @@ export default function PersonaBuilder({
                         <Check className="w-4 h-4 text-green-400" />
                       )}
                     </div>
-                    <p className="text-sm text-slate-400 mt-1">{description}</p>
+                    <p className="text-sm text-stone-500 mt-1">{description}</p>
                   </div>
                 </button>
               ))}
@@ -575,12 +575,12 @@ export default function PersonaBuilder({
         return (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold mb-4">Upload Knowledge Base</h3>
-            <p className="text-sm text-slate-400 mb-6">
+            <p className="text-sm text-stone-500 mb-6">
               Upload documents to give your persona specialized knowledge
             </p>
 
             {/* Upload Area */}
-            <div className="border-2 border-dashed border-slate-700 rounded-lg p-8 text-center hover:border-indigo-500 transition-colors">
+            <div className="border-2 border-dashed border-stone-200 rounded-lg p-8 text-center hover:border-indigo-500 transition-colors">
               <input
                 type="file"
                 id="knowledge-upload"
@@ -593,9 +593,9 @@ export default function PersonaBuilder({
                 htmlFor="knowledge-upload"
                 className="cursor-pointer flex flex-col items-center"
               >
-                <Upload className="w-12 h-12 text-slate-500 mb-3" />
+                <Upload className="w-12 h-12 text-stone-400 mb-3" />
                 <p className="font-medium mb-1">Click to upload files</p>
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-stone-500">
                   PDF, TXT, MD, JSON, CSV, DOCX, XLSX (max 50MB each)
                 </p>
               </label>
@@ -608,20 +608,20 @@ export default function PersonaBuilder({
                 {knowledgeFiles.map((file, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-3 bg-slate-800 rounded-lg"
+                    className="flex items-center justify-between p-3 bg-stone-100 rounded-lg"
                   >
                     <div className="flex items-center gap-3">
-                      <FileText className="w-5 h-5 text-slate-400" />
+                      <FileText className="w-5 h-5 text-stone-500" />
                       <div>
                         <p className="text-sm font-medium">{file.name}</p>
-                        <p className="text-xs text-slate-400">
+                        <p className="text-xs text-stone-500">
                           {(file.size / 1024).toFixed(1)} KB
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={() => handleRemoveFile(index)}
-                      className="p-1 hover:bg-slate-700 rounded"
+                      className="p-1 hover:bg-stone-200 rounded"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -638,9 +638,9 @@ export default function PersonaBuilder({
             <h3 className="text-lg font-semibold mb-4">Voice Configuration</h3>
 
             {!capabilities.voiceChat ? (
-              <div className="bg-slate-800 rounded-lg p-6 text-center">
-                <Mic className="w-12 h-12 text-slate-500 mx-auto mb-3" />
-                <p className="text-slate-400 mb-4">
+              <div className="bg-stone-100 rounded-lg p-6 text-center">
+                <Mic className="w-12 h-12 text-stone-400 mx-auto mb-3" />
+                <p className="text-stone-500 mb-4">
                   Voice chat is not enabled for this persona
                 </p>
                 <button
@@ -658,7 +658,7 @@ export default function PersonaBuilder({
                   <select
                     value={voiceProvider}
                     onChange={(e) => setVoiceProvider(e.target.value)}
-                    className="w-full px-4 py-2 bg-slate-800 rounded-lg border border-slate-700 focus:border-indigo-500 focus:outline-none"
+                    className="w-full px-4 py-2 bg-stone-100 rounded-lg border border-stone-200 focus:border-indigo-500 focus:outline-none"
                   >
                     <option value="openai">OpenAI</option>
                     <option value="elevenlabs">ElevenLabs</option>
@@ -672,7 +672,7 @@ export default function PersonaBuilder({
                   <select
                     value={voiceId}
                     onChange={(e) => setVoiceId(e.target.value)}
-                    className="w-full px-4 py-2 bg-slate-800 rounded-lg border border-slate-700 focus:border-indigo-500 focus:outline-none"
+                    className="w-full px-4 py-2 bg-stone-100 rounded-lg border border-stone-200 focus:border-indigo-500 focus:outline-none"
                   >
                     <option value="alloy">Alloy (Neutral)</option>
                     <option value="echo">Echo (Male)</option>
@@ -723,13 +723,13 @@ export default function PersonaBuilder({
                       'w-full flex items-start gap-4 p-4 rounded-lg border-2 transition-all text-left',
                       visibility === value
                         ? 'border-indigo-500 bg-indigo-500/20'
-                        : 'border-slate-700 hover:border-slate-600'
+                        : 'border-stone-200 hover:border-stone-300'
                     )}
                   >
                     <div
                       className={clsx(
                         'p-2 rounded-lg',
-                        visibility === value ? 'bg-indigo-500/30' : 'bg-slate-800'
+                        visibility === value ? 'bg-indigo-500/30' : 'bg-stone-100'
                       )}
                     >
                       <Icon className="w-5 h-5" />
@@ -739,7 +739,7 @@ export default function PersonaBuilder({
                         <span className="font-medium">{label}</span>
                         {visibility === value && <Check className="w-4 h-4 text-green-400" />}
                       </div>
-                      <p className="text-sm text-slate-400 mt-1">{description}</p>
+                      <p className="text-sm text-stone-500 mt-1">{description}</p>
                     </div>
                   </button>
                 ))}
@@ -747,29 +747,29 @@ export default function PersonaBuilder({
             </div>
 
             {/* Summary */}
-            <div className="bg-slate-800/50 rounded-lg p-6 space-y-3">
+            <div className="bg-stone-100/50 rounded-lg p-6 space-y-3">
               <h4 className="font-medium">Summary</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Name:</span>
+                  <span className="text-stone-500">Name:</span>
                   <span className="font-medium">{name || 'Not set'}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Category:</span>
+                  <span className="text-stone-500">Category:</span>
                   <span className="font-medium capitalize">{category}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Capabilities:</span>
+                  <span className="text-stone-500">Capabilities:</span>
                   <span className="font-medium">
                     {Object.values(capabilities).filter(Boolean).length} enabled
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Knowledge Files:</span>
+                  <span className="text-stone-500">Knowledge Files:</span>
                   <span className="font-medium">{knowledgeFiles.length}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-slate-400">Visibility:</span>
+                  <span className="text-stone-500">Visibility:</span>
                   <span className="font-medium capitalize">{visibility}</span>
                 </div>
               </div>
@@ -784,27 +784,27 @@ export default function PersonaBuilder({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-      <div className="bg-slate-900 rounded-2xl border border-slate-800 max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+      <div className="bg-white rounded-2xl border border-stone-200 max-w-5xl w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+        <div className="p-6 border-b border-stone-200 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-indigo-600/20 rounded-xl">
               <Wand2 className="w-6 h-6 text-indigo-400" />
             </div>
             <div>
               <h2 className="text-xl font-semibold">Create Custom Persona</h2>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-stone-500">
                 Step {currentStep + 1} of {STEPS.length}: {STEPS[currentStep].title}
               </p>
             </div>
           </div>
-          <button onClick={onCancel} className="p-2 hover:bg-slate-800 rounded-lg">
+          <button onClick={onCancel} className="p-2 hover:bg-stone-100 rounded-lg">
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Progress Steps */}
-        <div className="px-6 py-4 border-b border-slate-800">
+        <div className="px-6 py-4 border-b border-stone-200">
           <div className="flex items-center justify-between">
             {STEPS.map((step, index) => {
               const Icon = step.icon;
@@ -820,7 +820,7 @@ export default function PersonaBuilder({
                       'flex flex-col items-center gap-2 transition-all',
                       isActive && 'text-indigo-400',
                       isCompleted && 'text-green-400',
-                      index > currentStep && 'text-slate-600 cursor-not-allowed'
+                      index > currentStep && 'text-stone-400 cursor-not-allowed'
                     )}
                   >
                     <div
@@ -828,7 +828,7 @@ export default function PersonaBuilder({
                         'w-10 h-10 rounded-full flex items-center justify-center transition-all',
                         isActive && 'bg-indigo-600/30 ring-2 ring-indigo-500',
                         isCompleted && 'bg-green-600/30',
-                        !isActive && !isCompleted && 'bg-slate-800'
+                        !isActive && !isCompleted && 'bg-stone-100'
                       )}
                     >
                       <Icon className="w-5 h-5" />
@@ -839,7 +839,7 @@ export default function PersonaBuilder({
                     <div
                       className={clsx(
                         'h-0.5 flex-1 mx-2 transition-colors',
-                        isCompleted ? 'bg-green-500' : 'bg-slate-700'
+                        isCompleted ? 'bg-green-500' : 'bg-stone-200'
                       )}
                     />
                   )}
@@ -867,15 +867,15 @@ export default function PersonaBuilder({
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-slate-800 flex items-center justify-between">
+        <div className="p-6 border-t border-stone-200 flex items-center justify-between">
           <button
             onClick={handleBack}
             disabled={currentStep === 0}
             className={clsx(
               'flex items-center gap-2 px-4 py-2 rounded-lg transition-colors',
               currentStep === 0
-                ? 'text-slate-600 cursor-not-allowed'
-                : 'text-slate-300 hover:bg-slate-800'
+                ? 'text-stone-400 cursor-not-allowed'
+                : 'text-stone-700 hover:bg-stone-100'
             )}
           >
             <ChevronLeft className="w-5 h-5" />
@@ -885,7 +885,7 @@ export default function PersonaBuilder({
           <div className="flex items-center gap-3">
             <button
               onClick={() => setPreviewMode(!previewMode)}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors"
             >
               <Eye className="w-5 h-5" />
               Preview
@@ -899,7 +899,7 @@ export default function PersonaBuilder({
                   'flex items-center gap-2 px-6 py-2 rounded-lg transition-colors',
                   canGoNext()
                     ? 'bg-indigo-600 hover:bg-indigo-500'
-                    : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                    : 'bg-stone-200 text-stone-400 cursor-not-allowed'
                 )}
               >
                 Next
@@ -913,7 +913,7 @@ export default function PersonaBuilder({
                   'flex items-center gap-2 px-6 py-2 rounded-lg transition-colors',
                   canGoNext() && !saving
                     ? 'bg-green-600 hover:bg-green-500'
-                    : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                    : 'bg-stone-200 text-stone-400 cursor-not-allowed'
                 )}
               >
                 {saving ? (

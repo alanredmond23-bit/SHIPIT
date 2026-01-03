@@ -27,7 +27,7 @@ export default function WorkflowsPage() {
         <div className="h-[calc(100vh-3.5rem)] lg:h-screen flex flex-col">
           {/* Success message */}
           {savedMessage && (
-            <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg">
+            <div className="absolute top-16 left-1/2 -translate-x-1/2 z-50 bg-green-500 text-stone-900 px-6 py-3 rounded-lg shadow-lg">
               {savedMessage}
             </div>
           )}

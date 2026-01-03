@@ -384,7 +384,7 @@ export function WorkflowCanvas({
               x={ctrl1X}
               y={ctrl1Y - 10}
               textAnchor="middle"
-              className="text-xs fill-slate-400"
+              className="text-xs fill-stone-400"
             >
               {transition.name}
             </text>
@@ -425,18 +425,18 @@ export function WorkflowCanvas({
             }}
           >
             <span className="text-2xl mb-1">{STATE_ICONS[state.state_type]}</span>
-            <span className="text-sm font-medium text-slate-700 truncate px-2 max-w-full">
+            <span className="text-sm font-medium text-stone-300 truncate px-2 max-w-full">
               {state.name}
             </span>
             {state.action_type && (
-              <span className="text-xs text-slate-500">{state.action_type}</span>
+              <span className="text-xs text-stone-400">{state.action_type}</span>
             )}
           </div>
 
           {/* Connection points - Touch-friendly size */}
           <div
             className={`absolute -right-3 top-1/2 -translate-y-1/2 w-10 h-10 md:w-6 md:h-6 rounded-full border-2 flex items-center justify-center cursor-pointer transition-all touch-manipulation ${
-              isConnecting ? 'bg-indigo-500 border-indigo-600' : 'bg-white border-slate-300 hover:border-indigo-500 active:border-indigo-600'
+              isConnecting ? 'bg-indigo-500 border-indigo-600' : 'bg-white border-stone-300 hover:border-indigo-500 active:border-indigo-600'
             }`}
             onClick={(e) => handleConnectorClick(e, state.id)}
             onTouchEnd={(e) => {
@@ -450,7 +450,7 @@ export function WorkflowCanvas({
             className={`absolute -left-3 top-1/2 -translate-y-1/2 w-10 h-10 md:w-6 md:h-6 rounded-full border-2 flex items-center justify-center cursor-pointer transition-all touch-manipulation ${
               isConnecting && connectingFromId !== state.id
                 ? 'bg-green-500 border-green-600'
-                : 'bg-white border-slate-300 hover:border-green-500 active:border-green-600'
+                : 'bg-white border-stone-300 hover:border-green-500 active:border-green-600'
             }`}
             onClick={(e) => {
               if (isConnecting && connectingFromId && connectingFromId !== state.id) {
@@ -474,7 +474,7 @@ export function WorkflowCanvas({
   return (
     <div
       ref={canvasRef}
-      className="relative w-full h-full bg-slate-50 overflow-hidden touch-none"
+      className="relative w-full h-full bg-stone-50 overflow-hidden touch-none"
       style={{
         backgroundImage: `radial-gradient(circle, #cbd5e1 1px, transparent 1px)`,
         backgroundSize: `${20 * scale}px ${20 * scale}px`,
@@ -529,14 +529,14 @@ export function WorkflowCanvas({
       <div className="absolute top-4 left-4 flex gap-2 bg-white rounded-lg shadow-lg p-2 z-10">
         <button
           onClick={() => setScale((s) => Math.min(2, s * 1.2))}
-          className="p-2 md:p-1.5 hover:bg-slate-100 active:bg-slate-200 rounded touch-manipulation min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
+          className="p-2 md:p-1.5 hover:bg-stone-100 active:bg-stone-200 rounded touch-manipulation min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
           title="Zoom In"
         >
           <span className="text-base md:text-sm">🔍+</span>
         </button>
         <button
           onClick={() => setScale((s) => Math.max(0.25, s * 0.8))}
-          className="p-2 md:p-1.5 hover:bg-slate-100 active:bg-slate-200 rounded touch-manipulation min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
+          className="p-2 md:p-1.5 hover:bg-stone-100 active:bg-stone-200 rounded touch-manipulation min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
           title="Zoom Out"
         >
           <span className="text-base md:text-sm">🔍-</span>
@@ -546,13 +546,13 @@ export function WorkflowCanvas({
             setScale(1);
             setPan({ x: 0, y: 0 });
           }}
-          className="p-2 md:p-1.5 hover:bg-slate-100 active:bg-slate-200 rounded touch-manipulation min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
+          className="p-2 md:p-1.5 hover:bg-stone-100 active:bg-stone-200 rounded touch-manipulation min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0 flex items-center justify-center"
           title="Reset View"
         >
           <span className="text-base md:text-sm">⌂</span>
         </button>
-        <div className="w-px bg-slate-200 hidden md:block" />
-        <span className="text-sm text-slate-500 self-center px-2 hidden md:inline">
+        <div className="w-px bg-stone-200 hidden md:block" />
+        <span className="text-sm text-stone-400 self-center px-2 hidden md:inline">
           {Math.round(scale * 100)}%
         </span>
       </div>
@@ -563,14 +563,14 @@ export function WorkflowCanvas({
           {(['start', 'action', 'decision', 'parallel', 'wait', 'end'] as const).map((type) => (
             <button
               key={type}
-              className="flex flex-col items-center p-3 md:p-2 hover:bg-slate-100 active:bg-slate-200 rounded min-w-[64px] md:min-w-[60px] touch-manipulation"
+              className="flex flex-col items-center p-3 md:p-2 hover:bg-stone-100 active:bg-stone-200 rounded min-w-[64px] md:min-w-[60px] touch-manipulation"
               onClick={() => onStateAdd({ x: 200, y: 200 }, type)}
               title={`Add ${type} state`}
             >
               <span className="text-2xl md:text-xl mb-1" style={{ color: STATE_COLORS[type] }}>
                 {STATE_ICONS[type]}
               </span>
-              <span className="text-xs text-slate-500 capitalize whitespace-nowrap">{type}</span>
+              <span className="text-xs text-stone-400 capitalize whitespace-nowrap">{type}</span>
             </button>
           ))}
         </div>

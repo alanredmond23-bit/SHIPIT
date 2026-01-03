@@ -1,7 +1,5 @@
 import '@testing-library/jest-dom';
-import { vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
-import { afterEach, beforeAll } from 'vitest';
 
 // Cleanup after each test
 afterEach(() => {
@@ -9,12 +7,12 @@ afterEach(() => {
 });
 
 // Mock Next.js router
-vi.mock('next/navigation', () => ({
+jest.mock('next/navigation', () => ({
   useRouter: () => ({
-    push: vi.fn(),
-    replace: vi.fn(),
-    prefetch: vi.fn(),
-    back: vi.fn(),
+    push: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+    back: jest.fn(),
     pathname: '/',
     query: {},
     asPath: '/',
@@ -24,24 +22,22 @@ vi.mock('next/navigation', () => ({
 }));
 
 // Mock Next.js link
-vi.mock('next/link', () => ({
-  default: ({ children, href }: any) => {
-    return <a href={href}>{children}</a>;
-  },
+jest.mock('next/link', () => ({
+  default: ({ children, href }: any) => children,
 }));
 
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi.fn().mockImplementation((query) => ({
+  value: jest.fn().mockImplementation((query) => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
+    addListener: jest.fn(),
+    removeListener: jest.fn(),
+    addEventListener: jest.fn(),
+    removeEventListener: jest.fn(),
+    dispatchEvent: jest.fn(),
   })),
 });
 
@@ -65,7 +61,7 @@ global.ResizeObserver = class ResizeObserver {
 } as any;
 
 // Mock fetch
-global.fetch = vi.fn();
+global.fetch = jest.fn();
 
 // Mock EventSource for SSE
 global.EventSource = class EventSource {
@@ -90,11 +86,13 @@ global.EventSource = class EventSource {
 // Suppress console errors in tests
 beforeAll(() => {
   const originalError = console.error;
-  vi.spyOn(console, 'error').mockImplementation((...args) => {
+  jest.spyOn(console, 'error').mockImplementation((...args) => {
     // Filter out known React warnings
     if (
       typeof args[0] === 'string' &&
       (args[0].includes('Warning: ReactDOM.render') ||
+        args[0].includes('Warning: An update to') ||
+        args[0].includes('act(...)') ||
         args[0].includes('Not implemented: HTMLFormElement.prototype.submit'))
     ) {
       return;
@@ -128,4 +126,17 @@ if (typeof crypto === 'undefined') {
   (global as any).crypto = {
     randomUUID: () => Math.random().toString(36).substring(2, 15),
   };
+}
+
+// Mock TextEncoder/TextDecoder
+if (typeof TextEncoder === 'undefined') {
+  const { TextEncoder: NodeTextEncoder, TextDecoder: NodeTextDecoder } = require('util');
+  (global as any).TextEncoder = NodeTextEncoder;
+  (global as any).TextDecoder = NodeTextDecoder;
+}
+
+// Mock ReadableStream if not available
+if (typeof ReadableStream === 'undefined') {
+  const { ReadableStream: NodeReadableStream } = require('stream/web');
+  (global as any).ReadableStream = NodeReadableStream;
 }

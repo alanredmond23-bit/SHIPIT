@@ -452,6 +452,12 @@ export function useBenchmarkEngine() {
     );
   }, []);
 
+  // Clear all selections
+  const clearSelection = useCallback(() => {
+    setSelectedModels([]);
+    setSelectedBenchmarks([]);
+  }, []);
+
   return {
     // State
     models,
@@ -473,6 +479,7 @@ export function useBenchmarkEngine() {
     setProviderFilter,
     toggleModel,
     toggleBenchmark,
+    clearSelection,
     refreshData,
 
     // Queries

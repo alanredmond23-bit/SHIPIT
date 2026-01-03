@@ -444,7 +444,7 @@ export default function VoiceChat({
       case 'sad':
         return <Frown className="w-4 h-4 text-blue-400" />;
       case 'neutral':
-        return <Meh className="w-4 h-4 text-slate-400" />;
+        return <Meh className="w-4 h-4 text-stone-500" />;
       default:
         return null;
     }
@@ -488,16 +488,16 @@ export default function VoiceChat({
   const isActive = status !== 'idle';
 
   return (
-    <div className="flex flex-col h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-white">
+    <div className="flex flex-col h-screen bg-gradient-to-br from-stone-50 via-stone-50 to-stone-50 text-stone-900">
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 bg-slate-900/50 backdrop-blur-sm border-b border-slate-800">
+      <div className="flex items-center justify-between px-6 py-4 bg-white/50 backdrop-blur-sm border-b border-stone-200">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-indigo-600/20 rounded-xl">
             <Radio className="w-6 h-6 text-indigo-400" />
           </div>
           <div>
             <h1 className="text-xl font-semibold">Voice Chat</h1>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-stone-500">
               {isActive ? 'Connected' : 'Ready to connect'}
             </p>
           </div>
@@ -506,7 +506,7 @@ export default function VoiceChat({
         <div className="flex items-center gap-3">
           {/* Network Quality */}
           {isActive && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-lg">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-stone-100/50 rounded-lg">
               {networkQuality === 'excellent' ? (
                 <Wifi className="w-4 h-4 text-green-400" />
               ) : networkQuality === 'good' ? (
@@ -520,8 +520,8 @@ export default function VoiceChat({
 
           {/* Call Duration */}
           {isActive && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-800/50 rounded-lg">
-              <Clock className="w-4 h-4 text-slate-400" />
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-stone-100/50 rounded-lg">
+              <Clock className="w-4 h-4 text-stone-500" />
               <span className="text-sm font-mono">{formatDuration(callDuration)}</span>
             </div>
           )}
@@ -533,8 +533,8 @@ export default function VoiceChat({
             className={clsx(
               'p-2 rounded-lg transition-colors',
               isActive
-                ? 'bg-slate-800/30 text-slate-600 cursor-not-allowed'
-                : 'bg-slate-800 hover:bg-slate-700'
+                ? 'bg-stone-100/30 text-stone-400 cursor-not-allowed'
+                : 'bg-stone-100 hover:bg-stone-200'
             )}
           >
             <Settings className="w-5 h-5" />
@@ -562,7 +562,7 @@ export default function VoiceChat({
               {status === 'error' && 'Connection error'}
             </p>
             {metrics.totalTurns > 0 && (
-              <p className="text-sm text-slate-400 mt-1">
+              <p className="text-sm text-stone-500 mt-1">
                 {metrics.totalTurns} {metrics.totalTurns === 1 ? 'turn' : 'turns'} • Latency:{' '}
                 {metrics.latency}ms
               </p>
@@ -580,7 +580,7 @@ export default function VoiceChat({
                   'flex-1 rounded-full transition-all duration-75',
                   status === 'listening' || status === 'speaking'
                     ? 'bg-gradient-to-t from-indigo-600 to-indigo-400'
-                    : 'bg-slate-700'
+                    : 'bg-stone-200'
                 )}
                 style={{
                   height: `${Math.max(4, value * 100)}%`,
@@ -596,10 +596,10 @@ export default function VoiceChat({
           {!isActive ? (
             <button
               onClick={startSession}
-              className="group relative w-32 h-32 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 transition-all duration-300 shadow-2xl shadow-indigo-500/50 hover:shadow-indigo-500/70 active:scale-95"
+              className="group relative w-32 h-32 rounded-full bg-gradient-to-br from-indigo-500 to-teal-500 hover:from-indigo-400 hover:to-teal-500 transition-all duration-300 shadow-2xl shadow-indigo-500/50 hover:shadow-indigo-500/70 active:scale-95"
             >
               <div className="absolute inset-0 rounded-full bg-white/20 animate-pulse" />
-              <Phone className="w-12 h-12 text-white mx-auto" />
+              <Phone className="w-12 h-12 text-stone-900 mx-auto" />
               <p className="text-sm font-medium mt-2">Start Call</p>
             </button>
           ) : (
@@ -607,7 +607,7 @@ export default function VoiceChat({
               onClick={endSession}
               className="group relative w-32 h-32 rounded-full bg-gradient-to-br from-red-500 to-red-600 hover:from-red-400 hover:to-red-500 transition-all duration-300 shadow-2xl shadow-red-500/50 hover:shadow-red-500/70 active:scale-95"
             >
-              <PhoneOff className="w-12 h-12 text-white mx-auto" />
+              <PhoneOff className="w-12 h-12 text-stone-900 mx-auto" />
               <p className="text-sm font-medium mt-2">End Call</p>
             </button>
           )}
@@ -622,7 +622,7 @@ export default function VoiceChat({
                 'p-4 rounded-full transition-all',
                 isMuted
                   ? 'bg-red-600 hover:bg-red-500'
-                  : 'bg-slate-800 hover:bg-slate-700'
+                  : 'bg-stone-100 hover:bg-stone-200'
               )}
             >
               {isMuted ? <VolumeX className="w-6 h-6" /> : <Volume2 className="w-6 h-6" />}
@@ -630,7 +630,7 @@ export default function VoiceChat({
 
             <button
               onClick={() => setShowTranscript(!showTranscript)}
-              className="p-4 rounded-full bg-slate-800 hover:bg-slate-700 transition-all"
+              className="p-4 rounded-full bg-stone-100 hover:bg-stone-200 transition-all"
             >
               <MessageSquare className="w-6 h-6" />
             </button>
@@ -640,15 +640,15 @@ export default function VoiceChat({
 
       {/* Transcript Panel */}
       {showTranscript && transcript.length > 0 && (
-        <div className="h-64 border-t border-slate-800 bg-slate-900/50 backdrop-blur-sm overflow-hidden flex flex-col">
-          <div className="px-6 py-3 border-b border-slate-800 flex items-center justify-between">
+        <div className="h-64 border-t border-stone-200 bg-white/50 backdrop-blur-sm overflow-hidden flex flex-col">
+          <div className="px-6 py-3 border-b border-stone-200 flex items-center justify-between">
             <h3 className="font-semibold flex items-center gap-2">
               <MessageSquare className="w-4 h-4" />
               Transcript
             </h3>
             <button
               onClick={() => setShowTranscript(false)}
-              className="text-slate-400 hover:text-white"
+              className="text-stone-500 hover:text-stone-900"
             >
               <ChevronDown className="w-5 h-5" />
             </button>
@@ -661,15 +661,15 @@ export default function VoiceChat({
                   'flex gap-3 p-3 rounded-xl',
                   entry.role === 'user'
                     ? 'bg-indigo-600/20 ml-8'
-                    : 'bg-slate-800/50 mr-8'
+                    : 'bg-stone-100/50 mr-8'
                 )}
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-medium text-slate-400">
+                    <span className="text-xs font-medium text-stone-500">
                       {entry.role === 'user' ? 'You' : 'AI'}
                     </span>
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-stone-400">
                       {entry.timestamp.toLocaleTimeString()}
                     </span>
                     {entry.confidence !== undefined && entry.confidence < 0.8 && (
@@ -693,12 +693,12 @@ export default function VoiceChat({
       {/* Settings Panel */}
       {showSettings && !isActive && (
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-6">
-          <div className="bg-slate-900 rounded-2xl border border-slate-800 max-w-2xl w-full max-h-[80vh] overflow-y-auto scroll-container">
-            <div className="p-6 border-b border-slate-800 flex items-center justify-between">
+          <div className="bg-white rounded-2xl border border-stone-200 max-w-2xl w-full max-h-[80vh] overflow-y-auto scroll-container">
+            <div className="p-6 border-b border-stone-200 flex items-center justify-between">
               <h2 className="text-xl font-semibold">Voice Settings</h2>
               <button
                 onClick={() => setShowSettings(false)}
-                className="p-2 hover:bg-slate-800 rounded-lg"
+                className="p-2 hover:bg-stone-100 rounded-lg"
               >
                 <ChevronDown className="w-5 h-5" />
               </button>
@@ -713,7 +713,7 @@ export default function VoiceChat({
                   onChange={(e) =>
                     setConfig({ ...config, ttsProvider: e.target.value as any })
                   }
-                  className="w-full px-4 py-2 bg-slate-800 rounded-lg border border-slate-700 focus:border-indigo-500 focus:outline-none"
+                  className="w-full px-4 py-2 bg-stone-100 rounded-lg border border-stone-200 focus:border-indigo-500 focus:outline-none"
                 >
                   <option value="openai">OpenAI</option>
                   <option value="elevenlabs">ElevenLabs</option>
@@ -727,7 +727,7 @@ export default function VoiceChat({
                 <select
                   value={config.voice}
                   onChange={(e) => setConfig({ ...config, voice: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-800 rounded-lg border border-slate-700 focus:border-indigo-500 focus:outline-none"
+                  className="w-full px-4 py-2 bg-stone-100 rounded-lg border border-stone-200 focus:border-indigo-500 focus:outline-none"
                 >
                   {availableVoices.map((voice) => (
                     <option key={voice.id} value={voice.id}>
@@ -747,7 +747,7 @@ export default function VoiceChat({
                 <select
                   value={config.language}
                   onChange={(e) => setConfig({ ...config, language: e.target.value })}
-                  className="w-full px-4 py-2 bg-slate-800 rounded-lg border border-slate-700 focus:border-indigo-500 focus:outline-none"
+                  className="w-full px-4 py-2 bg-stone-100 rounded-lg border border-stone-200 focus:border-indigo-500 focus:outline-none"
                 >
                   <option value="en">English</option>
                   <option value="es">Spanish</option>
@@ -769,7 +769,7 @@ export default function VoiceChat({
                   onChange={(e) =>
                     setConfig({ ...config, responseStyle: e.target.value as any })
                   }
-                  className="w-full px-4 py-2 bg-slate-800 rounded-lg border border-slate-700 focus:border-indigo-500 focus:outline-none"
+                  className="w-full px-4 py-2 bg-stone-100 rounded-lg border border-stone-200 focus:border-indigo-500 focus:outline-none"
                 >
                   <option value="concise">Concise (Quick responses)</option>
                   <option value="conversational">Conversational (Natural flow)</option>
@@ -787,7 +787,7 @@ export default function VoiceChat({
                   onChange={(e) =>
                     setConfig({ ...config, interruptSensitivity: e.target.value as any })
                   }
-                  className="w-full px-4 py-2 bg-slate-800 rounded-lg border border-slate-700 focus:border-indigo-500 focus:outline-none"
+                  className="w-full px-4 py-2 bg-stone-100 rounded-lg border border-stone-200 focus:border-indigo-500 focus:outline-none"
                 >
                   <option value="low">Low (Finish responses)</option>
                   <option value="medium">Medium (Balanced)</option>
@@ -807,7 +807,7 @@ export default function VoiceChat({
                   }
                   placeholder="E.g., Act as a friendly tutor who explains things simply..."
                   rows={3}
-                  className="w-full px-4 py-2 bg-slate-800 rounded-lg border border-slate-700 focus:border-indigo-500 focus:outline-none resize-none"
+                  className="w-full px-4 py-2 bg-stone-100 rounded-lg border border-stone-200 focus:border-indigo-500 focus:outline-none resize-none"
                 />
               </div>
             </div>
@@ -821,7 +821,7 @@ export default function VoiceChat({
           <div className="text-center">
             <Loader2 className="w-12 h-12 text-indigo-400 animate-spin mx-auto mb-4" />
             <p className="text-lg font-medium">Connecting...</p>
-            <p className="text-sm text-slate-400 mt-2">Setting up voice session</p>
+            <p className="text-sm text-stone-500 mt-2">Setting up voice session</p>
           </div>
         </div>
       )}

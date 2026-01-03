@@ -57,11 +57,11 @@ export function AuthGuard({
     return (
       <>
         {fallback || (
-          <div className="min-h-screen flex items-center justify-center bg-slate-950">
+          <div className="min-h-screen flex items-center justify-center bg-stone-100">
             <div className="text-center">
               <div className="mb-4">
                 <svg
-                  className="animate-spin h-12 w-12 mx-auto text-purple-500"
+                  className="animate-spin h-12 w-12 mx-auto text-teal-500"
                   viewBox="0 0 24 24"
                 >
                   <circle
@@ -80,7 +80,7 @@ export function AuthGuard({
                   />
                 </svg>
               </div>
-              <p className="text-slate-400">Loading...</p>
+              <p className="text-stone-500">Loading...</p>
             </div>
           </div>
         )}

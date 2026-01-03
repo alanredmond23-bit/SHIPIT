@@ -111,10 +111,10 @@ function ResultHeader({ result }: { result: ToolResult }) {
             <XCircle className="w-5 h-5 text-red-400 mt-0.5" />
           )}
           <div>
-            <div className="font-semibold text-white">
+            <div className="font-semibold text-stone-900">
               {result.toolName.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
             </div>
-            <div className="flex items-center gap-2 mt-1 text-xs text-slate-400">
+            <div className="flex items-center gap-2 mt-1 text-xs text-stone-500">
               <Clock className="w-3 h-3" />
               <span>{result.duration}ms</span>
               <span>•</span>
@@ -123,7 +123,7 @@ function ResultHeader({ result }: { result: ToolResult }) {
             <div className="flex items-center gap-2 mt-1">
               <button
                 onClick={copyResultId}
-                className="text-xs text-slate-500 hover:text-slate-300 flex items-center gap-1"
+                className="text-xs text-stone-400 hover:text-stone-700 flex items-center gap-1"
               >
                 <Copy className="w-3 h-3" />
                 {copied ? 'Copied!' : result.id.slice(0, 8)}
@@ -175,14 +175,14 @@ function WebSearchDisplay({ result }: { result: WebSearchResult }) {
     <div className="space-y-3">
       {/* Search Query */}
       <div className="card">
-        <div className="flex items-center gap-2 text-slate-300 mb-2">
+        <div className="flex items-center gap-2 text-stone-700 mb-2">
           <Search className="w-4 h-4 text-indigo-400" />
           <span className="text-sm font-medium">Search Query</span>
         </div>
-        <div className="text-white font-mono text-sm bg-slate-800 p-3 rounded-lg">
+        <div className="text-stone-900 font-mono text-sm bg-stone-100 p-3 rounded-lg">
           {result.data.query}
         </div>
-        <div className="text-xs text-slate-500 mt-2">
+        <div className="text-xs text-stone-400 mt-2">
           {result.data.totalResults} results found
         </div>
       </div>
@@ -198,21 +198,21 @@ function WebSearchDisplay({ result }: { result: WebSearchResult }) {
               <div className="flex-1 min-w-0">
                 <div className="flex items-start gap-2">
                   {expandedResults.has(index) ? (
-                    <ChevronDown className="w-4 h-4 text-slate-400 mt-1 flex-shrink-0" />
+                    <ChevronDown className="w-4 h-4 text-stone-500 mt-1 flex-shrink-0" />
                   ) : (
-                    <ChevronRight className="w-4 h-4 text-slate-400 mt-1 flex-shrink-0" />
+                    <ChevronRight className="w-4 h-4 text-stone-500 mt-1 flex-shrink-0" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-white truncate">{item.title}</h3>
+                    <h3 className="font-medium text-stone-900 truncate">{item.title}</h3>
                     <div className="text-xs text-indigo-400 mt-0.5">{item.displayUrl}</div>
                   </div>
                 </div>
 
                 {expandedResults.has(index) && (
                   <div className="mt-3 ml-6 space-y-2">
-                    <p className="text-sm text-slate-300 leading-relaxed">{item.snippet}</p>
+                    <p className="text-sm text-stone-700 leading-relaxed">{item.snippet}</p>
                     {item.datePublished && (
-                      <div className="text-xs text-slate-500">
+                      <div className="text-xs text-stone-400">
                         Published: {new Date(item.datePublished).toLocaleDateString()}
                       </div>
                     )}
@@ -237,12 +237,12 @@ function WebSearchDisplay({ result }: { result: WebSearchResult }) {
       {/* Related Searches */}
       {result.data.relatedSearches && result.data.relatedSearches.length > 0 && (
         <div className="card">
-          <div className="text-sm font-medium text-slate-300 mb-2">Related Searches</div>
+          <div className="text-sm font-medium text-stone-700 mb-2">Related Searches</div>
           <div className="flex flex-wrap gap-2">
             {result.data.relatedSearches.map((search, index) => (
               <div
                 key={index}
-                className="px-3 py-1 bg-slate-800 rounded-full text-xs text-slate-300"
+                className="px-3 py-1 bg-stone-100 rounded-full text-xs text-stone-700"
               >
                 {search}
               </div>
@@ -272,21 +272,21 @@ function CodeExecutionDisplay({ result }: { result: CodeExecutionResult }) {
     <div className="space-y-3">
       {/* Execution Info */}
       <div className="card">
-        <div className="flex items-center gap-2 text-slate-300 mb-3">
+        <div className="flex items-center gap-2 text-stone-700 mb-3">
           <Code className="w-4 h-4 text-indigo-400" />
           <span className="text-sm font-medium">Code Execution</span>
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <div className="text-xs text-slate-500">Language</div>
-            <div className="text-sm text-white mt-1 capitalize">{result.data.language}</div>
+            <div className="text-xs text-stone-400">Language</div>
+            <div className="text-sm text-stone-900 mt-1 capitalize">{result.data.language}</div>
           </div>
           <div>
-            <div className="text-xs text-slate-500">Execution Time</div>
-            <div className="text-sm text-white mt-1">{result.data.executionTime}ms</div>
+            <div className="text-xs text-stone-400">Execution Time</div>
+            <div className="text-sm text-stone-900 mt-1">{result.data.executionTime}ms</div>
           </div>
           <div>
-            <div className="text-xs text-slate-500">Exit Code</div>
+            <div className="text-xs text-stone-400">Exit Code</div>
             <div
               className={clsx(
                 'text-sm mt-1',
@@ -297,7 +297,7 @@ function CodeExecutionDisplay({ result }: { result: CodeExecutionResult }) {
             </div>
           </div>
           <div>
-            <div className="text-xs text-slate-500">Status</div>
+            <div className="text-xs text-stone-400">Status</div>
             <div className="text-sm mt-1">
               {result.data.timedOut ? (
                 <span className="text-amber-400">Timed Out</span>
@@ -320,8 +320,8 @@ function CodeExecutionDisplay({ result }: { result: CodeExecutionResult }) {
               className={clsx(
                 'px-3 py-1 rounded-lg text-sm font-medium transition-colors',
                 activeTab === 'stdout'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-slate-800 text-slate-400 hover:text-white'
+                  ? 'bg-indigo-600 text-stone-900'
+                  : 'bg-stone-100 text-stone-500 hover:text-stone-900'
               )}
             >
               <div className="flex items-center gap-2">
@@ -334,8 +334,8 @@ function CodeExecutionDisplay({ result }: { result: CodeExecutionResult }) {
               className={clsx(
                 'px-3 py-1 rounded-lg text-sm font-medium transition-colors',
                 activeTab === 'stderr'
-                  ? 'bg-indigo-600 text-white'
-                  : 'bg-slate-800 text-slate-400 hover:text-white'
+                  ? 'bg-indigo-600 text-stone-900'
+                  : 'bg-stone-100 text-stone-500 hover:text-stone-900'
               )}
             >
               <div className="flex items-center gap-2">
@@ -346,14 +346,14 @@ function CodeExecutionDisplay({ result }: { result: CodeExecutionResult }) {
           </div>
           <button
             onClick={copyOutput}
-            className="p-2 bg-slate-800 rounded-lg hover:bg-slate-700 transition-colors"
+            className="p-2 bg-stone-100 rounded-lg hover:bg-stone-200 transition-colors"
           >
-            <Copy className="w-4 h-4 text-slate-400" />
+            <Copy className="w-4 h-4 text-stone-500" />
           </button>
         </div>
 
-        <div className="bg-slate-950 rounded-lg p-4 overflow-x-auto">
-          <pre className="text-xs font-mono text-slate-300 whitespace-pre-wrap break-words">
+        <div className="bg-stone-50 rounded-lg p-4 overflow-x-auto">
+          <pre className="text-xs font-mono text-stone-700 whitespace-pre-wrap break-words">
             {activeTab === 'stdout'
               ? result.data.stdout || '(no output)'
               : result.data.stderr || '(no errors)'}
@@ -377,8 +377,8 @@ function LoadingState() {
       <div className="flex items-center gap-3">
         <Loader2 className="w-5 h-5 text-indigo-400 animate-spin" />
         <div>
-          <div className="font-medium text-white">Executing tool...</div>
-          <div className="text-sm text-slate-400 mt-1">Please wait</div>
+          <div className="font-medium text-stone-900">Executing tool...</div>
+          <div className="text-sm text-stone-500 mt-1">Please wait</div>
         </div>
       </div>
     </div>
@@ -395,7 +395,7 @@ function ErrorState({ error }: { error: string }) {
         <XCircle className="w-5 h-5 text-red-400 mt-0.5" />
         <div>
           <div className="font-medium text-red-400">Tool Execution Failed</div>
-          <div className="text-sm text-slate-300 mt-2">{error}</div>
+          <div className="text-sm text-stone-700 mt-2">{error}</div>
         </div>
       </div>
     </div>
@@ -408,7 +408,7 @@ function ErrorState({ error }: { error: string }) {
 function EmptyState() {
   return (
     <div className="card text-center py-8">
-      <div className="text-slate-500">
+      <div className="text-stone-400">
         <Code className="w-12 h-12 mx-auto mb-3 opacity-50" />
         <p>No tool results to display</p>
         <p className="text-sm mt-1">Execute a tool to see results here</p>

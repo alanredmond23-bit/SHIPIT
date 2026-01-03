@@ -16,7 +16,7 @@ import {
   Info,
   X,
 } from 'lucide-react';
-import { useBenchmarkEngine } from '@/hooks/useBenchmarkEngine';
+import { useBenchmarkEngine, type BenchmarkCategory } from '@/hooks/useBenchmarkEngine';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { AccentButton } from '@/components/ui/AccentButton';
 import { MinimalButton } from '@/components/ui/MinimalButton';
@@ -55,11 +55,11 @@ export function BenchmarkDashboard() {
     isLoading,
   } = useBenchmarkEngine();
 
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<BenchmarkCategory | null>(null);
   const [expandedUseCase, setExpandedUseCase] = useState<string | null>(null);
   const [showCompare, setShowCompare] = useState(false);
 
-  const categories = ['coding', 'math', 'reasoning', 'knowledge'];
+  const categories: BenchmarkCategory[] = ['coding', 'math', 'reasoning', 'knowledge'];
 
   // Get leaderboard based on category filter
   const displayLeaderboard = selectedCategory
@@ -197,7 +197,7 @@ export function BenchmarkDashboard() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className="font-medium text-warm-900">{entry.name}</span>
+                      <span className="font-medium text-warm-900">{entry.modelName}</span>
                     </td>
                     <td className="px-6 py-4">
                       <span
@@ -259,7 +259,7 @@ export function BenchmarkDashboard() {
                     <div className="flex items-center gap-3">
                       {recommendation && (
                         <span className="text-sm font-medium text-teal-600">
-                          {recommendation.modelName}
+                          {recommendation.recommendedModel}
                         </span>
                       )}
                       <ChevronRight
@@ -277,14 +277,12 @@ export function BenchmarkDashboard() {
                           <span className="text-xs text-warm-500 uppercase">Why?</span>
                           <p className="text-sm text-warm-700">{recommendation.reason}</p>
                         </div>
-                        {recommendation.score && (
-                          <div>
-                            <span className="text-xs text-warm-500 uppercase">Score</span>
-                            <p className="text-sm font-medium text-warm-900">
-                              {recommendation.score.toFixed(1)}%
-                            </p>
-                          </div>
-                        )}
+                        <div>
+                          <span className="text-xs text-warm-500 uppercase">Key Benchmarks</span>
+                          <p className="text-sm font-medium text-warm-900">
+                            {recommendation.keyBenchmarks.join(', ')}
+                          </p>
+                        </div>
                         <div className="flex gap-2">
                           {recommendation.alternatives.map((alt) => (
                             <span

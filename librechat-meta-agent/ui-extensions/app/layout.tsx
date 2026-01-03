@@ -1,6 +1,14 @@
 import type { Metadata, Viewport } from 'next';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
+
+// Inter font - optimized for screens, perfect for minimalist UI
+const inter = Inter({
+  subsets: ['latin'],
+  display: 'swap',
+  variable: '--font-inter',
+});
 
 export const metadata: Metadata = {
   title: 'Meta Agent - AI-Powered Assistant',
@@ -61,10 +69,10 @@ export const viewport: Viewport = {
   userScalable: true,
   viewportFit: 'cover',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f8fafc' },
-    { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
+    { media: '(prefers-color-scheme: light)', color: '#F8FAFA' },
+    { media: '(prefers-color-scheme: dark)', color: '#0B0F10' },
   ],
-  colorScheme: 'dark',
+  colorScheme: 'dark light',
 };
 
 export default function RootLayout({
@@ -73,7 +81,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className={`${inter.variable} dark`} suppressHydrationWarning>
       <head>
         {/* PWA Icons */}
         <link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png" />
@@ -89,18 +97,35 @@ export default function RootLayout({
         <meta name="mobile-web-app-capable" content="yes" />
         <meta name="apple-touch-fullscreen" content="yes" />
 
-        {/* Windows Tile */}
-        <meta name="msapplication-TileColor" content="#0f172a" />
+        {/* Windows Tile - Night-Light Teal */}
+        <meta name="msapplication-TileColor" content="#0B0F10" />
         <meta name="msapplication-config" content="/browserconfig.xml" />
 
         {/* Disable automatic detection of phone numbers */}
         <meta name="format-detection" content="telephone=no" />
 
-        {/* Theme color for different states */}
-        <meta name="theme-color" content="#0f172a" media="(prefers-color-scheme: dark)" />
-        <meta name="theme-color" content="#f8fafc" media="(prefers-color-scheme: light)" />
+        {/* Theme color - Dark mode default */}
+        <meta name="theme-color" content="#0B0F10" media="(prefers-color-scheme: dark)" />
+        <meta name="theme-color" content="#F8FAFA" media="(prefers-color-scheme: light)" />
+
+        {/* Prevent flash of wrong theme */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var theme = localStorage.getItem('meta-agent-theme');
+                  if (theme === 'light') {
+                    document.documentElement.classList.remove('dark');
+                    document.documentElement.classList.add('light');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
       </head>
-      <body className="bg-slate-950 text-white antialiased overscroll-none">
+      <body className="antialiased overscroll-none font-sans" style={{ backgroundColor: 'var(--bg-0)', color: 'var(--text-primary)' }}>
         <Providers>{children}</Providers>
       </body>
     </html>

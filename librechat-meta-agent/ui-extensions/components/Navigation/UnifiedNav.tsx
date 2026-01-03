@@ -96,7 +96,7 @@ interface NavItem {
 const mainNavItems: NavItem[] = [
   { name: 'Dashboard', href: '/', icon: 'Home', description: 'Overview & stats', color: 'text-blue-400' },
   { name: 'Chat', href: '/chat', icon: 'Chat', description: 'AI conversation', color: 'text-green-400' },
-  { name: 'Thinking', href: '/thinking', icon: 'Brain', description: 'Extended reasoning', badge: 'NEW', color: 'text-purple-400' },
+  { name: 'Thinking', href: '/thinking', icon: 'Brain', description: 'Extended reasoning', badge: 'NEW', color: 'text-teal-400' },
   { name: 'Research', href: '/research', icon: 'Research', description: 'Deep research', badge: 'NEW', color: 'text-cyan-400' },
 ];
 
@@ -112,7 +112,7 @@ const toolsNavItems: NavItem[] = [
   { name: 'Tasks', href: '/tasks', icon: 'Calendar', description: 'Automation', badge: 'NEW', color: 'text-teal-400' },
   { name: 'Workspace', href: '/workspace', icon: 'Google', description: 'Google apps', badge: 'NEW', color: 'text-emerald-400' },
   { name: 'Memory', href: '/memory', icon: 'Memory', description: 'Saved context', color: 'text-violet-400' },
-  { name: 'Tools', href: '/tools', icon: 'Tools', description: 'MCP & more', color: 'text-slate-400' },
+  { name: 'Tools', href: '/tools', icon: 'Tools', description: 'MCP & more', color: 'text-stone-500' },
 ];
 
 export function UnifiedNav() {
@@ -147,16 +147,16 @@ export function UnifiedNav() {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <span className={`font-medium ${isActive ? 'text-white' : 'text-slate-300'}`}>
+            <span className={`font-medium ${isActive ? 'text-stone-900' : 'text-stone-700'}`}>
               {item.name}
             </span>
             {item.badge && (
-              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-purple-500 to-pink-500 rounded-full">
+              <span className="px-1.5 py-0.5 text-[10px] font-bold bg-gradient-to-r from-teal-500 to-pink-500 rounded-full">
                 {item.badge}
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-500 truncate">{item.description}</p>
+          <p className="text-xs text-stone-400 truncate">{item.description}</p>
         </div>
       </Link>
     );
@@ -165,10 +165,10 @@ export function UnifiedNav() {
   return (
     <>
       {/* Mobile Header */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-lg border-b border-slate-800 safe-top">
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg border-b border-stone-200 safe-top">
         <div className="flex items-center justify-between px-4 h-14">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/30">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-teal-500 to-pink-500 flex items-center justify-center shadow-lg shadow-teal-500/30">
               <Icons.Brain />
             </div>
             <span className="font-bold text-lg">Meta Agent</span>
@@ -194,7 +194,7 @@ export function UnifiedNav() {
 
       {/* Sidebar */}
       <aside className={`
-        fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-slate-900/98 backdrop-blur-xl border-r border-slate-800 z-50
+        fixed top-0 left-0 h-full w-80 max-w-[85vw] bg-white/98 backdrop-blur-xl border-r border-stone-200 z-50
         transform transition-transform duration-300 ease-out
         lg:w-72 lg:transform-none
         ${isOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full lg:translate-x-0'}
@@ -202,13 +202,13 @@ export function UnifiedNav() {
       aria-hidden={!isOpen && 'true'}>
 
         {/* Logo */}
-        <div className="hidden lg:flex items-center gap-3 px-6 h-16 border-b border-slate-800">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg shadow-purple-500/25">
+        <div className="hidden lg:flex items-center gap-3 px-6 h-16 border-b border-stone-200">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-pink-500 flex items-center justify-center shadow-lg shadow-teal-500/25">
             <Icons.Brain />
           </div>
           <div>
             <h1 className="font-bold text-lg">Meta Agent</h1>
-            <p className="text-xs text-slate-500">AI-Powered Assistant</p>
+            <p className="text-xs text-stone-400">AI-Powered Assistant</p>
           </div>
         </div>
 
@@ -216,7 +216,7 @@ export function UnifiedNav() {
         <nav className="h-[calc(100%-4rem)] lg:h-[calc(100%-4rem)] overflow-y-auto overscroll-contain py-4 px-3 mt-14 lg:mt-0 scroll-smooth">
           {/* Main Section */}
           <div className="mb-6">
-            <h3 className="px-4 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <h3 className="px-4 mb-2 text-xs font-semibold text-stone-400 uppercase tracking-wider">
               Main
             </h3>
             <div className="space-y-1">
@@ -226,7 +226,7 @@ export function UnifiedNav() {
 
           {/* Create Section */}
           <div className="mb-6">
-            <h3 className="px-4 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <h3 className="px-4 mb-2 text-xs font-semibold text-stone-400 uppercase tracking-wider">
               Create
             </h3>
             <div className="space-y-1">
@@ -236,7 +236,7 @@ export function UnifiedNav() {
 
           {/* Tools Section */}
           <div className="mb-6">
-            <h3 className="px-4 mb-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+            <h3 className="px-4 mb-2 text-xs font-semibold text-stone-400 uppercase tracking-wider">
               Tools
             </h3>
             <div className="space-y-1">
@@ -245,24 +245,24 @@ export function UnifiedNav() {
           </div>
 
           {/* Quick Stats */}
-          <div className="mx-3 mt-6 p-4 rounded-xl bg-gradient-to-br from-slate-800 to-slate-800/50 border border-slate-700 mb-safe">
+          <div className="mx-3 mt-6 p-4 rounded-xl bg-gradient-to-br from-stone-100 to-stone-100 border border-stone-200 mb-safe">
             <h4 className="font-medium text-sm mb-3">Today's Usage</h4>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <p className="text-2xl font-bold text-purple-400">247</p>
-                <p className="text-xs text-slate-500">Messages</p>
+                <p className="text-2xl font-bold text-teal-400">247</p>
+                <p className="text-xs text-stone-400">Messages</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-cyan-400">12</p>
-                <p className="text-xs text-slate-500">Research</p>
+                <p className="text-xs text-stone-400">Research</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-pink-400">34</p>
-                <p className="text-xs text-slate-500">Images</p>
+                <p className="text-xs text-stone-400">Images</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-orange-400">8</p>
-                <p className="text-xs text-slate-500">Tasks</p>
+                <p className="text-xs text-stone-400">Tasks</p>
               </div>
             </div>
           </div>
@@ -270,7 +270,7 @@ export function UnifiedNav() {
       </aside>
 
       {/* Bottom Navigation for Mobile */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900/98 backdrop-blur-xl border-t border-slate-800 safe-bottom">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/98 backdrop-blur-xl border-t border-stone-200 safe-bottom">
         <div className="flex justify-around items-center px-2 py-2">
           {[mainNavItems[0], mainNavItems[1], mainNavItems[2], createNavItems[0], toolsNavItems[1]].map((item) => {
             const Icon = Icons[item.icon];
@@ -282,7 +282,7 @@ export function UnifiedNav() {
                 className={`
                   flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl transition-all duration-200
                   min-w-[56px] min-h-[56px] touch-manipulation active:scale-95
-                  ${isActive ? `${item.color} bg-white/10` : 'text-slate-500 hover:text-slate-300 active:bg-white/5'}
+                  ${isActive ? `${item.color} bg-white/10` : 'text-stone-400 hover:text-stone-700 active:bg-white/5'}
                 `}
               >
                 <div className={`transition-transform ${isActive ? 'scale-110' : ''}`}>

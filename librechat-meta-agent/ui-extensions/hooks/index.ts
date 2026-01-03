@@ -9,14 +9,12 @@ export type {
   DecisionStep,
   DecisionOption,
   DecisionResult,
-  BiasWarning,
+  BiasAlert,
 } from './useDecisionEngine';
 
 export type {
-  BenchmarkScore,
-  ModelBenchmarks,
-  ModelComparison,
-  BenchmarkRecommendation,
+  ModelProvider,
+  BenchmarkCategory,
 } from './useBenchmarkEngine';
 
 export type {

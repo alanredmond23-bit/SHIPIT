@@ -37,7 +37,7 @@ export function UserMenu() {
 
   if (loading) {
     return (
-      <div className="w-10 h-10 rounded-full bg-slate-800 animate-pulse" />
+      <div className="w-10 h-10 rounded-full bg-stone-100 animate-pulse" />
     );
   }
 
@@ -46,13 +46,13 @@ export function UserMenu() {
       <div className="flex items-center gap-3">
         <Link
           href="/login"
-          className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition-colors"
+          className="px-4 py-2 text-sm font-medium text-stone-700 hover:text-stone-900 transition-colors"
         >
           Sign In
         </Link>
         <Link
           href="/signup"
-          className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all"
+          className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-teal-600 to-teal-500 rounded-lg hover:from-teal-500 hover:to-teal-400 transition-all shadow-lg shadow-teal-500/25"
         >
           Sign Up
         </Link>
@@ -70,14 +70,14 @@ export function UserMenu() {
     <div className="relative" ref={menuRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-800/50 transition-colors"
+        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-stone-100/50 transition-colors"
       >
-        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-sm font-bold">
+        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center text-sm font-bold shadow-lg shadow-teal-500/30">
           {initials}
         </div>
         <div className="hidden md:block text-left">
           <p className="text-sm font-medium">{user.email}</p>
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-stone-500">
             {user.user_metadata?.full_name || 'User'}
           </p>
         </div>
@@ -98,11 +98,11 @@ export function UserMenu() {
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-64 bg-slate-800 rounded-xl border border-slate-700 shadow-xl overflow-hidden z-50">
+        <div className="absolute right-0 mt-2 w-64 bg-stone-100 rounded-xl border border-stone-200 shadow-xl overflow-hidden z-50">
           {/* User Info */}
-          <div className="p-4 border-b border-slate-700">
+          <div className="p-4 border-b border-stone-200">
             <p className="text-sm font-medium truncate">{user.email}</p>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-stone-500 mt-1">
               {user.user_metadata?.full_name || 'Meta Agent User'}
             </p>
           </div>
@@ -111,7 +111,7 @@ export function UserMenu() {
           <div className="py-2">
             <Link
               href="/profile"
-              className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-slate-700/50 transition-colors"
+              className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-stone-200/50 transition-colors"
               onClick={() => setIsOpen(false)}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -127,7 +127,7 @@ export function UserMenu() {
 
             <Link
               href="/settings"
-              className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-slate-700/50 transition-colors"
+              className="flex items-center gap-3 px-4 py-2 text-sm hover:bg-stone-200/50 transition-colors"
               onClick={() => setIsOpen(false)}
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -147,11 +147,11 @@ export function UserMenu() {
               Settings
             </Link>
 
-            <div className="border-t border-slate-700 my-2" />
+            <div className="border-t border-stone-200 my-2" />
 
             <button
               onClick={handleSignOut}
-              className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-400 hover:bg-slate-700/50 transition-colors"
+              className="flex items-center gap-3 w-full px-4 py-2 text-sm text-red-400 hover:bg-stone-200/50 transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path

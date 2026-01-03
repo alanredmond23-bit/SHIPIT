@@ -112,20 +112,20 @@ export function SignUpForm() {
     <div className="w-full max-w-md">
       {/* Header */}
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-2">Create Account</h1>
-        <p className="text-slate-400">Join Meta Agent and unlock the power of AI</p>
+        <h1 className="text-3xl font-bold mb-2 text-stone-900">Create Account</h1>
+        <p className="text-stone-500">Join Meta Agent and unlock the power of AI</p>
       </div>
 
       {/* Error Message */}
       {error && (
-        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-sm">
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm">
           {error}
         </div>
       )}
 
       {/* Success Message */}
       {success && (
-        <div className="mb-6 p-4 bg-green-500/10 border border-green-500/20 rounded-xl text-green-400 text-sm">
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl text-green-600 text-sm">
           {success}
         </div>
       )}
@@ -135,7 +135,7 @@ export function SignUpForm() {
         <button
           onClick={() => handleOAuthSignIn('google')}
           disabled={loading}
-          className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-white text-slate-900 rounded-xl font-medium hover:bg-slate-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-stone-100 text-stone-900 rounded-xl font-medium hover:bg-stone-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed border border-stone-200"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path
@@ -161,7 +161,7 @@ export function SignUpForm() {
         <button
           onClick={() => handleOAuthSignIn('github')}
           disabled={loading}
-          className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl font-medium hover:bg-slate-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full flex items-center justify-center gap-3 px-4 py-3 bg-stone-900 text-white rounded-xl font-medium hover:bg-stone-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
             <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
@@ -173,17 +173,17 @@ export function SignUpForm() {
       {/* Divider */}
       <div className="relative mb-6">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-slate-700"></div>
+          <div className="w-full border-t border-stone-200"></div>
         </div>
         <div className="relative flex justify-center text-sm">
-          <span className="px-4 bg-slate-950 text-slate-400">Or continue with email</span>
+          <span className="px-4 bg-white text-stone-400">Or continue with email</span>
         </div>
       </div>
 
       {/* Sign Up Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="fullName" className="block text-sm font-medium mb-2">
+          <label htmlFor="fullName" className="block text-sm font-medium mb-2 text-stone-700">
             Full Name
           </label>
           <input
@@ -192,13 +192,13 @@ export function SignUpForm() {
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
             required
-            className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+            className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all text-stone-900 placeholder-stone-400"
             placeholder="John Doe"
           />
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-2">
+          <label htmlFor="email" className="block text-sm font-medium mb-2 text-stone-700">
             Email
           </label>
           <input
@@ -207,13 +207,13 @@ export function SignUpForm() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+            className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all text-stone-900 placeholder-stone-400"
             placeholder="you@example.com"
           />
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-2">
+          <label htmlFor="password" className="block text-sm font-medium mb-2 text-stone-700">
             Password
           </label>
           <input
@@ -222,24 +222,24 @@ export function SignUpForm() {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+            className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all text-stone-900 placeholder-stone-400"
             placeholder="••••••••"
           />
           {passwordStrength && (
             <div className="mt-2">
               <div className="flex items-center justify-between text-xs mb-1">
-                <span className="text-slate-400">Password strength:</span>
-                <span className={`font-medium ${passwordStrength.score <= 2 ? 'text-red-400' : passwordStrength.score <= 3 ? 'text-yellow-400' : passwordStrength.score <= 4 ? 'text-blue-400' : 'text-green-400'}`}>
+                <span className="text-stone-500">Password strength:</span>
+                <span className={`font-medium ${passwordStrength.score <= 2 ? 'text-red-500' : passwordStrength.score <= 3 ? 'text-yellow-600' : passwordStrength.score <= 4 ? 'text-blue-500' : 'text-green-500'}`}>
                   {passwordStrength.label}
                 </span>
               </div>
-              <div className="w-full bg-slate-700 rounded-full h-2">
+              <div className="w-full bg-stone-200 rounded-full h-2">
                 <div
                   className={`h-2 rounded-full transition-all ${passwordStrength.color}`}
                   style={{ width: `${(passwordStrength.score / 5) * 100}%` }}
                 />
               </div>
-              <p className="text-xs text-slate-500 mt-2">
+              <p className="text-xs text-stone-500 mt-2">
                 Use 8+ characters with a mix of letters, numbers & symbols
               </p>
             </div>
@@ -247,7 +247,7 @@ export function SignUpForm() {
         </div>
 
         <div>
-          <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">
+          <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2 text-stone-700">
             Confirm Password
           </label>
           <input
@@ -256,11 +256,11 @@ export function SignUpForm() {
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
-            className="w-full px-4 py-3 bg-slate-800/50 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
+            className="w-full px-4 py-3 bg-stone-50 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-all text-stone-900 placeholder-stone-400"
             placeholder="••••••••"
           />
           {confirmPassword && password !== confirmPassword && (
-            <p className="text-xs text-red-400 mt-1">Passwords do not match</p>
+            <p className="text-xs text-red-500 mt-1">Passwords do not match</p>
           )}
         </div>
 
@@ -270,15 +270,15 @@ export function SignUpForm() {
             type="checkbox"
             checked={acceptTerms}
             onChange={(e) => setAcceptTerms(e.target.checked)}
-            className="w-4 h-4 mt-0.5 bg-slate-800 border-slate-700 rounded focus:ring-2 focus:ring-purple-500"
+            className="w-4 h-4 mt-0.5 bg-stone-100 border-stone-300 rounded focus:ring-2 focus:ring-teal-500 accent-teal-500"
           />
-          <label htmlFor="terms" className="text-sm text-slate-400">
+          <label htmlFor="terms" className="text-sm text-stone-500">
             I agree to the{' '}
-            <Link href="/terms" className="text-purple-400 hover:text-purple-300 transition-colors">
+            <Link href="/terms" className="text-teal-600 hover:text-teal-700 transition-colors">
               Terms of Service
             </Link>{' '}
             and{' '}
-            <Link href="/privacy" className="text-purple-400 hover:text-purple-300 transition-colors">
+            <Link href="/privacy" className="text-teal-600 hover:text-teal-700 transition-colors">
               Privacy Policy
             </Link>
           </label>
@@ -287,7 +287,7 @@ export function SignUpForm() {
         <button
           type="submit"
           disabled={loading || !acceptTerms}
-          className="w-full px-4 py-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl font-medium hover:from-purple-600 hover:to-pink-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full px-4 py-3 bg-teal-500 hover:bg-teal-600 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed text-white"
         >
           {loading ? (
             <span className="flex items-center justify-center gap-2">
@@ -316,9 +316,9 @@ export function SignUpForm() {
       </form>
 
       {/* Sign In Link */}
-      <p className="mt-6 text-center text-sm text-slate-400">
+      <p className="mt-6 text-center text-sm text-stone-500">
         Already have an account?{' '}
-        <Link href="/login" className="text-purple-400 hover:text-purple-300 font-medium transition-colors">
+        <Link href="/login" className="text-teal-600 hover:text-teal-700 font-medium transition-colors">
           Sign in
         </Link>
       </p>

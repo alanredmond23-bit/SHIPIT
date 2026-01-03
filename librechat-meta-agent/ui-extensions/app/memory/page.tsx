@@ -118,7 +118,7 @@ async function deleteMemory(id: string): Promise<void> {
 // Components
 function CategoryBadge({ category }: { category: string }) {
   const colors = {
-    preference: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+    preference: 'bg-teal-500/20 text-teal-300 border-teal-500/30',
     fact: 'bg-blue-500/20 text-blue-300 border-blue-500/30',
     instruction: 'bg-green-500/20 text-green-300 border-green-500/30',
     context: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30',
@@ -273,15 +273,15 @@ export default function MemoryPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-indigo-950 to-slate-950">
+    <div className="min-h-screen bg-gradient-to-br from-stone-50 via-stone-100 to-stone-50">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
             <Brain className="text-indigo-400" size={32} />
-            <h1 className="text-3xl font-bold text-white">Memory System</h1>
+            <h1 className="text-3xl font-bold text-stone-900">Memory System</h1>
           </div>
-          <p className="text-slate-400">
+          <p className="text-stone-500">
             Manage personalized memories and preferences for context-aware AI interactions
           </p>
         </div>
@@ -289,9 +289,9 @@ export default function MemoryPage() {
         {/* Stats Dashboard */}
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-lg p-4">
-              <div className="text-slate-400 text-sm">Total Memories</div>
-              <div className="text-2xl font-bold text-white">{stats.total}</div>
+            <div className="bg-stone-100/50 backdrop-blur border border-stone-200 rounded-lg p-4">
+              <div className="text-stone-500 text-sm">Total Memories</div>
+              <div className="text-2xl font-bold text-stone-900">{stats.total}</div>
             </div>
             <div className="bg-green-500/10 backdrop-blur border border-green-500/30 rounded-lg p-4">
               <div className="text-green-400 text-sm">Enabled</div>
@@ -301,9 +301,9 @@ export default function MemoryPage() {
               <div className="text-red-400 text-sm">Disabled</div>
               <div className="text-2xl font-bold text-red-300">{stats.disabled}</div>
             </div>
-            <div className="bg-purple-500/10 backdrop-blur border border-purple-500/30 rounded-lg p-4">
-              <div className="text-purple-400 text-sm">Categories</div>
-              <div className="text-2xl font-bold text-purple-300">
+            <div className="bg-teal-500/10 backdrop-blur border border-teal-500/30 rounded-lg p-4">
+              <div className="text-teal-400 text-sm">Categories</div>
+              <div className="text-2xl font-bold text-teal-300">
                 {Object.keys(stats.by_category || {}).length}
               </div>
             </div>
@@ -311,17 +311,17 @@ export default function MemoryPage() {
         )}
 
         {/* Controls */}
-        <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-lg p-4 mb-6">
+        <div className="bg-stone-100/50 backdrop-blur border border-stone-200 rounded-lg p-4 mb-6">
           <div className="flex flex-col md:flex-row gap-4">
             {/* Search */}
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-3 text-slate-400" size={20} />
+              <Search className="absolute left-3 top-3 text-stone-500" size={20} />
               <input
                 type="text"
                 placeholder="Search memories..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                className="w-full pl-10 pr-4 py-2 bg-white border border-stone-200 rounded-lg text-stone-900 placeholder-stone-400 focus:outline-none focus:border-indigo-500"
               />
             </div>
 
@@ -329,7 +329,7 @@ export default function MemoryPage() {
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+              className="px-4 py-2 bg-white border border-stone-200 rounded-lg text-stone-900 focus:outline-none focus:border-indigo-500"
             >
               <option value="">All Categories</option>
               <option value="preference">Preferences</option>
@@ -344,7 +344,7 @@ export default function MemoryPage() {
               onChange={(e) =>
                 setEnabledFilter(e.target.value === '' ? undefined : e.target.value === 'true')
               }
-              className="px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+              className="px-4 py-2 bg-white border border-stone-200 rounded-lg text-stone-900 focus:outline-none focus:border-indigo-500"
             >
               <option value="">All Status</option>
               <option value="true">Enabled</option>
@@ -358,7 +358,7 @@ export default function MemoryPage() {
                 setEditingId(null);
                 resetForm();
               }}
-              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg flex items-center gap-2 transition-colors"
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-stone-900 rounded-lg flex items-center gap-2 transition-colors"
             >
               <Plus size={20} />
               Add Memory
@@ -371,14 +371,14 @@ export default function MemoryPage() {
               <span className="text-indigo-300">{selectedIds.size} selected</span>
               <button
                 onClick={handleBulkDelete}
-                className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white rounded flex items-center gap-1 text-sm transition-colors"
+                className="px-3 py-1 bg-red-600 hover:bg-red-700 text-stone-900 rounded flex items-center gap-1 text-sm transition-colors"
               >
                 <Trash2 size={16} />
                 Delete Selected
               </button>
               <button
                 onClick={() => setSelectedIds(new Set())}
-                className="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-white rounded text-sm transition-colors"
+                className="px-3 py-1 bg-stone-200 hover:bg-stone-200 text-stone-900 rounded text-sm transition-colors"
               >
                 Clear Selection
               </button>
@@ -388,27 +388,27 @@ export default function MemoryPage() {
 
         {/* Add/Edit Form */}
         {isAddingNew && (
-          <div className="bg-slate-800/50 backdrop-blur border border-slate-700 rounded-lg p-6 mb-6">
-            <h2 className="text-xl font-bold text-white mb-4">
+          <div className="bg-stone-100/50 backdrop-blur border border-stone-200 rounded-lg p-6 mb-6">
+            <h2 className="text-xl font-bold text-stone-900 mb-4">
               {editingId ? 'Edit Memory' : 'Add New Memory'}
             </h2>
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-slate-300 text-sm mb-2">Content</label>
+                  <label className="block text-stone-700 text-sm mb-2">Content</label>
                   <textarea
                     value={formData.content}
                     onChange={(e) => setFormData({ ...formData, content: e.target.value })}
                     placeholder="Enter memory content..."
                     rows={3}
                     required
-                    className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                    className="w-full px-4 py-2 bg-white border border-stone-200 rounded-lg text-stone-900 placeholder-stone-400 focus:outline-none focus:border-indigo-500"
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-slate-300 text-sm mb-2">Category</label>
+                    <label className="block text-stone-700 text-sm mb-2">Category</label>
                     <select
                       value={formData.category}
                       onChange={(e) =>
@@ -417,7 +417,7 @@ export default function MemoryPage() {
                           category: e.target.value as Memory['category'],
                         })
                       }
-                      className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full px-4 py-2 bg-white border border-stone-200 rounded-lg text-stone-900 focus:outline-none focus:border-indigo-500"
                     >
                       <option value="preference">Preference</option>
                       <option value="fact">Fact</option>
@@ -427,7 +427,7 @@ export default function MemoryPage() {
                   </div>
 
                   <div>
-                    <label className="block text-slate-300 text-sm mb-2">
+                    <label className="block text-stone-700 text-sm mb-2">
                       Importance ({Math.round(formData.importance_score * 100)}%)
                     </label>
                     <input
@@ -451,7 +451,7 @@ export default function MemoryPage() {
                   <button
                     type="submit"
                     disabled={createMutation.isPending || updateMutation.isPending}
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-700 text-white rounded-lg flex items-center gap-2 transition-colors"
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-stone-200 text-stone-900 rounded-lg flex items-center gap-2 transition-colors"
                   >
                     <Check size={20} />
                     {editingId ? 'Update' : 'Save'}
@@ -463,7 +463,7 @@ export default function MemoryPage() {
                       setEditingId(null);
                       resetForm();
                     }}
-                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg flex items-center gap-2 transition-colors"
+                    className="px-4 py-2 bg-stone-200 hover:bg-stone-200 text-stone-900 rounded-lg flex items-center gap-2 transition-colors"
                   >
                     <X size={20} />
                     Cancel
@@ -477,15 +477,15 @@ export default function MemoryPage() {
         {/* Memories List */}
         <div className="space-y-3">
           {isLoading ? (
-            <div className="text-center py-12 text-slate-400">
+            <div className="text-center py-12 text-stone-500">
               <Sparkles className="animate-spin mx-auto mb-2" size={32} />
               Loading memories...
             </div>
           ) : memories.length === 0 ? (
-            <div className="text-center py-12 bg-slate-800/30 backdrop-blur border border-slate-700 rounded-lg">
-              <Brain className="mx-auto mb-4 text-slate-600" size={48} />
-              <p className="text-slate-400 mb-2">No memories found</p>
-              <p className="text-slate-500 text-sm">
+            <div className="text-center py-12 bg-stone-100/30 backdrop-blur border border-stone-200 rounded-lg">
+              <Brain className="mx-auto mb-4 text-stone-400" size={48} />
+              <p className="text-stone-500 mb-2">No memories found</p>
+              <p className="text-stone-400 text-sm">
                 {searchQuery || categoryFilter
                   ? 'Try adjusting your filters'
                   : 'Add your first memory to get started'}
@@ -495,10 +495,10 @@ export default function MemoryPage() {
             memories.map((memory) => (
               <div
                 key={memory.id}
-                className={`bg-slate-800/50 backdrop-blur border rounded-lg p-4 transition-all ${
+                className={`bg-stone-100/50 backdrop-blur border rounded-lg p-4 transition-all ${
                   memory.enabled
-                    ? 'border-slate-700 hover:border-indigo-500/50'
-                    : 'border-slate-800 opacity-60'
+                    ? 'border-stone-200 hover:border-indigo-500/50'
+                    : 'border-stone-200 opacity-60'
                 }`}
               >
                 <div className="flex items-start gap-4">
@@ -514,9 +514,9 @@ export default function MemoryPage() {
                   <div className="flex-1">
                     <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
-                        <p className="text-white mb-2">{memory.content}</p>
+                        <p className="text-stone-900 mb-2">{memory.content}</p>
                         {memory.summary && memory.summary !== memory.content && (
-                          <p className="text-slate-400 text-sm italic">{memory.summary}</p>
+                          <p className="text-stone-500 text-sm italic">{memory.summary}</p>
                         )}
                       </div>
                     </div>
@@ -524,11 +524,11 @@ export default function MemoryPage() {
                     <div className="flex items-center gap-3 flex-wrap">
                       <CategoryBadge category={memory.category} />
                       <ImportanceStars score={memory.importance_score} />
-                      <span className="text-slate-500 text-xs">
+                      <span className="text-stone-400 text-xs">
                         {new Date(memory.created_at).toLocaleDateString()}
                       </span>
                       {memory.last_accessed_at && (
-                        <span className="text-slate-500 text-xs">
+                        <span className="text-stone-400 text-xs">
                           Last used: {new Date(memory.last_accessed_at).toLocaleDateString()}
                         </span>
                       )}
@@ -539,18 +539,18 @@ export default function MemoryPage() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => handleToggle(memory.id, memory.enabled)}
-                      className="p-2 hover:bg-slate-700 rounded transition-colors"
+                      className="p-2 hover:bg-stone-200 rounded transition-colors"
                       title={memory.enabled ? 'Disable' : 'Enable'}
                     >
                       {memory.enabled ? (
                         <ToggleRight className="text-green-400" size={20} />
                       ) : (
-                        <ToggleLeft className="text-slate-600" size={20} />
+                        <ToggleLeft className="text-stone-400" size={20} />
                       )}
                     </button>
                     <button
                       onClick={() => handleEdit(memory)}
-                      className="p-2 hover:bg-slate-700 rounded transition-colors"
+                      className="p-2 hover:bg-stone-200 rounded transition-colors"
                       title="Edit"
                     >
                       <Edit2 className="text-indigo-400" size={18} />
@@ -561,7 +561,7 @@ export default function MemoryPage() {
                           deleteMutation.mutate(memory.id);
                         }
                       }}
-                      className="p-2 hover:bg-slate-700 rounded transition-colors"
+                      className="p-2 hover:bg-stone-200 rounded transition-colors"
                       title="Delete"
                     >
                       <Trash2 className="text-red-400" size={18} />

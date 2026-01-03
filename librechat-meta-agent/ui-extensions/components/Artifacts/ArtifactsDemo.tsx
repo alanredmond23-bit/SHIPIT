@@ -278,18 +278,18 @@ export class AuthService {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-4 sm:p-8">
+    <div className="min-h-screen bg-stone-50 text-stone-900 p-4 sm:p-8">
       {/* Header */}
       <div className="max-w-7xl mx-auto mb-8">
         <div className="flex items-center gap-3 mb-4">
-          <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl">
+          <div className="p-3 bg-gradient-to-br from-indigo-500 to-teal-500 rounded-2xl">
             <Sparkles className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-indigo-400 to-teal-400 bg-clip-text text-transparent">
               Artifacts System Demo
             </h1>
-            <p className="text-slate-400">
+            <p className="text-stone-500">
               Claude-style artifact/canvas system for LibreChat
             </p>
           </div>
@@ -300,7 +300,7 @@ export class AuthService {
             <Code2 className="w-5 h-5 text-indigo-400" />
             Features
           </h2>
-          <ul className="space-y-2 text-sm text-slate-300">
+          <ul className="space-y-2 text-sm text-stone-700">
             <li className="flex items-start gap-2">
               <span className="text-green-400 mt-1">✓</span>
               <span>Syntax highlighting for 25+ languages</span>
@@ -335,7 +335,7 @@ export class AuthService {
           <FileBox className="w-6 h-6 text-indigo-400" />
           Sample Artifacts
         </h2>
-        <p className="text-slate-400 mb-6">
+        <p className="text-stone-500 mb-6">
           Click on any artifact to open it in the interactive panel
         </p>
 
@@ -354,16 +354,16 @@ export class AuthService {
                   <h3 className="font-semibold truncate group-hover:text-indigo-400 transition-colors">
                     {artifact.title}
                   </h3>
-                  <p className="text-xs text-slate-500">{artifact.filename}</p>
+                  <p className="text-xs text-stone-400">{artifact.filename}</p>
                 </div>
               </div>
 
-              <p className="text-sm text-slate-400 line-clamp-2 mb-3">
+              <p className="text-sm text-stone-500 line-clamp-2 mb-3">
                 {artifact.description}
               </p>
 
-              <div className="flex items-center gap-2 text-xs text-slate-500">
-                <span className="px-2 py-1 bg-slate-800 rounded-full">
+              <div className="flex items-center gap-2 text-xs text-stone-400">
+                <span className="px-2 py-1 bg-stone-100 rounded-full">
                   {artifact.language}
                 </span>
                 <span>v{artifact.version}</span>
@@ -378,7 +378,7 @@ export class AuthService {
       {/* Inline Example */}
       <div className="max-w-7xl mx-auto">
         <h2 className="text-xl font-semibold mb-4">Inline Code Display</h2>
-        <p className="text-slate-400 mb-6">
+        <p className="text-stone-500 mb-6">
           Example of CodeArtifact component used inline (not in a panel)
         </p>
 

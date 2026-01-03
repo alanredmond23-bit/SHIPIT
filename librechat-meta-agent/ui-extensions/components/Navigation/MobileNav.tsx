@@ -43,10 +43,10 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { name: 'Home', href: '/', icon: 'Home', color: 'text-blue-400' },
-  { name: 'Thinking', href: '/thinking', icon: 'Brain', badge: 'NEW', color: 'text-purple-400' },
+  { name: 'Thinking', href: '/thinking', icon: 'Brain', badge: 'NEW', color: 'text-teal-400' },
   { name: 'Research', href: '/research', icon: 'Research', badge: 'NEW', color: 'text-cyan-400' },
   { name: 'Create', href: '/images', icon: 'Sparkles', color: 'text-pink-400' },
-  { name: 'More', href: '/tools', icon: 'Menu', color: 'text-slate-400' },
+  { name: 'More', href: '/tools', icon: 'Menu', color: 'text-stone-500' },
 ];
 
 export interface MobileNavProps {
@@ -58,7 +58,7 @@ export function MobileNav({ className = '', onItemClick }: MobileNavProps) {
   const pathname = usePathname();
 
   return (
-    <nav className={`lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900/98 backdrop-blur-xl border-t border-slate-800 safe-bottom ${className}`}>
+    <nav className={`lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/98 backdrop-blur-xl border-t border-stone-200 safe-bottom ${className}`}>
       <div className="flex justify-around items-center px-2 py-2">
         {navItems.map((item) => {
           const Icon = Icons[item.icon];
@@ -72,12 +72,12 @@ export function MobileNav({ className = '', onItemClick }: MobileNavProps) {
               className={`
                 relative flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-xl transition-all duration-200
                 min-w-[60px] min-h-[60px] touch-manipulation active:scale-95
-                ${isActive ? `${item.color} bg-white/10` : 'text-slate-500 hover:text-slate-300 active:bg-white/5'}
+                ${isActive ? `${item.color} bg-white/10` : 'text-stone-400 hover:text-stone-700 active:bg-white/5'}
               `}
             >
               {/* Badge */}
               {item.badge && (
-                <span className="absolute top-1 right-1 px-1 py-0.5 text-[8px] font-bold bg-gradient-to-r from-purple-500 to-pink-500 rounded-full">
+                <span className="absolute top-1 right-1 px-1 py-0.5 text-[8px] font-bold bg-gradient-to-r from-teal-500 to-pink-500 rounded-full">
                   {item.badge}
                 </span>
               )}
@@ -94,7 +94,7 @@ export function MobileNav({ className = '', onItemClick }: MobileNavProps) {
 
               {/* Active Indicator */}
               {isActive && (
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full" />
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-teal-500 to-pink-500 rounded-full" />
               )}
             </Link>
           );
