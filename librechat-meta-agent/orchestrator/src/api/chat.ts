@@ -68,17 +68,19 @@ interface Artifact {
 // Model Provider Detection
 // ============================================================================
 
-type ModelProvider = 'anthropic' | 'openai' | 'google';
+type ModelProvider = 'anthropic' | 'openai' | 'google' | 'deepseek';
 
 function detectProvider(model: string): ModelProvider {
   const lowerModel = model.toLowerCase();
 
   if (lowerModel.includes('claude')) {
     return 'anthropic';
-  } else if (lowerModel.includes('gpt') || lowerModel.includes('o1') || lowerModel.includes('o3')) {
+  } else if (lowerModel.includes('gpt') || lowerModel.includes('o1') || lowerModel.includes('o3') || lowerModel.includes('o4')) {
     return 'openai';
   } else if (lowerModel.includes('gemini') || lowerModel.includes('palm')) {
     return 'google';
+  } else if (lowerModel.includes('deepseek')) {
+    return 'deepseek';
   }
 
   // Default to anthropic if unknown
@@ -666,6 +668,183 @@ class GoogleProvider {
 }
 
 // ============================================================================
+// DeepSeek Provider (OpenAI-Compatible API)
+// ============================================================================
+
+class DeepSeekProvider {
+  private baseURL: string = 'https://api.deepseek.com/v1';
+  private apiKey: string;
+
+  constructor() {
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+    if (!apiKey) {
+      console.warn('DEEPSEEK_API_KEY not set - DeepSeek models will not work');
+      this.apiKey = '';
+    } else {
+      this.apiKey = apiKey;
+    }
+  }
+
+  private convertMessages(messages: ChatMessage[]) {
+    return messages.map(msg => {
+      if (typeof msg.content === 'string') {
+        return { role: msg.role, content: msg.content };
+      }
+      // DeepSeek uses text-only for now
+      const textContent = msg.content
+        .filter((item: any) => item.type === 'text')
+        .map((item: any) => item.text)
+        .join('\n');
+      return { role: msg.role, content: textContent };
+    });
+  }
+
+  async *streamChat(
+    request: ChatRequest,
+    logger: Logger,
+    signal?: AbortSignal
+  ): AsyncGenerator<{
+    type: 'content' | 'usage' | 'error' | 'done';
+    data?: any;
+    error?: string;
+  }> {
+    if (!this.apiKey) {
+      yield { type: 'error', error: 'DEEPSEEK_API_KEY not configured' };
+      return;
+    }
+
+    try {
+      const messages = this.convertMessages(request.messages);
+
+      const response = await fetch(`${this.baseURL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`,
+        },
+        body: JSON.stringify({
+          model: request.model,
+          messages,
+          temperature: request.temperature,
+          max_tokens: request.max_tokens,
+          stop: request.stop_sequences,
+          stream: true,
+        }),
+        signal,
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        throw new Error(`DeepSeek API error: ${response.status} - ${error}`);
+      }
+
+      const reader = response.body?.getReader();
+      if (!reader) {
+        throw new Error('Response body is not readable');
+      }
+
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          if (!line.trim() || line.trim() === 'data: [DONE]') continue;
+
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+
+              const delta = data.choices?.[0]?.delta;
+              if (delta?.content) {
+                yield {
+                  type: 'content',
+                  data: { content: delta.content },
+                };
+              }
+
+              if (data.usage) {
+                yield {
+                  type: 'usage',
+                  data: {
+                    input_tokens: data.usage.prompt_tokens,
+                    output_tokens: data.usage.completion_tokens,
+                    total_tokens: data.usage.total_tokens,
+                  },
+                };
+              }
+            } catch (e) {
+              logger.warn({ line }, 'Failed to parse DeepSeek SSE line');
+            }
+          }
+        }
+      }
+
+      yield { type: 'done' };
+
+    } catch (error: any) {
+      logger.error({ error }, 'DeepSeek streaming error');
+      yield {
+        type: 'error',
+        error: error.message || 'Unknown error occurred',
+      };
+    }
+  }
+
+  async chat(request: ChatRequest, logger: Logger): Promise<{
+    content: string;
+    usage: TokenUsage;
+    artifacts: Artifact[];
+  }> {
+    if (!this.apiKey) {
+      throw new Error('DEEPSEEK_API_KEY not configured');
+    }
+
+    const messages = this.convertMessages(request.messages);
+
+    const response = await fetch(`${this.baseURL}/chat/completions`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${this.apiKey}`,
+      },
+      body: JSON.stringify({
+        model: request.model,
+        messages,
+        temperature: request.temperature,
+        max_tokens: request.max_tokens,
+        stop: request.stop_sequences,
+        stream: false,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`DeepSeek API error: ${response.status} - ${error}`);
+    }
+
+    const data: any = await response.json();
+    const content = data.choices?.[0]?.message?.content || '';
+
+    const usage: TokenUsage = {
+      input_tokens: data.usage?.prompt_tokens || 0,
+      output_tokens: data.usage?.completion_tokens || 0,
+      total_tokens: data.usage?.total_tokens || 0,
+    };
+
+    const artifacts = extractArtifacts(content);
+
+    return { content, usage, artifacts };
+  }
+}
+
+// ============================================================================
 // Provider Factory
 // ============================================================================
 
@@ -673,8 +852,9 @@ class ProviderFactory {
   private static anthropic: AnthropicProvider | null = null;
   private static openai: OpenAIProvider | null = null;
   private static google: GoogleProvider | null = null;
+  private static deepseek: DeepSeekProvider | null = null;
 
-  static getProvider(model: string): AnthropicProvider | OpenAIProvider | GoogleProvider {
+  static getProvider(model: string): AnthropicProvider | OpenAIProvider | GoogleProvider | DeepSeekProvider {
     const provider = detectProvider(model);
 
     switch (provider) {
@@ -695,6 +875,12 @@ class ProviderFactory {
           this.google = new GoogleProvider();
         }
         return this.google;
+
+      case 'deepseek':
+        if (!this.deepseek) {
+          this.deepseek = new DeepSeekProvider();
+        }
+        return this.deepseek;
 
       default:
         throw new Error(`Unsupported provider: ${provider}`);
@@ -832,88 +1018,215 @@ export async function handleChatStream(req: Request, res: Response, logger: Logg
 export async function handleListModels(req: Request, res: Response, logger: Logger) {
   try {
     const models = [
-      // Anthropic Claude models
+      // ============================================
+      // ANTHROPIC - Latest Models (January 2026)
+      // ============================================
+      {
+        id: 'claude-opus-4-5-20251101',
+        provider: 'anthropic',
+        name: 'Claude Opus 4.5',
+        description: 'Most capable model - best for complex reasoning, analysis, and creative tasks',
+        context_window: 200000,
+        supports_vision: true,
+        tier: 'flagship',
+      },
+      {
+        id: 'claude-sonnet-4-5-20250929',
+        provider: 'anthropic',
+        name: 'Claude Sonnet 4.5',
+        description: 'Excellent balance of intelligence and speed for most tasks',
+        context_window: 200000,
+        supports_vision: true,
+        tier: 'balanced',
+      },
+      {
+        id: 'claude-haiku-4-5-20251022',
+        provider: 'anthropic',
+        name: 'Claude Haiku 4.5',
+        description: 'Fastest model - ideal for high-volume, low-latency tasks',
+        context_window: 200000,
+        supports_vision: true,
+        tier: 'fast',
+      },
       {
         id: 'claude-3-5-sonnet-20241022',
         provider: 'anthropic',
         name: 'Claude 3.5 Sonnet',
-        description: 'Most intelligent model, best for complex tasks',
+        description: 'Previous generation intelligent model',
         context_window: 200000,
         supports_vision: true,
+        tier: 'legacy',
       },
       {
         id: 'claude-3-5-haiku-20241022',
         provider: 'anthropic',
         name: 'Claude 3.5 Haiku',
-        description: 'Fastest model, best for simple tasks',
+        description: 'Previous generation fast model',
         context_window: 200000,
         supports_vision: true,
+        tier: 'legacy',
+      },
+      // ============================================
+      // OPENAI - Latest Models (January 2026)
+      // ============================================
+      {
+        id: 'gpt-5.2',
+        provider: 'openai',
+        name: 'GPT-5.2',
+        description: 'Latest flagship GPT model with enhanced reasoning',
+        context_window: 400000,
+        supports_vision: true,
+        tier: 'flagship',
       },
       {
-        id: 'claude-3-opus-20240229',
-        provider: 'anthropic',
-        name: 'Claude 3 Opus',
-        description: 'Previous flagship model',
-        context_window: 200000,
+        id: 'gpt-5.2-pro',
+        provider: 'openai',
+        name: 'GPT-5.2 Pro',
+        description: 'Extended capabilities GPT-5.2 for enterprise',
+        context_window: 400000,
         supports_vision: true,
+        tier: 'flagship',
       },
-      // OpenAI GPT models
+      {
+        id: 'gpt-4.1',
+        provider: 'openai',
+        name: 'GPT-4.1',
+        description: 'Million-token context flagship model',
+        context_window: 1000000,
+        supports_vision: true,
+        tier: 'balanced',
+      },
+      {
+        id: 'o3',
+        provider: 'openai',
+        name: 'o3',
+        description: 'Advanced reasoning model - excels at math, coding, and logic',
+        context_window: 200000,
+        supports_vision: false,
+        tier: 'reasoning',
+      },
+      {
+        id: 'o3-pro',
+        provider: 'openai',
+        name: 'o3 Pro',
+        description: 'Extended o3 with enhanced reasoning capabilities',
+        context_window: 200000,
+        supports_vision: false,
+        tier: 'reasoning',
+      },
+      {
+        id: 'o4-mini',
+        provider: 'openai',
+        name: 'o4 Mini',
+        description: 'Fast reasoning model with lower cost',
+        context_window: 200000,
+        supports_vision: false,
+        tier: 'fast',
+      },
       {
         id: 'gpt-4o',
         provider: 'openai',
         name: 'GPT-4o',
-        description: 'Most advanced multimodal model',
+        description: 'Multimodal model with vision and audio',
         context_window: 128000,
         supports_vision: true,
+        tier: 'legacy',
       },
       {
         id: 'gpt-4o-mini',
         provider: 'openai',
         name: 'GPT-4o Mini',
-        description: 'Fast and affordable model',
+        description: 'Fast and affordable GPT-4o variant',
         context_window: 128000,
         supports_vision: true,
+        tier: 'legacy',
       },
+      // ============================================
+      // GOOGLE - Latest Models (January 2026)
+      // ============================================
       {
-        id: 'gpt-4-turbo',
-        provider: 'openai',
-        name: 'GPT-4 Turbo',
-        description: 'Previous generation flagship',
-        context_window: 128000,
+        id: 'gemini-3-pro',
+        provider: 'google',
+        name: 'Gemini 3 Pro',
+        description: 'Latest Gemini flagship with million-token context',
+        context_window: 1000000,
         supports_vision: true,
+        tier: 'flagship',
       },
       {
-        id: 'o1',
-        provider: 'openai',
-        name: 'o1',
-        description: 'Advanced reasoning model',
-        context_window: 200000,
-        supports_vision: false,
+        id: 'gemini-3-flash',
+        provider: 'google',
+        name: 'Gemini 3 Flash',
+        description: 'Fast Gemini 3 model for high-throughput tasks',
+        context_window: 1000000,
+        supports_vision: true,
+        tier: 'fast',
       },
-      // Google Gemini models
+      {
+        id: 'gemini-3-deep-think',
+        provider: 'google',
+        name: 'Gemini 3 Deep Think',
+        description: 'Advanced reasoning variant with deep thinking capabilities',
+        context_window: 192000,
+        supports_vision: true,
+        tier: 'reasoning',
+      },
+      {
+        id: 'gemini-2.5-pro',
+        provider: 'google',
+        name: 'Gemini 2.5 Pro',
+        description: '2-million token context powerhouse',
+        context_window: 2000000,
+        supports_vision: true,
+        tier: 'balanced',
+      },
       {
         id: 'gemini-2.0-flash-exp',
         provider: 'google',
         name: 'Gemini 2.0 Flash',
-        description: 'Next generation multimodal model',
+        description: 'Previous generation fast model',
         context_window: 1000000,
         supports_vision: true,
+        tier: 'legacy',
       },
       {
         id: 'gemini-1.5-pro',
         provider: 'google',
         name: 'Gemini 1.5 Pro',
-        description: 'Pro-level multimodal model',
+        description: 'Previous generation pro model',
         context_window: 2000000,
         supports_vision: true,
+        tier: 'legacy',
+      },
+      // ============================================
+      // DEEPSEEK - Latest Models (January 2026)
+      // ============================================
+      {
+        id: 'deepseek-v3.2-exp',
+        provider: 'deepseek',
+        name: 'DeepSeek V3.2',
+        description: 'Latest DeepSeek with enhanced coding and reasoning',
+        context_window: 128000,
+        supports_vision: false,
+        tier: 'flagship',
       },
       {
-        id: 'gemini-1.5-flash',
-        provider: 'google',
-        name: 'Gemini 1.5 Flash',
-        description: 'Fast and efficient model',
-        context_window: 1000000,
-        supports_vision: true,
+        id: 'deepseek-r1',
+        provider: 'deepseek',
+        name: 'DeepSeek R1',
+        description: 'Reasoning-focused model rivaling o1',
+        context_window: 128000,
+        supports_vision: false,
+        tier: 'reasoning',
+      },
+      {
+        id: 'deepseek-coder-v3',
+        provider: 'deepseek',
+        name: 'DeepSeek Coder V3',
+        description: 'Specialized coding model with exceptional code generation',
+        context_window: 128000,
+        supports_vision: false,
+        tier: 'specialized',
       },
     ];
 

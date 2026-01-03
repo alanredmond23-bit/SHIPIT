@@ -282,7 +282,7 @@ function TestToolsView() {
 
       {selectedTool === 'web_search' && (
         <WebSearchTest
-          onExecute={(result) => {
+          onExecute={(result: unknown) => {
             setTestResult(result);
             setIsExecuting(false);
           }}
@@ -292,7 +292,7 @@ function TestToolsView() {
 
       {selectedTool === 'code_executor' && (
         <CodeExecutorTest
-          onExecute={(result) => {
+          onExecute={(result: unknown) => {
             setTestResult(result);
             setIsExecuting(false);
           }}
