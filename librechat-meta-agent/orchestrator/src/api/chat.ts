@@ -68,7 +68,7 @@ interface Artifact {
 // Model Provider Detection
 // ============================================================================
 
-type ModelProvider = 'anthropic' | 'openai' | 'google' | 'deepseek';
+type ModelProvider = 'anthropic' | 'openai' | 'google' | 'deepseek' | 'mistral' | 'xai';
 
 function detectProvider(model: string): ModelProvider {
   const lowerModel = model.toLowerCase();
@@ -81,6 +81,10 @@ function detectProvider(model: string): ModelProvider {
     return 'google';
   } else if (lowerModel.includes('deepseek')) {
     return 'deepseek';
+  } else if (lowerModel.includes('mistral')) {
+    return 'mistral';
+  } else if (lowerModel.includes('grok')) {
+    return 'xai';
   }
 
   // Default to anthropic if unknown
@@ -1227,6 +1231,48 @@ export async function handleListModels(req: Request, res: Response, logger: Logg
         context_window: 128000,
         supports_vision: false,
         tier: 'specialized',
+      },
+      // ============================================
+      // MISTRAL - Latest Models (January 2026)
+      // ============================================
+      {
+        id: 'mistral-large-2',
+        provider: 'mistral',
+        name: 'Mistral Large 2',
+        description: 'Flagship Mistral model with advanced reasoning and multilingual support',
+        context_window: 128000,
+        supports_vision: true,
+        tier: 'flagship',
+      },
+      {
+        id: 'mistral-medium-2',
+        provider: 'mistral',
+        name: 'Mistral Medium 2',
+        description: 'Balanced Mistral model for general-purpose tasks',
+        context_window: 128000,
+        supports_vision: true,
+        tier: 'balanced',
+      },
+      // ============================================
+      // XAI GROK - Latest Models (January 2026)
+      // ============================================
+      {
+        id: 'grok-3',
+        provider: 'xai',
+        name: 'Grok 3',
+        description: 'Latest xAI flagship model with real-time knowledge',
+        context_window: 131072,
+        supports_vision: true,
+        tier: 'flagship',
+      },
+      {
+        id: 'grok-3-vision',
+        provider: 'xai',
+        name: 'Grok 3 Vision',
+        description: 'Grok 3 with enhanced vision capabilities',
+        context_window: 131072,
+        supports_vision: true,
+        tier: 'flagship',
       },
     ];
 
