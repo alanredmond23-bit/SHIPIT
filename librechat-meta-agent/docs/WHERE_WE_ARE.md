@@ -1,8 +1,9 @@
 # LibreChat Meta Agent - Project Status
 
 **Last Updated**: January 3, 2026
-**Branch**: `add/theme-presets-and-selector`
+**Branch**: `main` (merged from `add/theme-presets-and-selector` via PR #5)
 **Overall Completion**: ~70%
+**PR Status**: ✅ Merged - https://github.com/alanredmond23-bit/SHIPIT/pull/5
 
 ---
 
@@ -220,8 +221,8 @@ cd desktop-app && npm run build:mac  # or build:win, build:linux
 
 - **Repository**: `alanredmond23-bit/SHIPIT`
 - **Subdirectory**: `/librechat-meta-agent`
-- **Main Branch**: `main`
-- **Feature Branch**: `add/theme-presets-and-selector`
+- **Main Branch**: `main` ✅ (all features merged)
+- **Merged PR**: #5 (add/theme-presets-and-selector → main)
 
 ---
 
