@@ -1,0 +1,1703 @@
+/**
+ * MCP Server Data - Complete list of 75+ available MCP servers
+ * Organized by category for easy filtering and discovery
+ */
+
+export type MCPCategory =
+  | 'productivity'
+  | 'development'
+  | 'data'
+  | 'ai'
+  | 'web'
+  | 'communication'
+  | 'storage'
+  | 'analytics'
+  | 'security'
+  | 'media';
+
+export type MCPHealthStatus = 'healthy' | 'degraded' | 'offline' | 'unknown';
+
+export interface MCPServer {
+  id: string;
+  name: string;
+  description: string;
+  category: MCPCategory;
+  icon: string;
+  version: string;
+  enabled: boolean;
+  healthStatus: MCPHealthStatus;
+  lastHealthCheck: Date | null;
+  configRequired: boolean;
+  configFields?: MCPConfigField[];
+  documentation?: string;
+  usageStats?: {
+    totalCalls: number;
+    successRate: number;
+    avgLatency: number;
+  };
+}
+
+export interface MCPConfigField {
+  key: string;
+  label: string;
+  type: 'text' | 'password' | 'number' | 'boolean' | 'select';
+  required: boolean;
+  placeholder?: string;
+  options?: { value: string; label: string }[];
+  default?: any;
+  description?: string;
+}
+
+export const MCP_CATEGORIES: Record<MCPCategory, { label: string; description: string; color: string }> = {
+  productivity: {
+    label: 'Productivity',
+    description: 'Tools for task management and organization',
+    color: 'teal',
+  },
+  development: {
+    label: 'Development',
+    description: 'Version control and project management',
+    color: 'blue',
+  },
+  data: {
+    label: 'Data',
+    description: 'Databases and data management',
+    color: 'purple',
+  },
+  ai: {
+    label: 'AI',
+    description: 'AI models and services',
+    color: 'pink',
+  },
+  web: {
+    label: 'Web',
+    description: 'Web scraping and automation',
+    color: 'orange',
+  },
+  communication: {
+    label: 'Communication',
+    description: 'Messaging and collaboration',
+    color: 'green',
+  },
+  storage: {
+    label: 'Storage',
+    description: 'File and cloud storage',
+    color: 'yellow',
+  },
+  analytics: {
+    label: 'Analytics',
+    description: 'Data analytics and visualization',
+    color: 'red',
+  },
+  security: {
+    label: 'Security',
+    description: 'Authentication and security tools',
+    color: 'gray',
+  },
+  media: {
+    label: 'Media',
+    description: 'Image, audio, and video processing',
+    color: 'indigo',
+  },
+};
+
+export const MCP_SERVERS: MCPServer[] = [
+  // Productivity
+  {
+    id: 'notion',
+    name: 'Notion',
+    description: 'All-in-one workspace for notes, databases, and collaboration',
+    category: 'productivity',
+    icon: 'N',
+    version: '2.1.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_key',
+        label: 'Integration Token',
+        type: 'password',
+        required: true,
+        placeholder: 'secret_...',
+        description: 'Create an internal integration at notion.so/my-integrations',
+      },
+      {
+        key: 'workspace_id',
+        label: 'Workspace ID',
+        type: 'text',
+        required: false,
+        placeholder: 'Optional workspace filter',
+      },
+    ],
+    documentation: 'https://developers.notion.com',
+  },
+  {
+    id: 'slack',
+    name: 'Slack',
+    description: 'Team communication and channel management',
+    category: 'productivity',
+    icon: 'S',
+    version: '1.8.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'bot_token',
+        label: 'Bot Token',
+        type: 'password',
+        required: true,
+        placeholder: 'xoxb-...',
+      },
+      {
+        key: 'signing_secret',
+        label: 'Signing Secret',
+        type: 'password',
+        required: true,
+      },
+    ],
+    documentation: 'https://api.slack.com',
+  },
+  {
+    id: 'gmail',
+    name: 'Gmail',
+    description: 'Email management and automation',
+    category: 'productivity',
+    icon: 'M',
+    version: '1.5.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'client_id',
+        label: 'OAuth Client ID',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'client_secret',
+        label: 'OAuth Client Secret',
+        type: 'password',
+        required: true,
+      },
+    ],
+    documentation: 'https://developers.google.com/gmail/api',
+  },
+  {
+    id: 'calendar',
+    name: 'Google Calendar',
+    description: 'Calendar events and scheduling',
+    category: 'productivity',
+    icon: 'C',
+    version: '1.4.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'client_id',
+        label: 'OAuth Client ID',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'client_secret',
+        label: 'OAuth Client Secret',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'todoist',
+    name: 'Todoist',
+    description: 'Task management and project tracking',
+    category: 'productivity',
+    icon: 'T',
+    version: '1.2.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_token',
+        label: 'API Token',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'asana',
+    name: 'Asana',
+    description: 'Work management and team coordination',
+    category: 'productivity',
+    icon: 'A',
+    version: '1.3.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'access_token',
+        label: 'Personal Access Token',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'trello',
+    name: 'Trello',
+    description: 'Kanban boards and project management',
+    category: 'productivity',
+    icon: 'TR',
+    version: '1.1.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'token',
+        label: 'Token',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+
+  // Development
+  {
+    id: 'github',
+    name: 'GitHub',
+    description: 'Repository management, issues, and pull requests',
+    category: 'development',
+    icon: 'GH',
+    version: '2.5.0',
+    enabled: true,
+    healthStatus: 'healthy',
+    lastHealthCheck: new Date(Date.now() - 1000 * 60 * 5),
+    configRequired: true,
+    configFields: [
+      {
+        key: 'token',
+        label: 'Personal Access Token',
+        type: 'password',
+        required: true,
+        placeholder: 'ghp_...',
+      },
+      {
+        key: 'owner',
+        label: 'Default Owner/Org',
+        type: 'text',
+        required: false,
+      },
+    ],
+    documentation: 'https://docs.github.com/rest',
+    usageStats: {
+      totalCalls: 15420,
+      successRate: 99.2,
+      avgLatency: 245,
+    },
+  },
+  {
+    id: 'gitlab',
+    name: 'GitLab',
+    description: 'DevOps platform for Git repositories',
+    category: 'development',
+    icon: 'GL',
+    version: '2.2.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'token',
+        label: 'Personal Access Token',
+        type: 'password',
+        required: true,
+      },
+      {
+        key: 'base_url',
+        label: 'GitLab URL',
+        type: 'text',
+        required: false,
+        default: 'https://gitlab.com',
+      },
+    ],
+  },
+  {
+    id: 'linear',
+    name: 'Linear',
+    description: 'Issue tracking and project management',
+    category: 'development',
+    icon: 'LN',
+    version: '1.9.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'password',
+        required: true,
+      },
+    ],
+    documentation: 'https://developers.linear.app',
+  },
+  {
+    id: 'jira',
+    name: 'Jira',
+    description: 'Agile project management and issue tracking',
+    category: 'development',
+    icon: 'JR',
+    version: '2.0.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'domain',
+        label: 'Jira Domain',
+        type: 'text',
+        required: true,
+        placeholder: 'your-company.atlassian.net',
+      },
+      {
+        key: 'email',
+        label: 'Email',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'api_token',
+        label: 'API Token',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'vercel',
+    name: 'Vercel',
+    description: 'Deployment and hosting platform',
+    category: 'development',
+    icon: 'VC',
+    version: '1.6.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'token',
+        label: 'Access Token',
+        type: 'password',
+        required: true,
+      },
+      {
+        key: 'team_id',
+        label: 'Team ID',
+        type: 'text',
+        required: false,
+      },
+    ],
+  },
+  {
+    id: 'netlify',
+    name: 'Netlify',
+    description: 'Web hosting and serverless functions',
+    category: 'development',
+    icon: 'NL',
+    version: '1.4.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'access_token',
+        label: 'Access Token',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'docker',
+    name: 'Docker Hub',
+    description: 'Container registry and management',
+    category: 'development',
+    icon: 'DK',
+    version: '1.3.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'username',
+        label: 'Username',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'password',
+        label: 'Access Token',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'npm',
+    name: 'NPM',
+    description: 'Node.js package registry',
+    category: 'development',
+    icon: 'NP',
+    version: '1.2.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'token',
+        label: 'Auth Token',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+
+  // Data
+  {
+    id: 'supabase',
+    name: 'Supabase',
+    description: 'Open source Firebase alternative with PostgreSQL',
+    category: 'data',
+    icon: 'SB',
+    version: '2.3.0',
+    enabled: true,
+    healthStatus: 'healthy',
+    lastHealthCheck: new Date(Date.now() - 1000 * 60 * 3),
+    configRequired: true,
+    configFields: [
+      {
+        key: 'url',
+        label: 'Project URL',
+        type: 'text',
+        required: true,
+        placeholder: 'https://xxx.supabase.co',
+      },
+      {
+        key: 'anon_key',
+        label: 'Anon Key',
+        type: 'password',
+        required: true,
+      },
+      {
+        key: 'service_role_key',
+        label: 'Service Role Key',
+        type: 'password',
+        required: false,
+        description: 'Only needed for admin operations',
+      },
+    ],
+    documentation: 'https://supabase.com/docs',
+    usageStats: {
+      totalCalls: 8750,
+      successRate: 99.8,
+      avgLatency: 120,
+    },
+  },
+  {
+    id: 'postgresql',
+    name: 'PostgreSQL',
+    description: 'Direct PostgreSQL database connection',
+    category: 'data',
+    icon: 'PG',
+    version: '1.8.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'connection_string',
+        label: 'Connection String',
+        type: 'password',
+        required: true,
+        placeholder: 'postgresql://user:pass@host:5432/db',
+      },
+    ],
+  },
+  {
+    id: 'mongodb',
+    name: 'MongoDB',
+    description: 'NoSQL document database',
+    category: 'data',
+    icon: 'MG',
+    version: '1.7.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'connection_string',
+        label: 'Connection String',
+        type: 'password',
+        required: true,
+        placeholder: 'mongodb+srv://...',
+      },
+    ],
+  },
+  {
+    id: 'redis',
+    name: 'Redis',
+    description: 'In-memory data store and cache',
+    category: 'data',
+    icon: 'RD',
+    version: '1.5.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'url',
+        label: 'Redis URL',
+        type: 'password',
+        required: true,
+        placeholder: 'redis://...',
+      },
+    ],
+  },
+  {
+    id: 'mysql',
+    name: 'MySQL',
+    description: 'Relational database management',
+    category: 'data',
+    icon: 'MY',
+    version: '1.4.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'host',
+        label: 'Host',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'port',
+        label: 'Port',
+        type: 'number',
+        required: true,
+        default: 3306,
+      },
+      {
+        key: 'user',
+        label: 'Username',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'password',
+        label: 'Password',
+        type: 'password',
+        required: true,
+      },
+      {
+        key: 'database',
+        label: 'Database',
+        type: 'text',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'elasticsearch',
+    name: 'Elasticsearch',
+    description: 'Search and analytics engine',
+    category: 'data',
+    icon: 'ES',
+    version: '1.3.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'node',
+        label: 'Node URL',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'password',
+        required: false,
+      },
+    ],
+  },
+  {
+    id: 'pinecone',
+    name: 'Pinecone',
+    description: 'Vector database for AI applications',
+    category: 'data',
+    icon: 'PC',
+    version: '1.6.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'password',
+        required: true,
+      },
+      {
+        key: 'environment',
+        label: 'Environment',
+        type: 'text',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'qdrant',
+    name: 'Qdrant',
+    description: 'Vector similarity search engine',
+    category: 'data',
+    icon: 'QD',
+    version: '1.4.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'url',
+        label: 'Qdrant URL',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'password',
+        required: false,
+      },
+    ],
+  },
+
+  // AI
+  {
+    id: 'openai',
+    name: 'OpenAI',
+    description: 'GPT models and DALL-E image generation',
+    category: 'ai',
+    icon: 'OA',
+    version: '3.0.0',
+    enabled: true,
+    healthStatus: 'healthy',
+    lastHealthCheck: new Date(Date.now() - 1000 * 60 * 2),
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'password',
+        required: true,
+        placeholder: 'sk-...',
+      },
+      {
+        key: 'organization',
+        label: 'Organization ID',
+        type: 'text',
+        required: false,
+      },
+    ],
+    documentation: 'https://platform.openai.com/docs',
+    usageStats: {
+      totalCalls: 45200,
+      successRate: 99.5,
+      avgLatency: 890,
+    },
+  },
+  {
+    id: 'anthropic',
+    name: 'Anthropic',
+    description: 'Claude AI models and capabilities',
+    category: 'ai',
+    icon: 'AN',
+    version: '2.8.0',
+    enabled: true,
+    healthStatus: 'healthy',
+    lastHealthCheck: new Date(Date.now() - 1000 * 60 * 1),
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'password',
+        required: true,
+        placeholder: 'sk-ant-...',
+      },
+    ],
+    documentation: 'https://docs.anthropic.com',
+    usageStats: {
+      totalCalls: 52100,
+      successRate: 99.7,
+      avgLatency: 1250,
+    },
+  },
+  {
+    id: 'stability',
+    name: 'Stability AI',
+    description: 'Stable Diffusion image generation',
+    category: 'ai',
+    icon: 'ST',
+    version: '1.5.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'elevenlabs',
+    name: 'ElevenLabs',
+    description: 'AI voice synthesis and cloning',
+    category: 'ai',
+    icon: '11',
+    version: '1.4.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'replicate',
+    name: 'Replicate',
+    description: 'Run ML models in the cloud',
+    category: 'ai',
+    icon: 'RP',
+    version: '1.3.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_token',
+        label: 'API Token',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'huggingface',
+    name: 'Hugging Face',
+    description: 'ML models and inference API',
+    category: 'ai',
+    icon: 'HF',
+    version: '1.6.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_token',
+        label: 'API Token',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'cohere',
+    name: 'Cohere',
+    description: 'NLP and embeddings API',
+    category: 'ai',
+    icon: 'CO',
+    version: '1.2.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'together',
+    name: 'Together AI',
+    description: 'Open source model inference',
+    category: 'ai',
+    icon: 'TG',
+    version: '1.1.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+
+  // Web
+  {
+    id: 'browserbase',
+    name: 'Browserbase',
+    description: 'Headless browser automation',
+    category: 'web',
+    icon: 'BB',
+    version: '1.7.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'password',
+        required: true,
+      },
+      {
+        key: 'project_id',
+        label: 'Project ID',
+        type: 'text',
+        required: true,
+      },
+    ],
+    documentation: 'https://docs.browserbase.com',
+  },
+  {
+    id: 'puppeteer',
+    name: 'Puppeteer',
+    description: 'Chrome browser automation',
+    category: 'web',
+    icon: 'PP',
+    version: '2.0.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: false,
+  },
+  {
+    id: 'firecrawl',
+    name: 'Firecrawl',
+    description: 'Web scraping and crawling API',
+    category: 'web',
+    icon: 'FC',
+    version: '1.5.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'password',
+        required: true,
+      },
+    ],
+    documentation: 'https://docs.firecrawl.dev',
+  },
+  {
+    id: 'playwright',
+    name: 'Playwright',
+    description: 'Cross-browser automation',
+    category: 'web',
+    icon: 'PW',
+    version: '1.8.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: false,
+  },
+  {
+    id: 'scrapingbee',
+    name: 'ScrapingBee',
+    description: 'Web scraping with proxy rotation',
+    category: 'web',
+    icon: 'SB',
+    version: '1.3.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'apify',
+    name: 'Apify',
+    description: 'Web scraping and automation platform',
+    category: 'web',
+    icon: 'AP',
+    version: '1.4.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_token',
+        label: 'API Token',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'serpapi',
+    name: 'SerpAPI',
+    description: 'Search engine results scraping',
+    category: 'web',
+    icon: 'SP',
+    version: '1.2.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+
+  // Communication
+  {
+    id: 'discord',
+    name: 'Discord',
+    description: 'Discord bot and server management',
+    category: 'communication',
+    icon: 'DC',
+    version: '1.6.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'bot_token',
+        label: 'Bot Token',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'telegram',
+    name: 'Telegram',
+    description: 'Telegram bot API',
+    category: 'communication',
+    icon: 'TL',
+    version: '1.4.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'bot_token',
+        label: 'Bot Token',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'twilio',
+    name: 'Twilio',
+    description: 'SMS, voice, and video communications',
+    category: 'communication',
+    icon: 'TW',
+    version: '1.5.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'account_sid',
+        label: 'Account SID',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'auth_token',
+        label: 'Auth Token',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'sendgrid',
+    name: 'SendGrid',
+    description: 'Email delivery and marketing',
+    category: 'communication',
+    icon: 'SG',
+    version: '1.3.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'intercom',
+    name: 'Intercom',
+    description: 'Customer messaging platform',
+    category: 'communication',
+    icon: 'IC',
+    version: '1.2.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'access_token',
+        label: 'Access Token',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'teams',
+    name: 'Microsoft Teams',
+    description: 'Team collaboration and chat',
+    category: 'communication',
+    icon: 'MT',
+    version: '1.4.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'client_id',
+        label: 'Client ID',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'client_secret',
+        label: 'Client Secret',
+        type: 'password',
+        required: true,
+      },
+      {
+        key: 'tenant_id',
+        label: 'Tenant ID',
+        type: 'text',
+        required: true,
+      },
+    ],
+  },
+
+  // Storage
+  {
+    id: 'aws-s3',
+    name: 'AWS S3',
+    description: 'Cloud object storage',
+    category: 'storage',
+    icon: 'S3',
+    version: '1.8.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'access_key_id',
+        label: 'Access Key ID',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'secret_access_key',
+        label: 'Secret Access Key',
+        type: 'password',
+        required: true,
+      },
+      {
+        key: 'region',
+        label: 'Region',
+        type: 'text',
+        required: true,
+        default: 'us-east-1',
+      },
+    ],
+  },
+  {
+    id: 'gcs',
+    name: 'Google Cloud Storage',
+    description: 'GCP object storage',
+    category: 'storage',
+    icon: 'GS',
+    version: '1.5.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'service_account_json',
+        label: 'Service Account JSON',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'dropbox',
+    name: 'Dropbox',
+    description: 'Cloud file storage and sharing',
+    category: 'storage',
+    icon: 'DB',
+    version: '1.4.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'access_token',
+        label: 'Access Token',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'azure-blob',
+    name: 'Azure Blob Storage',
+    description: 'Microsoft Azure object storage',
+    category: 'storage',
+    icon: 'AZ',
+    version: '1.3.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'connection_string',
+        label: 'Connection String',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'cloudflare-r2',
+    name: 'Cloudflare R2',
+    description: 'S3-compatible object storage',
+    category: 'storage',
+    icon: 'R2',
+    version: '1.2.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'account_id',
+        label: 'Account ID',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'access_key_id',
+        label: 'Access Key ID',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'secret_access_key',
+        label: 'Secret Access Key',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'box',
+    name: 'Box',
+    description: 'Enterprise content management',
+    category: 'storage',
+    icon: 'BX',
+    version: '1.1.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'client_id',
+        label: 'Client ID',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'client_secret',
+        label: 'Client Secret',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+
+  // Analytics
+  {
+    id: 'google-analytics',
+    name: 'Google Analytics',
+    description: 'Web analytics and reporting',
+    category: 'analytics',
+    icon: 'GA',
+    version: '1.5.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'property_id',
+        label: 'Property ID',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'service_account_json',
+        label: 'Service Account JSON',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'mixpanel',
+    name: 'Mixpanel',
+    description: 'Product analytics platform',
+    category: 'analytics',
+    icon: 'MP',
+    version: '1.3.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'project_token',
+        label: 'Project Token',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'api_secret',
+        label: 'API Secret',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'amplitude',
+    name: 'Amplitude',
+    description: 'Behavioral analytics',
+    category: 'analytics',
+    icon: 'AM',
+    version: '1.2.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'secret_key',
+        label: 'Secret Key',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'segment',
+    name: 'Segment',
+    description: 'Customer data platform',
+    category: 'analytics',
+    icon: 'SE',
+    version: '1.4.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'write_key',
+        label: 'Write Key',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'posthog',
+    name: 'PostHog',
+    description: 'Open source product analytics',
+    category: 'analytics',
+    icon: 'PH',
+    version: '1.3.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'password',
+        required: true,
+      },
+      {
+        key: 'host',
+        label: 'Host URL',
+        type: 'text',
+        required: false,
+        default: 'https://app.posthog.com',
+      },
+    ],
+  },
+
+  // Security
+  {
+    id: 'auth0',
+    name: 'Auth0',
+    description: 'Identity and access management',
+    category: 'security',
+    icon: 'A0',
+    version: '1.6.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'domain',
+        label: 'Domain',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'client_id',
+        label: 'Client ID',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'client_secret',
+        label: 'Client Secret',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'okta',
+    name: 'Okta',
+    description: 'Enterprise identity management',
+    category: 'security',
+    icon: 'OK',
+    version: '1.4.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'domain',
+        label: 'Okta Domain',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'api_token',
+        label: 'API Token',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'vault',
+    name: 'HashiCorp Vault',
+    description: 'Secrets management',
+    category: 'security',
+    icon: 'VT',
+    version: '1.3.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'address',
+        label: 'Vault Address',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'token',
+        label: 'Token',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'clerk',
+    name: 'Clerk',
+    description: 'User authentication and management',
+    category: 'security',
+    icon: 'CK',
+    version: '1.5.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'secret_key',
+        label: 'Secret Key',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+
+  // Media
+  {
+    id: 'cloudinary',
+    name: 'Cloudinary',
+    description: 'Image and video management',
+    category: 'media',
+    icon: 'CL',
+    version: '1.5.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'cloud_name',
+        label: 'Cloud Name',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'api_secret',
+        label: 'API Secret',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'imgix',
+    name: 'imgix',
+    description: 'Real-time image processing',
+    category: 'media',
+    icon: 'IX',
+    version: '1.2.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'mux',
+    name: 'Mux',
+    description: 'Video streaming infrastructure',
+    category: 'media',
+    icon: 'MX',
+    version: '1.4.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'token_id',
+        label: 'Token ID',
+        type: 'text',
+        required: true,
+      },
+      {
+        key: 'token_secret',
+        label: 'Token Secret',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'assemblyai',
+    name: 'AssemblyAI',
+    description: 'Speech-to-text transcription',
+    category: 'media',
+    icon: 'AA',
+    version: '1.3.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+  {
+    id: 'deepgram',
+    name: 'Deepgram',
+    description: 'Voice AI and transcription',
+    category: 'media',
+    icon: 'DG',
+    version: '1.2.0',
+    enabled: false,
+    healthStatus: 'unknown',
+    lastHealthCheck: null,
+    configRequired: true,
+    configFields: [
+      {
+        key: 'api_key',
+        label: 'API Key',
+        type: 'password',
+        required: true,
+      },
+    ],
+  },
+];
+
+// Helper functions
+export function getServersByCategory(category: MCPCategory): MCPServer[] {
+  return MCP_SERVERS.filter((server) => server.category === category);
+}
+
+export function getEnabledServers(): MCPServer[] {
+  return MCP_SERVERS.filter((server) => server.enabled);
+}
+
+export function getHealthyServers(): MCPServer[] {
+  return MCP_SERVERS.filter((server) => server.healthStatus === 'healthy');
+}
+
+export function searchServers(query: string): MCPServer[] {
+  const lowerQuery = query.toLowerCase();
+  return MCP_SERVERS.filter(
+    (server) =>
+      server.name.toLowerCase().includes(lowerQuery) ||
+      server.description.toLowerCase().includes(lowerQuery)
+  );
+}

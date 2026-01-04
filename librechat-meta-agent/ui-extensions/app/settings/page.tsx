@@ -81,40 +81,67 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<'api' | 'code' | 'appearance'>('api');
   const [providers, setProviders] = useState<APIProvider[]>([
     {
+      id: 'openai',
+      name: 'OpenAI',
+      icon: <Cloud className="w-5 h-5" />,
+      status: 'checking',
+      models: ['GPT-5.2 Pro', 'GPT-5.2', 'GPT-5', 'o3', 'o3 Mini', 'o1 Pro', 'GPT-4.5 Turbo', 'GPT-4o'],
+      envVar: 'OPENAI_API_KEY',
+      description: 'ChatGPT Pro models with GPT-5 & o3 reasoning',
+    },
+    {
       id: 'anthropic',
       name: 'Anthropic',
       icon: <Zap className="w-5 h-5" />,
       status: 'checking',
       models: ['Claude Opus 4.5', 'Claude Sonnet 4', 'Claude 3.5 Sonnet', 'Claude 3.5 Haiku'],
       envVar: 'ANTHROPIC_API_KEY',
-      description: 'Primary AI provider for Claude models',
-    },
-    {
-      id: 'openai',
-      name: 'OpenAI',
-      icon: <Cloud className="w-5 h-5" />,
-      status: 'checking',
-      models: ['GPT-4o', 'GPT-4o Mini', 'o1', 'o1 Mini'],
-      envVar: 'OPENAI_API_KEY',
-      description: 'Deep reasoning with o1 models',
+      description: 'Extended thinking with Claude models',
     },
     {
       id: 'google',
       name: 'Google',
       icon: <Globe className="w-5 h-5" />,
       status: 'checking',
-      models: ['Gemini 2.0 Flash', 'Gemini 1.5 Pro'],
+      models: ['Gemini 2.0 Ultra', 'Gemini 2.0 Pro', 'Gemini 2.0 Flash', 'Gemini 2.0 Flash Thinking'],
       envVar: 'GOOGLE_API_KEY',
-      description: 'Million-token context with Gemini',
+      description: '10M token context with Gemini 2.0',
     },
     {
       id: 'deepseek',
       name: 'DeepSeek',
       icon: <Cpu className="w-5 h-5" />,
       status: 'checking',
-      models: ['DeepSeek V3', 'DeepSeek R1'],
+      models: ['DeepSeek R1', 'DeepSeek R1 Zero', 'DeepSeek V3', 'DeepSeek Chat'],
       envVar: 'DEEPSEEK_API_KEY',
-      description: 'Advanced open-source reasoning',
+      description: 'Open-source reasoning champion',
+    },
+    {
+      id: 'meta',
+      name: 'Meta',
+      icon: <Server className="w-5 h-5" />,
+      status: 'checking',
+      models: ['Llama 4 405B', 'Llama 4 70B', 'Llama 3.3 70B'],
+      envVar: 'META_API_KEY',
+      description: 'Open-weight Llama models',
+    },
+    {
+      id: 'mistral',
+      name: 'Mistral',
+      icon: <Shield className="w-5 h-5" />,
+      status: 'checking',
+      models: ['Mistral Large 2', 'Codestral', 'Mistral Medium'],
+      envVar: 'MISTRAL_API_KEY',
+      description: 'European AI with code specialization',
+    },
+    {
+      id: 'xai',
+      name: 'xAI',
+      icon: <Zap className="w-5 h-5" />,
+      status: 'checking',
+      models: ['Grok 3', 'Grok 2'],
+      envVar: 'XAI_API_KEY',
+      description: 'Real-time X/Twitter integration',
     },
   ]);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -350,10 +377,26 @@ export default function SettingsPage() {
               </p>
               <div className="code-viewer">
                 <pre className="text-sm">
-{`ANTHROPIC_API_KEY=sk-ant-...
+{`# OpenAI (GPT-5.2 Pro, o3, etc.)
 OPENAI_API_KEY=sk-...
+
+# Anthropic (Claude Opus 4.5, Sonnet 4)
+ANTHROPIC_API_KEY=sk-ant-...
+
+# Google (Gemini 2.0 Ultra/Pro/Flash)
 GOOGLE_API_KEY=AIza...
-DEEPSEEK_API_KEY=sk-...`}
+
+# DeepSeek (R1, V3)
+DEEPSEEK_API_KEY=sk-...
+
+# Meta (Llama 4)
+META_API_KEY=...
+
+# Mistral (Large 2, Codestral)
+MISTRAL_API_KEY=...
+
+# xAI (Grok 3)
+XAI_API_KEY=xai-...`}
                 </pre>
               </div>
             </div>

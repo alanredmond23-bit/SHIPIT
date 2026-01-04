@@ -19,6 +19,7 @@ import {
   TrendingUp,
   Clock,
   ChevronRight,
+  Settings,
 } from 'lucide-react';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { AccentButton } from '@/components/ui/AccentButton';
@@ -31,6 +32,7 @@ const quickActions = [
   { title: 'Think', description: 'Extended reasoning', href: '/thinking', icon: Brain },
   { title: 'Research', description: 'Deep analysis', href: '/research', icon: Search },
   { title: 'Create', description: 'Generate images', href: '/images', icon: Palette },
+  { title: 'Settings', description: 'API & theme config', href: '/settings', icon: Settings },
 ];
 
 const features = [
@@ -157,7 +159,7 @@ export default function DashboardPage() {
             <h2 className="text-sm font-medium text-warm-500 uppercase tracking-wider">Quick Actions</h2>
           </div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             {quickActions.map((action) => (
               <Link
                 key={action.href}
