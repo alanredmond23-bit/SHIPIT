@@ -63,9 +63,9 @@ const LANGUAGE_INFO: Record<CodeLanguage, { name: string; extension: string }> =
  * Syntax highlighting color schemes by token type
  */
 const SYNTAX_COLORS = {
-  keyword: 'text-purple-400',
+  keyword: 'text-teal-400',
   string: 'text-green-400',
-  comment: 'text-slate-500',
+  comment: 'text-stone-400',
   function: 'text-blue-400',
   number: 'text-orange-400',
   operator: 'text-pink-400',
@@ -189,19 +189,19 @@ export default function CodeArtifact({
   return (
     <div
       className={clsx(
-        'code-artifact flex flex-col bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden',
+        'code-artifact flex flex-col bg-white rounded-2xl border border-stone-200 overflow-hidden',
         isFullscreen && 'fixed inset-0 z-50 rounded-none m-0'
       )}
     >
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 bg-slate-800/50 border-b border-slate-700">
+      <div className="flex items-center justify-between px-4 py-3 bg-stone-100/50 border-b border-stone-200">
         <div className="flex items-center gap-3 flex-1 min-w-0">
           <Code2 className="w-5 h-5 text-indigo-400 flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <h3 className="font-medium text-sm truncate">
               {title || filename || 'Code Artifact'}
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-stone-400">
               {lines.length} lines · {localContent.length} characters
             </p>
           </div>
@@ -211,10 +211,10 @@ export default function CodeArtifact({
         <div className="relative">
           <button
             onClick={() => setShowLanguageMenu(!showLanguageMenu)}
-            className="flex items-center gap-2 px-3 py-1.5 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-sm transition-colors tap-target"
+            className="flex items-center gap-2 px-3 py-1.5 bg-stone-200/50 hover:bg-stone-200 rounded-lg text-sm transition-colors tap-target"
           >
-            <span className="text-slate-300">{LANGUAGE_INFO[selectedLanguage].name}</span>
-            <ChevronDown className="w-4 h-4 text-slate-400" />
+            <span className="text-stone-700">{LANGUAGE_INFO[selectedLanguage].name}</span>
+            <ChevronDown className="w-4 h-4 text-stone-500" />
           </button>
 
           {/* Language Dropdown */}
@@ -224,13 +224,13 @@ export default function CodeArtifact({
                 className="fixed inset-0 z-10"
                 onClick={() => setShowLanguageMenu(false)}
               />
-              <div className="absolute right-0 top-full mt-2 w-48 max-h-64 overflow-y-auto bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-20 scroll-container">
+              <div className="absolute right-0 top-full mt-2 w-48 max-h-64 overflow-y-auto bg-stone-100 border border-stone-200 rounded-lg shadow-xl z-20 scroll-container">
                 {(Object.keys(LANGUAGE_INFO) as CodeLanguage[]).map((lang) => (
                   <button
                     key={lang}
                     onClick={() => handleLanguageSelect(lang)}
                     className={clsx(
-                      'w-full px-4 py-2 text-left text-sm hover:bg-slate-700 transition-colors',
+                      'w-full px-4 py-2 text-left text-sm hover:bg-stone-200 transition-colors',
                       selectedLanguage === lang && 'bg-indigo-600/20 text-indigo-400'
                     )}
                   >
@@ -244,10 +244,10 @@ export default function CodeArtifact({
       </div>
 
       {/* Toolbar */}
-      <div className="flex items-center gap-2 px-4 py-2 bg-slate-800/30 border-b border-slate-700/50">
+      <div className="flex items-center gap-2 px-4 py-2 bg-stone-100/30 border-b border-stone-200/50">
         <button
           onClick={handleCopy}
-          className="flex items-center gap-2 px-3 py-1.5 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-sm transition-colors tap-target"
+          className="flex items-center gap-2 px-3 py-1.5 bg-stone-200/50 hover:bg-stone-200 rounded-lg text-sm transition-colors tap-target"
           aria-label="Copy code"
         >
           {copied ? (
@@ -265,7 +265,7 @@ export default function CodeArtifact({
 
         <button
           onClick={handleDownload}
-          className="flex items-center gap-2 px-3 py-1.5 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-sm transition-colors tap-target"
+          className="flex items-center gap-2 px-3 py-1.5 bg-stone-200/50 hover:bg-stone-200 rounded-lg text-sm transition-colors tap-target"
           aria-label="Download file"
         >
           <Download className="w-4 h-4" />
@@ -287,7 +287,7 @@ export default function CodeArtifact({
 
         <button
           onClick={toggleFullscreen}
-          className="flex items-center gap-2 px-3 py-1.5 bg-slate-700/50 hover:bg-slate-700 rounded-lg text-sm transition-colors tap-target"
+          className="flex items-center gap-2 px-3 py-1.5 bg-stone-200/50 hover:bg-stone-200 rounded-lg text-sm transition-colors tap-target"
           aria-label={isFullscreen ? 'Exit fullscreen' : 'Enter fullscreen'}
         >
           {isFullscreen ? (
@@ -307,7 +307,7 @@ export default function CodeArtifact({
           <div className="flex h-full overflow-auto scroll-container">
             {/* Line Numbers */}
             {showLineNumbers && (
-              <div className="flex-shrink-0 px-4 py-4 bg-slate-800/30 text-slate-500 text-sm font-mono select-none border-r border-slate-700/50">
+              <div className="flex-shrink-0 px-4 py-4 bg-stone-100/30 text-stone-400 text-sm font-mono select-none border-r border-stone-200/50">
                 {lines.map((_, index) => (
                   <div key={index} className="leading-6 text-right" style={{ minWidth: `${lineNumberWidth}ch` }}>
                     {index + 1}
@@ -321,7 +321,7 @@ export default function CodeArtifact({
               ref={textareaRef}
               value={localContent}
               onChange={handleContentChange}
-              className="flex-1 px-4 py-4 bg-transparent text-white font-mono text-sm leading-6 resize-none focus:outline-none"
+              className="flex-1 px-4 py-4 bg-transparent text-stone-900 font-mono text-sm leading-6 resize-none focus:outline-none"
               spellCheck={false}
               autoCapitalize="off"
               autoCorrect="off"
@@ -336,7 +336,7 @@ export default function CodeArtifact({
           <div className="flex h-full overflow-auto scroll-container">
             {/* Line Numbers */}
             {showLineNumbers && (
-              <div className="flex-shrink-0 px-4 py-4 bg-slate-800/30 text-slate-500 text-sm font-mono select-none border-r border-slate-700/50">
+              <div className="flex-shrink-0 px-4 py-4 bg-stone-100/30 text-stone-400 text-sm font-mono select-none border-r border-stone-200/50">
                 {lines.map((_, index) => (
                   <div key={index} className="leading-6 text-right" style={{ minWidth: `${lineNumberWidth}ch` }}>
                     {index + 1}
@@ -367,7 +367,7 @@ export default function CodeArtifact({
 function highlightLine(line: string, language: CodeLanguage): React.ReactNode[] {
   // Fallback for non-code languages
   if (['plaintext', 'markdown'].includes(language)) {
-    return [<span key={0} className="text-slate-300">{line}</span>];
+    return [<span key={0} className="text-stone-700">{line}</span>];
   }
 
   const tokens: React.ReactNode[] = [];
@@ -379,7 +379,7 @@ function highlightLine(line: string, language: CodeLanguage): React.ReactNode[] 
     const commentMatch = line.match(/^(\s*)#(.*)$/);
     if (commentMatch) {
       return [
-        <span key={0} className="text-slate-300">{commentMatch[1]}</span>,
+        <span key={0} className="text-stone-700">{commentMatch[1]}</span>,
         <span key={1} className={SYNTAX_COLORS.comment}>#{commentMatch[2]}</span>,
       ];
     }
@@ -387,7 +387,7 @@ function highlightLine(line: string, language: CodeLanguage): React.ReactNode[] 
     const commentMatch = line.match(/^(\s*)(\/\/.*)$/);
     if (commentMatch) {
       return [
-        <span key={0} className="text-slate-300">{commentMatch[1]}</span>,
+        <span key={0} className="text-stone-700">{commentMatch[1]}</span>,
         <span key={1} className={SYNTAX_COLORS.comment}>{commentMatch[2]}</span>,
       ];
     }
@@ -395,9 +395,9 @@ function highlightLine(line: string, language: CodeLanguage): React.ReactNode[] 
     const multiLineCommentMatch = line.match(/^(\s*)(\/\*.*?\*\/)(.*)$/);
     if (multiLineCommentMatch) {
       return [
-        <span key={0} className="text-slate-300">{multiLineCommentMatch[1]}</span>,
+        <span key={0} className="text-stone-700">{multiLineCommentMatch[1]}</span>,
         <span key={1} className={SYNTAX_COLORS.comment}>{multiLineCommentMatch[2]}</span>,
-        <span key={2} className="text-slate-300">{multiLineCommentMatch[3]}</span>,
+        <span key={2} className="text-stone-700">{multiLineCommentMatch[3]}</span>,
       ];
     }
   }
@@ -449,7 +449,7 @@ function highlightLine(line: string, language: CodeLanguage): React.ReactNode[] 
     // Add plain text before match
     if (match.start > lastEnd) {
       tokens.push(
-        <span key={tokenId++} className="text-slate-300">
+        <span key={tokenId++} className="text-stone-700">
           {line.substring(lastEnd, match.start)}
         </span>
       );
@@ -468,13 +468,13 @@ function highlightLine(line: string, language: CodeLanguage): React.ReactNode[] 
   // Add remaining text
   if (lastEnd < line.length) {
     tokens.push(
-      <span key={tokenId++} className="text-slate-300">
+      <span key={tokenId++} className="text-stone-700">
         {line.substring(lastEnd)}
       </span>
     );
   }
 
-  return tokens.length > 0 ? tokens : [<span key={0} className="text-slate-300">{line}</span>];
+  return tokens.length > 0 ? tokens : [<span key={0} className="text-stone-700">{line}</span>];
 }
 
 /**

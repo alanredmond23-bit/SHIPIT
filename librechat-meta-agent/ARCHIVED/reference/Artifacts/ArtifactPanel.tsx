@@ -230,7 +230,7 @@ export default function ArtifactPanel({
       <div
         ref={panelRef}
         className={clsx(
-          'fixed bg-slate-900 border-slate-800 z-50 flex flex-col transition-transform duration-300 ease-out',
+          'fixed bg-white border-stone-200 z-50 flex flex-col transition-transform duration-300 ease-out',
           position === 'right' && [
             'top-0 right-0 bottom-0 w-full sm:w-[600px] md:w-[700px] lg:w-[800px] border-l',
             isOpen ? 'translate-x-0' : 'translate-x-full',
@@ -243,11 +243,11 @@ export default function ArtifactPanel({
       >
         {/* Swipe Handle (mobile) */}
         {position === 'bottom' && (
-          <div className="w-12 h-1 bg-slate-700 rounded-full mx-auto my-3 sm:hidden" />
+          <div className="w-12 h-1 bg-stone-200 rounded-full mx-auto my-3 sm:hidden" />
         )}
 
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-800 bg-slate-900/95 backdrop-blur-sm">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-stone-200 bg-white/95 backdrop-blur-sm">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="p-2 bg-indigo-600/20 rounded-lg text-indigo-400">
               {getTypeIcon(artifact.type)}
@@ -255,7 +255,7 @@ export default function ArtifactPanel({
             <div className="flex-1 min-w-0">
               <h2 className="font-semibold text-lg truncate">{artifact.title}</h2>
               {artifact.description && (
-                <p className="text-sm text-slate-400 truncate">{artifact.description}</p>
+                <p className="text-sm text-stone-500 truncate">{artifact.description}</p>
               )}
             </div>
           </div>
@@ -269,7 +269,7 @@ export default function ArtifactPanel({
                   'p-2 rounded-lg transition-colors tap-target',
                   showVersionHistory
                     ? 'bg-indigo-600/20 text-indigo-400'
-                    : 'bg-slate-800 hover:bg-slate-700'
+                    : 'bg-stone-100 hover:bg-stone-200'
                 )}
                 aria-label="Version history"
               >
@@ -280,7 +280,7 @@ export default function ArtifactPanel({
             {/* Close Button */}
             <button
               onClick={onClose}
-              className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors tap-target"
+              className="p-2 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors tap-target"
               aria-label="Close panel"
             >
               <X className="w-5 h-5" />
@@ -289,7 +289,7 @@ export default function ArtifactPanel({
         </div>
 
         {/* Metadata Bar */}
-        <div className="flex items-center gap-4 px-4 py-2 bg-slate-800/30 border-b border-slate-700/50 text-sm text-slate-400">
+        <div className="flex items-center gap-4 px-4 py-2 bg-stone-100/30 border-b border-stone-200/50 text-sm text-stone-500">
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4" />
             <span>Updated {formatTimestamp(artifact.updatedAt)}</span>
@@ -339,7 +339,7 @@ export default function ArtifactPanel({
           {/* Version History Sidebar */}
           {showVersionHistory && (
             <div className={clsx(
-              'w-full sm:w-1/3 border-l border-slate-800 bg-slate-900/50 overflow-auto scroll-container',
+              'w-full sm:w-1/3 border-l border-stone-200 bg-white/50 overflow-auto scroll-container',
               'sm:block'
             )}>
               <div className="p-4">
@@ -347,7 +347,7 @@ export default function ArtifactPanel({
                   <h3 className="font-semibold">Version History</h3>
                   <button
                     onClick={() => setShowVersionHistory(false)}
-                    className="sm:hidden p-2 hover:bg-slate-800 rounded-lg"
+                    className="sm:hidden p-2 hover:bg-stone-100 rounded-lg"
                   >
                     <ChevronRight className="w-5 h-5" />
                   </button>
@@ -362,8 +362,8 @@ export default function ArtifactPanel({
                         selectedVersion === version.version
                           ? 'bg-indigo-600/20 border-indigo-600'
                           : version.version === artifact.version
-                          ? 'bg-slate-800/50 border-slate-700'
-                          : 'bg-slate-800/30 border-slate-700/50 hover:bg-slate-800/50'
+                          ? 'bg-stone-100/50 border-stone-200'
+                          : 'bg-stone-100/30 border-stone-200/50 hover:bg-stone-100/50'
                       )}
                       onClick={() => handleRestoreVersion(version.version)}
                     >
@@ -377,11 +377,11 @@ export default function ArtifactPanel({
                               </span>
                             )}
                           </div>
-                          <p className="text-xs text-slate-400">
+                          <p className="text-xs text-stone-500">
                             {formatTimestamp(version.timestamp)}
                           </p>
                           {version.description && (
-                            <p className="text-sm text-slate-300 mt-2 line-clamp-2">
+                            <p className="text-sm text-stone-700 mt-2 line-clamp-2">
                               {version.description}
                             </p>
                           )}
@@ -394,7 +394,7 @@ export default function ArtifactPanel({
                   ))}
 
                   {versions.length === 0 && (
-                    <div className="text-center py-8 text-slate-500">
+                    <div className="text-center py-8 text-stone-400">
                       <History className="w-12 h-12 mx-auto mb-3 opacity-50" />
                       <p>No version history yet</p>
                     </div>
@@ -406,12 +406,12 @@ export default function ArtifactPanel({
         </div>
 
         {/* Footer Actions */}
-        <div className="px-4 py-3 border-t border-slate-800 bg-slate-900/95 backdrop-blur-sm pb-[calc(0.75rem+var(--safe-area-inset-bottom))]">
+        <div className="px-4 py-3 border-t border-stone-200 bg-white/95 backdrop-blur-sm pb-[calc(0.75rem+var(--safe-area-inset-bottom))]">
           {isEditing ? (
             <div className="flex gap-3">
               <button
                 onClick={handleDiscard}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-800 hover:bg-slate-700 rounded-xl font-medium transition-colors tap-target"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-stone-100 hover:bg-stone-200 rounded-xl font-medium transition-colors tap-target"
               >
                 <XCircle className="w-5 h-5" />
                 <span>Discard</span>
@@ -419,7 +419,7 @@ export default function ArtifactPanel({
               <button
                 onClick={handleSave}
                 disabled={!hasUnsavedChanges}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-500 rounded-xl font-medium transition-colors tap-target"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-500 disabled:bg-stone-200 disabled:text-stone-400 rounded-xl font-medium transition-colors tap-target"
               >
                 <Save className="w-5 h-5" />
                 <span>Save Changes</span>

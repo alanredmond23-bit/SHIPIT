@@ -105,6 +105,9 @@ const PROVIDER_CONFIG: Record<string, { color: string; bg: string; icon: string 
   openai: { color: 'text-emerald-400', bg: 'bg-emerald-500/20', icon: '🟢' },
   google: { color: 'text-blue-400', bg: 'bg-blue-500/20', icon: '🔵' },
   deepseek: { color: 'text-purple-400', bg: 'bg-purple-500/20', icon: '🟣' },
+  meta: { color: 'text-blue-500', bg: 'bg-blue-600/20', icon: '🦙' },
+  mistral: { color: 'text-orange-400', bg: 'bg-orange-500/20', icon: '🌀' },
+  xai: { color: 'text-gray-400', bg: 'bg-gray-500/20', icon: '✖️' },
 };
 
 const TIER_CONFIG: Record<string, { label: string; icon: any; color: string }> = {
