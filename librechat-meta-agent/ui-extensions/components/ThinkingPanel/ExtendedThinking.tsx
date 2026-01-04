@@ -194,7 +194,7 @@ function TreeNode({
     <div className="relative">
       {/* Connection Line */}
       {depth > 0 && (
-        <div className="absolute left-[-20px] top-0 w-[20px] h-[24px] border-l-2 border-b-2 border-slate-700 rounded-bl-lg" />
+        <div className="absolute left-[-20px] top-0 w-[20px] h-[24px] border-l-2 border-b-2 border-stone-200 rounded-bl-lg" />
       )}
 
       {/* Node Card */}
@@ -205,7 +205,7 @@ function TreeNode({
           isActive && 'ring-4 ring-indigo-500/50 shadow-xl shadow-indigo-500/20',
           hasChildren && isExpanded && 'mb-4',
           {
-            'bg-slate-800/50 border-slate-700': !isActive,
+            'bg-stone-100/50 border-stone-200': !isActive,
             'bg-gradient-to-br from-indigo-900/40 to-purple-900/40 border-indigo-500': isActive,
           }
         )}
@@ -234,11 +234,11 @@ function TreeNode({
           <div className="flex-1 min-w-0">
             {/* Type & Confidence */}
             <div className="flex items-center gap-2 mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <span className="text-xs font-semibold uppercase tracking-wider text-stone-500">
                 {node.type}
               </span>
               <div className="flex items-center gap-1">
-                <div className="w-16 h-2 bg-slate-700 rounded-full overflow-hidden">
+                <div className="w-16 h-2 bg-stone-200 rounded-full overflow-hidden">
                   <div
                     className={clsx(
                       'h-full transition-all duration-500',
@@ -257,17 +257,17 @@ function TreeNode({
             </div>
 
             {/* Thought Content */}
-            <p className="text-sm text-slate-200 leading-relaxed mb-2">{node.content}</p>
+            <p className="text-sm text-stone-600 leading-relaxed mb-2">{node.content}</p>
 
             {/* Reasoning (if available) */}
             {node.reasoning && (
-              <div className="text-xs text-slate-400 italic border-l-2 border-slate-600 pl-2 mb-2">
+              <div className="text-xs text-stone-500 italic border-l-2 border-stone-300 pl-2 mb-2">
                 {node.reasoning}
               </div>
             )}
 
             {/* Metadata */}
-            <div className="flex items-center gap-3 text-xs text-slate-500">
+            <div className="flex items-center gap-3 text-xs text-stone-400">
               <span>{node.metadata.tokens} tokens</span>
               <span>•</span>
               <span>{formatDuration(node.metadata.duration)}</span>
@@ -280,7 +280,7 @@ function TreeNode({
           <div className="flex flex-col gap-1">
             <button
               onClick={() => onBookmark(node.id)}
-              className="p-1.5 hover:bg-slate-700 rounded-lg transition-colors"
+              className="p-1.5 hover:bg-stone-200 rounded-lg transition-colors"
               title="Bookmark"
             >
               <Star className="w-4 h-4 text-yellow-400" />
@@ -288,7 +288,7 @@ function TreeNode({
             {hasChildren && (
               <button
                 onClick={() => onToggle(node.id)}
-                className="p-1.5 hover:bg-slate-700 rounded-lg transition-colors"
+                className="p-1.5 hover:bg-stone-200 rounded-lg transition-colors"
                 title={isExpanded ? 'Collapse' : 'Expand'}
               >
                 {isExpanded ? (
@@ -302,7 +302,7 @@ function TreeNode({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-2 px-4 pb-3 border-t border-slate-700/50 pt-3">
+        <div className="flex gap-2 px-4 pb-3 border-t border-stone-200/50 pt-3">
           <button
             onClick={() => onExpand(node.id)}
             className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-400 rounded-lg text-xs font-medium transition-colors"
@@ -319,7 +319,7 @@ function TreeNode({
           </button>
           <button
             onClick={() => onAlternatives(node.id)}
-            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-purple-600/20 hover:bg-purple-600/30 text-purple-400 rounded-lg text-xs font-medium transition-colors"
+            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 bg-teal-500/20 hover:bg-teal-500/30 text-teal-400 rounded-lg text-xs font-medium transition-colors"
           >
             <GitBranch className="w-3.5 h-3.5" />
             Alternatives
@@ -671,19 +671,19 @@ export default function ExtendedThinking({
   const rootNode = session ? nodes.get(session.rootNodeId) : null;
 
   return (
-    <div className="flex flex-col h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className="flex flex-col h-full bg-gradient-to-br from-white via-stone-100 to-white">
       {/* Header */}
-      <div className="border-b border-slate-700 bg-slate-900/50 backdrop-blur-sm">
+      <div className="border-b border-stone-200 bg-white/50 backdrop-blur-sm">
         <div className="flex items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-indigo-600 to-purple-600 rounded-xl">
-              <Brain className="w-6 h-6 text-white" />
+            <div className="p-2 bg-gradient-to-br from-indigo-600 to-teal-500 rounded-xl">
+              <Brain className="w-6 h-6 text-stone-900" />
             </div>
             <div>
-              <h2 className="text-xl font-bold bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+              <h2 className="text-xl font-bold bg-gradient-to-r from-indigo-400 to-teal-400 bg-clip-text text-transparent">
                 Extended Thinking Engine
               </h2>
-              <p className="text-sm text-slate-400">Visual reasoning with confidence tracking</p>
+              <p className="text-sm text-stone-500">Visual reasoning with confidence tracking</p>
             </div>
           </div>
 
@@ -691,7 +691,7 @@ export default function ExtendedThinking({
             <div className="flex items-center gap-3">
               <button
                 onClick={togglePause}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors"
               >
                 {session.status === 'thinking' ? (
                   <>
@@ -710,7 +710,7 @@ export default function ExtendedThinking({
                 <button
                   onClick={concludeThinking}
                   disabled={loading}
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 disabled:bg-slate-700 rounded-lg transition-colors"
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-500 disabled:bg-stone-200 rounded-lg transition-colors"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Conclude</span>
@@ -725,27 +725,27 @@ export default function ExtendedThinking({
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 px-6 pb-4">
             <div className="flex items-center gap-2 text-sm">
               <Activity className="w-4 h-4 text-indigo-400" />
-              <span className="text-slate-400">Thoughts:</span>
-              <span className="font-bold text-white">{session.stats.branchesExplored}</span>
+              <span className="text-stone-500">Thoughts:</span>
+              <span className="font-bold text-stone-900">{session.stats.branchesExplored}</span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <TrendingUp className="w-4 h-4 text-green-400" />
-              <span className="text-slate-400">Avg Confidence:</span>
-              <span className="font-bold text-white">
+              <span className="text-stone-500">Avg Confidence:</span>
+              <span className="font-bold text-stone-900">
                 {session.stats.averageConfidence.toFixed(1)}%
               </span>
             </div>
             <div className="flex items-center gap-2 text-sm">
               <Zap className="w-4 h-4 text-yellow-400" />
-              <span className="text-slate-400">Tokens:</span>
-              <span className="font-bold text-white">
+              <span className="text-stone-500">Tokens:</span>
+              <span className="font-bold text-stone-900">
                 {session.stats.totalTokens}/{session.config.maxTokens}
               </span>
             </div>
             <div className="flex items-center gap-2 text-sm">
-              <Target className="w-4 h-4 text-purple-400" />
-              <span className="text-slate-400">Max Depth:</span>
-              <span className="font-bold text-white">
+              <Target className="w-4 h-4 text-teal-400" />
+              <span className="text-stone-500">Max Depth:</span>
+              <span className="font-bold text-stone-900">
                 {session.stats.maxDepthReached}/{session.config.maxDepth}
               </span>
             </div>
@@ -768,7 +768,7 @@ export default function ExtendedThinking({
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="What would you like to think about?"
-                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
+                  className="w-full px-4 py-3 bg-stone-100 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-none"
                   rows={4}
                 />
               </div>
@@ -779,7 +779,7 @@ export default function ExtendedThinking({
                 <select
                   value={selectedTemplate}
                   onChange={(e) => setSelectedTemplate(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-3 bg-stone-100 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   <option value="">No template (free-form)</option>
                   {templates.map((t) => (
@@ -798,7 +798,7 @@ export default function ExtendedThinking({
                     type="number"
                     value={maxTokens}
                     onChange={(e) => setMaxTokens(parseInt(e.target.value))}
-                    className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-4 py-2 bg-stone-100 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
                 <div>
@@ -807,7 +807,7 @@ export default function ExtendedThinking({
                     type="number"
                     value={maxDepth}
                     onChange={(e) => setMaxDepth(parseInt(e.target.value))}
-                    className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                    className="w-full px-4 py-2 bg-stone-100 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   />
                 </div>
               </div>
@@ -817,7 +817,7 @@ export default function ExtendedThinking({
                 <select
                   value={thinkingStyle}
                   onChange={(e) => setThinkingStyle(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-4 py-3 bg-stone-100 border border-stone-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   <option value="thorough">Thorough</option>
                   <option value="fast">Fast</option>
@@ -836,7 +836,7 @@ export default function ExtendedThinking({
               <button
                 onClick={startThinking}
                 disabled={loading || !query.trim()}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 disabled:from-slate-700 disabled:to-slate-700 rounded-xl font-medium transition-all"
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-600 to-teal-500 hover:from-indigo-500 hover:to-teal-500 disabled:from-stone-200 disabled:to-stone-200 rounded-xl font-medium transition-all"
               >
                 <Rocket className="w-5 h-5" />
                 {loading ? 'Starting...' : 'Start Thinking'}
@@ -852,7 +852,7 @@ export default function ExtendedThinking({
                   </div>
                   <div>
                     <h4 className="font-semibold mb-1">Visual Thought Tree</h4>
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-stone-500">
                       See branching reasoning paths in real-time
                     </p>
                   </div>
@@ -866,7 +866,7 @@ export default function ExtendedThinking({
                   </div>
                   <div>
                     <h4 className="font-semibold mb-1">Confidence Scoring</h4>
-                    <p className="text-sm text-slate-400">Each thought has a confidence level</p>
+                    <p className="text-sm text-stone-500">Each thought has a confidence level</p>
                   </div>
                 </div>
               </div>
@@ -878,7 +878,7 @@ export default function ExtendedThinking({
                   </div>
                   <div>
                     <h4 className="font-semibold mb-1">Self-Critique</h4>
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-stone-500">
                       Automatic review and revision of reasoning
                     </p>
                   </div>
@@ -887,12 +887,12 @@ export default function ExtendedThinking({
 
               <div className="card p-4">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 bg-purple-500/20 rounded-lg">
-                    <Sparkles className="w-5 h-5 text-purple-400" />
+                  <div className="p-2 bg-teal-500/20 rounded-lg">
+                    <Sparkles className="w-5 h-5 text-teal-400" />
                   </div>
                   <div>
                     <h4 className="font-semibold mb-1">Parallel Exploration</h4>
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-stone-500">
                       Explore multiple solution paths simultaneously
                     </p>
                   </div>
@@ -927,13 +927,13 @@ export default function ExtendedThinking({
                   </div>
                   <div>
                     <h3 className="text-lg font-bold text-green-400">Final Conclusion</h3>
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-stone-500">
                       Synthesized from {session.stats.branchesExplored} thoughts
                     </p>
                   </div>
                 </div>
                 <div className="prose prose-invert max-w-none">
-                  <p className="text-slate-200 whitespace-pre-wrap">{session.finalConclusion}</p>
+                  <p className="text-stone-600 whitespace-pre-wrap">{session.finalConclusion}</p>
                 </div>
               </div>
             )}
@@ -961,9 +961,9 @@ export default function ExtendedThinking({
           --yellow-500-20: rgba(234, 179, 8, 0.2);
           --yellow-400: rgb(250, 204, 21);
           --yellow-500: rgb(234, 179, 8);
-          --purple-500-20: rgba(168, 85, 247, 0.2);
-          --purple-400: rgb(192, 132, 252);
-          --purple-500: rgb(168, 85, 247);
+          --teal-500-20: rgba(168, 85, 247, 0.2);
+          --teal-400: rgb(192, 132, 252);
+          --teal-500: rgb(168, 85, 247);
           --orange-500-20: rgba(249, 115, 22, 0.2);
           --orange-400: rgb(251, 146, 60);
           --orange-500: rgb(249, 115, 22);

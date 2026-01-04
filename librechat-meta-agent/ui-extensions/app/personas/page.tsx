@@ -26,13 +26,13 @@ export default function PersonasPage() {
       <MainContent>
         <div className="h-[calc(100vh-3.5rem)] lg:h-screen flex flex-col">
           {/* Tab Bar */}
-          <div className="flex border-b border-slate-700 bg-slate-900/50">
+          <div className="flex border-b border-stone-200 bg-white/50">
             <button
               onClick={() => setView('explore')}
               className={`px-6 py-3 text-sm font-medium transition-colors ${
                 view === 'explore'
-                  ? 'text-white border-b-2 border-purple-500'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'text-stone-900 border-b-2 border-teal-500'
+                  : 'text-stone-500 hover:text-stone-900'
               }`}
             >
               Explore Personas
@@ -41,8 +41,8 @@ export default function PersonasPage() {
               onClick={() => setView('create')}
               className={`px-6 py-3 text-sm font-medium transition-colors ${
                 view === 'create'
-                  ? 'text-white border-b-2 border-purple-500'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'text-stone-900 border-b-2 border-teal-500'
+                  : 'text-stone-500 hover:text-stone-900'
               }`}
             >
               Create New
@@ -52,8 +52,8 @@ export default function PersonasPage() {
                 onClick={() => setView('chat')}
                 className={`px-6 py-3 text-sm font-medium transition-colors ${
                   view === 'chat'
-                    ? 'text-white border-b-2 border-purple-500'
-                    : 'text-slate-400 hover:text-white'
+                    ? 'text-stone-900 border-b-2 border-teal-500'
+                    : 'text-stone-500 hover:text-stone-900'
                 }`}
               >
                 Chat

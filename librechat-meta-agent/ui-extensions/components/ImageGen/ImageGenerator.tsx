@@ -350,16 +350,16 @@ export default function ImageGenerator() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6">
+    <div className="min-h-screen bg-stone-50 p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-white flex items-center gap-3">
-              <Wand2 className="w-8 h-8 text-purple-400" />
+            <h1 className="text-3xl font-bold text-stone-900 flex items-center gap-3">
+              <Wand2 className="w-8 h-8 text-teal-400" />
               AI Image Generator
             </h1>
-            <p className="text-slate-400 mt-1">
+            <p className="text-stone-500 mt-1">
               Multi-provider image generation with DALL-E, Stability AI, and Replicate
             </p>
           </div>
@@ -378,7 +378,7 @@ export default function ImageGenerator() {
           <div className="lg:col-span-1 space-y-4">
             {/* Prompt Input */}
             <div className="card">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-stone-700 mb-2">
                 Prompt
               </label>
               <textarea
@@ -386,7 +386,7 @@ export default function ImageGenerator() {
                 onChange={(e) => setPrompt(e.target.value)}
                 placeholder="Describe the image you want to create..."
                 rows={4}
-                className="w-full px-4 py-3 bg-slate-900 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none"
+                className="w-full px-4 py-3 bg-white border border-stone-200 rounded-lg text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
               />
 
               <button
@@ -405,7 +405,7 @@ export default function ImageGenerator() {
 
             {/* Provider Selection */}
             <div className="card">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-stone-700 mb-2">
                 Provider
               </label>
               <div className="grid grid-cols-3 gap-2">
@@ -416,8 +416,8 @@ export default function ImageGenerator() {
                     className={clsx(
                       'py-2 px-3 rounded-lg font-medium text-sm transition-colors',
                       provider === p
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                        ? 'bg-teal-500 text-stone-900'
+                        : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
                     )}
                   >
                     {p === 'dalle3' ? 'DALL-E 3' : p === 'stability' ? 'Stability' : 'Replicate'}
@@ -428,7 +428,7 @@ export default function ImageGenerator() {
 
             {/* Size Selection */}
             <div className="card">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-stone-700 mb-2">
                 Size & Aspect Ratio
               </label>
               <div className="space-y-2">
@@ -439,8 +439,8 @@ export default function ImageGenerator() {
                     className={clsx(
                       'w-full py-2 px-4 rounded-lg text-left transition-colors',
                       size === option.value
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                        ? 'bg-teal-500 text-stone-900'
+                        : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
                     )}
                   >
                     <div className="flex items-center justify-between">
@@ -454,7 +454,7 @@ export default function ImageGenerator() {
 
             {/* Style Presets */}
             <div className="card">
-              <label className="block text-sm font-medium text-slate-300 mb-3">
+              <label className="block text-sm font-medium text-stone-700 mb-3">
                 Style
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -465,8 +465,8 @@ export default function ImageGenerator() {
                     className={clsx(
                       'p-3 rounded-lg text-left transition-all',
                       style === preset.value
-                        ? 'bg-purple-600 text-white ring-2 ring-purple-400'
-                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                        ? 'bg-teal-500 text-stone-900 ring-2 ring-teal-400'
+                        : 'bg-stone-100 text-stone-700 hover:bg-stone-200'
                     )}
                   >
                     <div className="text-2xl mb-1">{preset.preview}</div>
@@ -479,7 +479,7 @@ export default function ImageGenerator() {
             {/* Quality */}
             {provider === 'dalle3' && (
               <div className="card">
-                <label className="block text-sm font-medium text-slate-300 mb-2">
+                <label className="block text-sm font-medium text-stone-700 mb-2">
                   Quality
                 </label>
                 <div className="grid grid-cols-2 gap-2">
@@ -488,8 +488,8 @@ export default function ImageGenerator() {
                     className={clsx(
                       'py-2 px-4 rounded-lg font-medium',
                       quality === 'standard'
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                        ? 'bg-teal-500 text-stone-900'
+                        : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
                     )}
                   >
                     Standard
@@ -499,8 +499,8 @@ export default function ImageGenerator() {
                     className={clsx(
                       'py-2 px-4 rounded-lg font-medium',
                       quality === 'hd'
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                        ? 'bg-teal-500 text-stone-900'
+                        : 'bg-stone-100 text-stone-500 hover:bg-stone-200'
                     )}
                   >
                     HD
@@ -513,7 +513,7 @@ export default function ImageGenerator() {
             <div className="card">
               <button
                 onClick={() => setShowAdvanced(!showAdvanced)}
-                className="w-full flex items-center justify-between text-slate-300 hover:text-white"
+                className="w-full flex items-center justify-between text-stone-700 hover:text-stone-900"
               >
                 <div className="flex items-center gap-2">
                   <Settings className="w-4 h-4" />
@@ -529,7 +529,7 @@ export default function ImageGenerator() {
               {showAdvanced && (
                 <div className="mt-4 space-y-4">
                   <div>
-                    <label className="block text-sm text-slate-400 mb-2">
+                    <label className="block text-sm text-stone-500 mb-2">
                       Negative Prompt
                     </label>
                     <textarea
@@ -537,14 +537,14 @@ export default function ImageGenerator() {
                       onChange={(e) => setNegativePrompt(e.target.value)}
                       placeholder="What to avoid..."
                       rows={2}
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm resize-none"
+                      className="w-full px-3 py-2 bg-white border border-stone-200 rounded-lg text-stone-900 text-sm resize-none"
                     />
                   </div>
 
                   {provider !== 'dalle3' && (
                     <>
                       <div>
-                        <label className="block text-sm text-slate-400 mb-2">
+                        <label className="block text-sm text-stone-500 mb-2">
                           Steps: {steps}
                         </label>
                         <input
@@ -558,7 +558,7 @@ export default function ImageGenerator() {
                       </div>
 
                       <div>
-                        <label className="block text-sm text-slate-400 mb-2">
+                        <label className="block text-sm text-stone-500 mb-2">
                           CFG Scale: {cfgScale}
                         </label>
                         <input
@@ -575,7 +575,7 @@ export default function ImageGenerator() {
                   )}
 
                   <div>
-                    <label className="block text-sm text-slate-400 mb-2">
+                    <label className="block text-sm text-stone-500 mb-2">
                       Seed (optional)
                     </label>
                     <input
@@ -583,12 +583,12 @@ export default function ImageGenerator() {
                       value={seed || ''}
                       onChange={(e) => setSeed(e.target.value ? parseInt(e.target.value) : undefined)}
                       placeholder="Random"
-                      className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white text-sm"
+                      className="w-full px-3 py-2 bg-white border border-stone-200 rounded-lg text-stone-900 text-sm"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm text-slate-400 mb-2">
+                    <label className="block text-sm text-stone-500 mb-2">
                       Number of Images: {count}
                     </label>
                     <input
@@ -633,15 +633,15 @@ export default function ImageGenerator() {
               className={clsx(
                 'border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors',
                 dragActive
-                  ? 'border-purple-500 bg-purple-500/10'
-                  : 'border-slate-700 hover:border-slate-600'
+                  ? 'border-teal-500 bg-teal-500/10'
+                  : 'border-stone-200 hover:border-stone-300'
               )}
             >
-              <Upload className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-              <p className="text-sm text-slate-400">
+              <Upload className="w-8 h-8 text-stone-400 mx-auto mb-2" />
+              <p className="text-sm text-stone-500">
                 Drag & drop or click to upload
               </p>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-stone-400 mt-1">
                 For image-to-image editing
               </p>
               <input
@@ -658,9 +658,9 @@ export default function ImageGenerator() {
           <div className="lg:col-span-2">
             {loading && (
               <div className="card text-center py-12">
-                <Loader2 className="w-12 h-12 text-purple-400 animate-spin mx-auto mb-4" />
-                <p className="text-slate-300 text-lg">Creating your images...</p>
-                <p className="text-slate-500 text-sm mt-2">
+                <Loader2 className="w-12 h-12 text-teal-400 animate-spin mx-auto mb-4" />
+                <p className="text-stone-700 text-lg">Creating your images...</p>
+                <p className="text-stone-400 text-sm mt-2">
                   This may take 10-30 seconds
                 </p>
               </div>
@@ -668,9 +668,9 @@ export default function ImageGenerator() {
 
             {!loading && images.length === 0 && !showHistory && (
               <div className="card text-center py-16">
-                <ImageIcon className="w-16 h-16 text-slate-700 mx-auto mb-4" />
-                <p className="text-slate-400 text-lg">No images yet</p>
-                <p className="text-slate-500 text-sm mt-2">
+                <ImageIcon className="w-16 h-16 text-stone-300 mx-auto mb-4" />
+                <p className="text-stone-500 text-lg">No images yet</p>
+                <p className="text-stone-400 text-sm mt-2">
                   Enter a prompt and generate your first image
                 </p>
               </div>
@@ -679,12 +679,12 @@ export default function ImageGenerator() {
             {!loading && images.length > 0 && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-xl font-semibold text-white">
+                  <h2 className="text-xl font-semibold text-stone-900">
                     Generated Images ({images.length})
                   </h2>
                   <button
                     onClick={() => setImages([])}
-                    className="text-sm text-slate-400 hover:text-white"
+                    className="text-sm text-stone-500 hover:text-stone-900"
                   >
                     Clear All
                   </button>
@@ -713,7 +713,7 @@ export default function ImageGenerator() {
 
             {showHistory && history.length > 0 && (
               <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-white">Recent History</h2>
+                <h2 className="text-xl font-semibold text-stone-900">Recent History</h2>
                 <div className="grid grid-cols-3 gap-3">
                   {history.map((image) => (
                     <div
@@ -731,7 +731,7 @@ export default function ImageGenerator() {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                         <div className="absolute bottom-2 left-2 right-2">
-                          <p className="text-white text-xs truncate">{image.prompt}</p>
+                          <p className="text-stone-900 text-xs truncate">{image.prompt}</p>
                         </div>
                       </div>
                     </div>
@@ -794,52 +794,52 @@ function ImageCard({
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
           <div className="absolute bottom-3 left-3 right-3">
-            <p className="text-white text-sm font-medium line-clamp-2">{image.prompt}</p>
+            <p className="text-stone-900 text-sm font-medium line-clamp-2">{image.prompt}</p>
           </div>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 text-xs text-slate-500 mb-3">
-        <span className="px-2 py-1 bg-slate-800 rounded">{image.provider}</span>
-        <span className="px-2 py-1 bg-slate-800 rounded">{image.size}</span>
-        {image.seed && <span className="px-2 py-1 bg-slate-800 rounded">Seed: {image.seed}</span>}
+      <div className="flex items-center gap-2 text-xs text-stone-400 mb-3">
+        <span className="px-2 py-1 bg-stone-100 rounded">{image.provider}</span>
+        <span className="px-2 py-1 bg-stone-100 rounded">{image.size}</span>
+        {image.seed && <span className="px-2 py-1 bg-stone-100 rounded">Seed: {image.seed}</span>}
       </div>
 
       <div className="grid grid-cols-5 gap-1">
         <button
           onClick={onView}
-          className="p-2 bg-slate-800 hover:bg-slate-700 rounded transition-colors"
+          className="p-2 bg-stone-100 hover:bg-stone-200 rounded transition-colors"
           title="View"
         >
-          <Maximize2 className="w-4 h-4 text-slate-400" />
+          <Maximize2 className="w-4 h-4 text-stone-500" />
         </button>
         <button
           onClick={onDownload}
-          className="p-2 bg-slate-800 hover:bg-slate-700 rounded transition-colors"
+          className="p-2 bg-stone-100 hover:bg-stone-200 rounded transition-colors"
           title="Download"
         >
-          <Download className="w-4 h-4 text-slate-400" />
+          <Download className="w-4 h-4 text-stone-500" />
         </button>
         <button
           onClick={onShare}
-          className="p-2 bg-slate-800 hover:bg-slate-700 rounded transition-colors"
+          className="p-2 bg-stone-100 hover:bg-stone-200 rounded transition-colors"
           title="Share"
         >
-          <Share2 className="w-4 h-4 text-slate-400" />
+          <Share2 className="w-4 h-4 text-stone-500" />
         </button>
         <button
           onClick={onVariations}
-          className="p-2 bg-slate-800 hover:bg-slate-700 rounded transition-colors"
+          className="p-2 bg-stone-100 hover:bg-stone-200 rounded transition-colors"
           title="Create Variations"
         >
-          <RefreshCw className="w-4 h-4 text-slate-400" />
+          <RefreshCw className="w-4 h-4 text-stone-500" />
         </button>
         <button
           onClick={onUpscale}
-          className="p-2 bg-slate-800 hover:bg-slate-700 rounded transition-colors"
+          className="p-2 bg-stone-100 hover:bg-stone-200 rounded transition-colors"
           title="Upscale"
         >
-          <ZoomIn className="w-4 h-4 text-slate-400" />
+          <ZoomIn className="w-4 h-4 text-stone-500" />
         </button>
       </div>
     </div>
@@ -864,9 +864,9 @@ function Lightbox({
     <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4">
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 p-2 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors"
+        className="absolute top-4 right-4 p-2 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors"
       >
-        <X className="w-6 h-6 text-white" />
+        <X className="w-6 h-6 text-stone-900" />
       </button>
 
       <div className="max-w-6xl w-full max-h-full flex flex-col lg:flex-row gap-6">
@@ -878,39 +878,39 @@ function Lightbox({
           />
         </div>
 
-        <div className="w-full lg:w-80 bg-slate-900 rounded-lg p-6 space-y-4">
-          <h3 className="text-xl font-semibold text-white">Image Details</h3>
+        <div className="w-full lg:w-80 bg-white rounded-lg p-6 space-y-4">
+          <h3 className="text-xl font-semibold text-stone-900">Image Details</h3>
 
           <div className="space-y-3">
             <div>
-              <label className="text-xs text-slate-500">Prompt</label>
-              <p className="text-sm text-slate-300 mt-1">{image.prompt}</p>
+              <label className="text-xs text-stone-400">Prompt</label>
+              <p className="text-sm text-stone-700 mt-1">{image.prompt}</p>
             </div>
 
             {image.revisedPrompt && (
               <div>
-                <label className="text-xs text-slate-500">Revised Prompt</label>
-                <p className="text-sm text-slate-300 mt-1">{image.revisedPrompt}</p>
+                <label className="text-xs text-stone-400">Revised Prompt</label>
+                <p className="text-sm text-stone-700 mt-1">{image.revisedPrompt}</p>
               </div>
             )}
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-xs text-slate-500">Provider</label>
-                <p className="text-sm text-white mt-1 capitalize">{image.provider}</p>
+                <label className="text-xs text-stone-400">Provider</label>
+                <p className="text-sm text-stone-900 mt-1 capitalize">{image.provider}</p>
               </div>
               <div>
-                <label className="text-xs text-slate-500">Model</label>
-                <p className="text-sm text-white mt-1">{image.model}</p>
+                <label className="text-xs text-stone-400">Model</label>
+                <p className="text-sm text-stone-900 mt-1">{image.model}</p>
               </div>
               <div>
-                <label className="text-xs text-slate-500">Size</label>
-                <p className="text-sm text-white mt-1">{image.size}</p>
+                <label className="text-xs text-stone-400">Size</label>
+                <p className="text-sm text-stone-900 mt-1">{image.size}</p>
               </div>
               {image.seed && (
                 <div>
-                  <label className="text-xs text-slate-500">Seed</label>
-                  <p className="text-sm text-white mt-1">{image.seed}</p>
+                  <label className="text-xs text-stone-400">Seed</label>
+                  <p className="text-sm text-stone-900 mt-1">{image.seed}</p>
                 </div>
               )}
             </div>

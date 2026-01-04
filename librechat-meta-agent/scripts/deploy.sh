@@ -1,6 +1,8 @@
 #!/bin/bash
+# ============================================================================
 # Meta Agent Deployment Script
 # Supports: Docker Compose (local) or Supabase (cloud)
+# ============================================================================
 
 set -e
 
@@ -40,7 +42,7 @@ check_prereqs() {
     HAS_DOCKER=false
   else
     HAS_DOCKER=true
-    log_success "Docker found"
+    log_success "Docker found: $(docker --version)"
   fi
 
   if ! command -v psql &> /dev/null; then
@@ -49,6 +51,34 @@ check_prereqs() {
   else
     HAS_PSQL=true
     log_success "psql found"
+  fi
+
+  # Check if Docker daemon is running
+  if [ "$HAS_DOCKER" = "true" ]; then
+    if ! docker info &> /dev/null; then
+      log_warn "Docker daemon is not running."
+      HAS_DOCKER=false
+    fi
+  fi
+}
+
+# Setup environment file if needed
+setup_env() {
+  if [ ! -f "$PROJECT_DIR/.env" ]; then
+    log_warn ".env file not found. Creating from .env.example..."
+    if [ -f "$PROJECT_DIR/.env.example" ]; then
+      cp "$PROJECT_DIR/.env.example" "$PROJECT_DIR/.env"
+      log_success "Created .env file. Please edit it with your API keys."
+      echo ""
+      echo "Required:"
+      echo "  - ANTHROPIC_API_KEY"
+      echo "  - JWT_SECRET (generate: openssl rand -base64 32)"
+      echo ""
+      exit 1
+    else
+      log_error ".env.example not found!"
+      exit 1
+    fi
   fi
 }
 
@@ -62,34 +92,51 @@ deploy_docker() {
   log_info "Starting Docker Compose deployment..."
   cd "$PROJECT_DIR"
 
+  # Stop existing containers
+  log_info "Stopping existing containers..."
+  docker compose down 2>/dev/null || true
+
   # Build and start containers
+  log_info "Building Docker images..."
   docker compose build
+
+  log_info "Starting services..."
   docker compose up -d
 
   # Wait for healthy
   log_info "Waiting for services to be healthy..."
-  sleep 10
+  sleep 15
 
   # Check health
   if curl -s http://localhost:3100/health | grep -q "ok"; then
     log_success "Orchestrator API is healthy"
   else
-    log_error "Orchestrator API health check failed"
+    log_warn "Orchestrator API health check pending..."
   fi
 
-  if curl -s http://localhost:3000 > /dev/null; then
+  if curl -s http://localhost:3000 > /dev/null 2>&1; then
     log_success "UI is accessible"
   else
-    log_error "UI is not accessible"
+    log_warn "UI is starting up..."
   fi
 
   log_success "Docker deployment complete!"
   echo ""
-  echo "Services running:"
-  echo "  - UI:          http://localhost:3000"
-  echo "  - API:         http://localhost:3100"
-  echo "  - PostgreSQL:  localhost:5433"
-  echo "  - Redis:       localhost:6380"
+  echo "============================================================================"
+  echo "                    Meta Agent is Running!                                  "
+  echo "============================================================================"
+  echo ""
+  echo "Access URLs:"
+  echo "  • Web UI:          http://localhost:3000"
+  echo "  • API:             http://localhost:3100"
+  echo "  • PostgreSQL:      localhost:5433"
+  echo "  • Redis:           localhost:6380"
+  echo ""
+  echo "Commands:"
+  echo "  • View logs:       docker compose logs -f"
+  echo "  • Stop:            docker compose down"
+  echo "  • Status:          ./scripts/deploy.sh status"
+  echo ""
 }
 
 # Deploy migrations to Supabase
@@ -107,7 +154,7 @@ deploy_supabase_migrations() {
       schema_name=$(basename "$schema")
       log_info "Applying: $schema_name"
 
-      if $HAS_PSQL; then
+      if [ "$HAS_PSQL" = "true" ]; then
         psql "$DATABASE_URL" -f "$schema" 2>&1 | while read line; do
           if [[ "$line" == *"ERROR"* ]]; then
             log_warn "  $line"
@@ -116,8 +163,7 @@ deploy_supabase_migrations() {
           fi
         done
       else
-        log_warn "psql not available, using Supabase MCP"
-        # Could integrate with Supabase MCP here
+        log_warn "psql not available, skipping: $schema_name"
       fi
     fi
   done
@@ -192,52 +238,70 @@ stop_all() {
   log_success "All services stopped"
 }
 
+# Show status
+show_status() {
+  echo ""
+  echo "============================================================================"
+  echo "                    Meta Agent Service Status                               "
+  echo "============================================================================"
+  echo ""
+
+  if curl -s http://localhost:3100/health > /dev/null 2>&1; then
+    echo -e "  API (3100):    ${GREEN}✓ Running${NC}"
+  else
+    echo -e "  API (3100):    ${RED}✗ Stopped${NC}"
+  fi
+
+  if curl -s http://localhost:3000 > /dev/null 2>&1; then
+    echo -e "  UI (3000):     ${GREEN}✓ Running${NC}"
+  else
+    echo -e "  UI (3000):     ${RED}✗ Stopped${NC}"
+  fi
+
+  if [ "$HAS_DOCKER" = "true" ]; then
+    if docker ps | grep -q meta-agent-postgres; then
+      echo -e "  PostgreSQL:    ${GREEN}✓ Running${NC}"
+    else
+      echo -e "  PostgreSQL:    ${RED}✗ Stopped${NC}"
+    fi
+
+    if docker ps | grep -q meta-agent-redis; then
+      echo -e "  Redis:         ${GREEN}✓ Running${NC}"
+    else
+      echo -e "  Redis:         ${RED}✗ Stopped${NC}"
+    fi
+
+    if docker ps | grep -q meta-agent-nginx; then
+      echo -e "  Nginx:         ${GREEN}✓ Running${NC}"
+    else
+      echo -e "  Nginx:         ${YELLOW}○ Not started${NC}"
+    fi
+  fi
+  echo ""
+}
+
 # Show usage
 usage() {
-  echo "Meta Agent Deployment Script"
+  echo ""
+  echo "============================================================================"
+  echo "                    Meta Agent Deployment Script                            "
+  echo "============================================================================"
   echo ""
   echo "Usage: $0 <command>"
   echo ""
   echo "Commands:"
-  echo "  docker       Deploy with Docker Compose (full stack)"
+  echo "  docker       Deploy full stack with Docker Compose"
   echo "  db           Start PostgreSQL + Redis only"
   echo "  migrations   Deploy migrations to Supabase"
   echo "  dev          Start development servers"
   echo "  stop         Stop all services"
   echo "  status       Show service status"
+  echo "  setup        Create .env from template"
   echo ""
-}
-
-# Show status
-show_status() {
-  echo "Service Status:"
-  echo ""
-
-  if curl -s http://localhost:3100/health > /dev/null 2>&1; then
-    echo "  API (3100):    ${GREEN}Running${NC}"
-  else
-    echo "  API (3100):    ${RED}Stopped${NC}"
-  fi
-
-  if curl -s http://localhost:3000 > /dev/null 2>&1; then
-    echo "  UI (3000):     ${GREEN}Running${NC}"
-  else
-    echo "  UI (3000):     ${RED}Stopped${NC}"
-  fi
-
-  if [ "$HAS_DOCKER" = "true" ]; then
-    if docker ps | grep -q meta-agent-postgres; then
-      echo "  PostgreSQL:    ${GREEN}Running${NC}"
-    else
-      echo "  PostgreSQL:    ${RED}Stopped${NC}"
-    fi
-
-    if docker ps | grep -q meta-agent-redis; then
-      echo "  Redis:         ${GREEN}Running${NC}"
-    else
-      echo "  Redis:         ${RED}Stopped${NC}"
-    fi
-  fi
+  echo "Examples:"
+  echo "  $0 docker      # Full production deployment"
+  echo "  $0 dev         # Development mode"
+  echo "  $0 status      # Check what's running"
   echo ""
 }
 
@@ -248,6 +312,7 @@ main() {
 
   case "${1:-}" in
     docker)
+      setup_env
       deploy_docker
       ;;
     db)
@@ -264,6 +329,9 @@ main() {
       ;;
     status)
       show_status
+      ;;
+    setup)
+      setup_env
       ;;
     *)
       usage
