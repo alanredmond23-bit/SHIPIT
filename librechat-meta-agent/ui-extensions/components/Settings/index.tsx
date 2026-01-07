@@ -205,3 +205,21 @@ export type {
   MCPHealthStatus,
   MCPConfigField,
 } from './mcpServersData';
+
+// ============================================================================
+// MODEL CONTROLS & SETTINGS CONTEXT
+// ============================================================================
+
+// Connected Model Controls (uses SettingsContext)
+export { default as ConnectedModelControls } from './ConnectedModelControls';
+
+// Settings Indicator (compact display for headers)
+export { SettingsIndicator, SettingsIndicatorExpanded } from './SettingsIndicator';
+
+// Model Parameters Panel
+export { ModelParametersPanel, DEFAULT_PARAMETERS } from './ModelParameters';
+export type { ModelParameters } from './ModelParameters';
+
+// Reasoning Controls
+export { ReasoningControls, DEFAULT_REASONING_CONFIG, EFFORT_LEVELS } from './ReasoningControls';
+export type { ReasoningConfig } from './ReasoningControls';

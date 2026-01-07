@@ -18,9 +18,11 @@ import {
   Cpu,
   Globe,
   ArrowLeft,
+  SlidersHorizontal,
 } from 'lucide-react';
 import Link from 'next/link';
 import { CodeViewer, CODE_SECTIONS } from '@/components/CodeViewer';
+import ConnectedModelControls from '@/components/Settings/ConnectedModelControls';
 
 // Lazy load theme-dependent components to avoid SSR issues
 const ThemeToggle = React.lazy(() =>
@@ -78,7 +80,7 @@ const checkAPIStatus = async (envVar: string): Promise<boolean> => {
 
 export default function SettingsPage() {
   const { theme, toggleTheme, isDark, mounted } = useThemeSafe();
-  const [activeTab, setActiveTab] = useState<'api' | 'code' | 'appearance'>('api');
+  const [activeTab, setActiveTab] = useState<'model' | 'api' | 'code' | 'appearance'>('model');
   const [providers, setProviders] = useState<APIProvider[]>([
     {
       id: 'openai',
@@ -180,6 +182,7 @@ export default function SettingsPage() {
   };
 
   const tabs = [
+    { id: 'model' as const, label: 'Model Controls', icon: SlidersHorizontal, badge: 'A++' },
     { id: 'api' as const, label: 'API Status', icon: Server },
     { id: 'code' as const, label: 'Code Inspector', icon: Code2 },
     { id: 'appearance' as const, label: 'Appearance', icon: isDark ? Moon : Sun },
@@ -222,14 +225,14 @@ export default function SettingsPage() {
         </div>
 
         {/* Tab Navigation */}
-        <div className="max-w-4xl mx-auto px-4 flex gap-1">
+        <div className="max-w-4xl mx-auto px-4 flex gap-1 overflow-x-auto">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-t-xl transition-colors ${
+                className={`flex items-center gap-2 px-4 py-3 text-sm font-medium rounded-t-xl transition-colors whitespace-nowrap ${
                   activeTab === tab.id
                     ? 'text-[var(--accent-500)]'
                     : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
@@ -240,6 +243,11 @@ export default function SettingsPage() {
               >
                 <Icon className="w-4 h-4" />
                 {tab.label}
+                {'badge' in tab && tab.badge && (
+                  <span className="text-[10px] font-bold bg-[var(--accent-500)] text-white px-1.5 py-0.5 rounded">
+                    {tab.badge}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -247,6 +255,48 @@ export default function SettingsPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-4 py-6">
+        {/* Model Controls Tab */}
+        {activeTab === 'model' && (
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="card-elevated">
+              <div className="flex items-center gap-3 mb-4">
+                <div
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                  style={{ backgroundColor: 'var(--accent-subtle)' }}
+                >
+                  <SlidersHorizontal className="w-6 h-6 text-[var(--accent-500)]" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold" style={{ color: 'var(--text-primary)' }}>
+                    Model Controls
+                  </h2>
+                  <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+                    Parameters competitors hide from you - fully exposed
+                  </p>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <span className="text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-700">
+                  ChatGPT hides temperature
+                </span>
+                <span className="text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-700">
+                  Claude hides top_k
+                </span>
+                <span className="text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-700">
+                  All hide thinking budget
+                </span>
+                <span className="text-xs px-2 py-1 rounded-full bg-teal-100 text-teal-700">
+                  We expose everything
+                </span>
+              </div>
+            </div>
+
+            {/* Connected Model Controls */}
+            <ConnectedModelControls />
+          </div>
+        )}
+
         {/* API Status Tab */}
         {activeTab === 'api' && (
           <div className="space-y-6">
