@@ -3,6 +3,9 @@ export { useDecisionEngine } from './useDecisionEngine';
 export { useBenchmarkEngine } from './useBenchmarkEngine';
 export { useMCPManager } from './useMCPManager';
 
+// Settings Hook
+export { useChatSettings, buildChatRequest } from './useChatSettings';
+
 // Re-export types
 export type {
   DecisionSession,
@@ -23,3 +26,8 @@ export type {
   MCPInstallation,
   MCPHealthCheck,
 } from './useMCPManager';
+
+export type {
+  ChatRequestSettings,
+  UseChatSettingsReturn,
+} from './useChatSettings';
