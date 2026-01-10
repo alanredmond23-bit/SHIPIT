@@ -484,8 +484,8 @@ function LabeledSlider({
   unit = '',
   onChange,
   disabled = false,
-  marks?: { value: number; label: string }[],
-  formatValue?: (v: number) => string,
+  marks,
+  formatValue,
 }: {
   icon: React.ReactNode;
   label: string;

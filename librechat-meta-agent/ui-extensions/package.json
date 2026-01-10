@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
+    "export": "echo 'Static export is now included in build via next.config.js output: export'",
     "start": "next start",
     "lint": "next lint",
     "test": "jest --passWithNoTests",

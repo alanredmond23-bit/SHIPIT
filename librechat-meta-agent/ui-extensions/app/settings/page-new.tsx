@@ -35,7 +35,9 @@ const MCPManager = React.lazy(() =>
 );
 
 // Placeholder for components still being built
-function PlaceholderPanel({ title = 'Coming Soon' }: { title?: string }) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function PlaceholderPanel(props: any) {
+  const title = props?.title || 'Coming Soon';
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <div className="w-16 h-16 bg-warm-100 rounded-2xl flex items-center justify-center mb-4">
@@ -56,6 +58,59 @@ function LoadingPanel() {
       <Loader2 className="w-8 h-8 text-teal-500 animate-spin" />
     </div>
   );
+}
+
+// Wrapper components that manage their own state (for WIP settings page)
+// These provide default props to lazy-loaded components during development
+function ModelParametersWrapper() {
+  const [params, setParams] = useState<{
+    temperature: number;
+    top_p: number;
+    top_k: number;
+    frequency_penalty: number;
+    presence_penalty: number;
+    max_output_tokens: number;
+    seed: number | null;
+    stop_sequences: string[];
+  }>({
+    temperature: 0.7,
+    top_p: 1.0,
+    top_k: 40,
+    frequency_penalty: 0.0,
+    presence_penalty: 0.0,
+    max_output_tokens: 4096,
+    seed: null,
+    stop_sequences: [],
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return <ModelParameters parameters={params as any} onChange={setParams as any} />;
+}
+
+function ReasoningControlsWrapper() {
+  const [config, setConfig] = useState({
+    enabled: false,
+    budgetTokens: 10000,
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return <ReasoningControls config={config as any} onChange={setConfig as any} />;
+}
+
+function SearchDepthSliderWrapper() {
+  const [depth, setDepth] = useState(3);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return <SearchDepthSlider value={depth} onChange={setDepth as any} />;
+}
+
+function RAGConfigurationWrapper() {
+  const [config, setConfig] = useState({
+    enabled: true,
+    chunkSize: 512,
+    chunkOverlap: 50,
+    topK: 5,
+    threshold: 0.7,
+  });
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return <RAGConfiguration config={config as any} onChange={setConfig as any} />;
 }
 
 // Theme hook
@@ -205,16 +260,16 @@ function ModelControlsContent() {
   return (
     <div className="space-y-8">
       <Suspense fallback={<LoadingPanel />}>
-        <ModelParameters />
+        <ModelParametersWrapper />
       </Suspense>
       <Suspense fallback={<LoadingPanel />}>
-        <ReasoningControls />
+        <ReasoningControlsWrapper />
       </Suspense>
       <Suspense fallback={<LoadingPanel />}>
-        <SearchDepthSlider />
+        <SearchDepthSliderWrapper />
       </Suspense>
       <Suspense fallback={<LoadingPanel />}>
-        <RAGConfiguration />
+        <RAGConfigurationWrapper />
       </Suspense>
     </div>
   );

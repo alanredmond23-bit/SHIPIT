@@ -1,29 +1,46 @@
+-- ============================================================================
+-- 002_memory_schema.sql
 -- Memory/Personalization Schema Extension
 -- Enhances meta_memory_facts with user-specific memory features
+-- Made idempotent with IF NOT EXISTS checks
+-- ============================================================================
 
--- Add user_id column to support multi-user memories
+-- Add columns to support multi-user memories (IF NOT EXISTS already used)
 ALTER TABLE meta_memory_facts
   ADD COLUMN IF NOT EXISTS user_id UUID,
   ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'fact',
   ADD COLUMN IF NOT EXISTS enabled BOOLEAN DEFAULT true,
   ADD COLUMN IF NOT EXISTS last_accessed_at TIMESTAMPTZ;
 
--- Create memory categories enum (for better type safety in future migrations)
-CREATE TYPE memory_category AS ENUM ('preference', 'fact', 'instruction', 'context');
+-- Create memory categories enum (safely)
+DO $$ BEGIN
+  CREATE TYPE memory_category AS ENUM ('preference', 'fact', 'instruction', 'context');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
--- Update category column to use enum (optional, can keep as TEXT for flexibility)
--- ALTER TABLE meta_memory_facts ALTER COLUMN category TYPE memory_category USING category::memory_category;
+-- ============================================================================
+-- Indexes
+-- ============================================================================
 
--- Add indexes for better query performance
 CREATE INDEX IF NOT EXISTS idx_memory_user_id ON meta_memory_facts(user_id);
 CREATE INDEX IF NOT EXISTS idx_memory_category ON meta_memory_facts(category);
 CREATE INDEX IF NOT EXISTS idx_memory_enabled ON meta_memory_facts(enabled);
 CREATE INDEX IF NOT EXISTS idx_memory_created_at ON meta_memory_facts(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_memory_user_category ON meta_memory_facts(user_id, category) WHERE enabled = true;
 
--- Create a composite index for semantic search by user
-CREATE INDEX IF NOT EXISTS idx_memory_user_embedding ON meta_memory_facts(user_id, embedding)
-  WHERE enabled = true;
+-- Composite index for semantic search by user (handle potential errors)
+DO $$ BEGIN
+  CREATE INDEX IF NOT EXISTS idx_memory_user_embedding ON meta_memory_facts(user_id, embedding)
+    WHERE enabled = true;
+EXCEPTION
+  WHEN undefined_column THEN NULL;
+  WHEN feature_not_supported THEN NULL;
+END $$;
+
+-- ============================================================================
+-- Functions
+-- ============================================================================
 
 -- Function to update last_accessed_at timestamp
 CREATE OR REPLACE FUNCTION update_memory_access() RETURNS TRIGGER AS $$
@@ -106,8 +123,14 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Add comment documentation
+-- ============================================================================
+-- Comments
+-- ============================================================================
+
 COMMENT ON COLUMN meta_memory_facts.user_id IS 'User ID for multi-user memory support';
 COMMENT ON COLUMN meta_memory_facts.category IS 'Memory type: preference, fact, instruction, or context';
 COMMENT ON COLUMN meta_memory_facts.enabled IS 'Whether this memory is active and should be retrieved';
 COMMENT ON COLUMN meta_memory_facts.last_accessed_at IS 'Last time this memory was accessed/used';
+
+COMMENT ON FUNCTION search_user_memories IS 'Search memories by semantic similarity for a specific user';
+COMMENT ON FUNCTION get_user_memories IS 'Get all active memories for a user';

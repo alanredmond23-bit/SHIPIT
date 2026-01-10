@@ -502,7 +502,7 @@ export function ModelParametersPanel({
 
   const updateParameter = useCallback(
     <K extends keyof ModelParameters>(key: K, value: ModelParameters[K]) => {
-      onChange({ ...parameters, key: value });
+      onChange({ ...parameters, [key]: value });
     },
     [parameters, onChange]
   );

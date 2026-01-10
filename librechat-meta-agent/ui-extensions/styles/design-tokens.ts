@@ -319,4 +319,66 @@ export const theme = {
 
 export type Theme = typeof theme;
 
+// ============================================================================
+// Tailwind Class Utilities
+// ============================================================================
+
+/**
+ * Common Tailwind class combinations for the design system.
+ * Use these for consistent styling across components.
+ */
+export const tw = {
+  // Card styles
+  card: 'bg-white border border-warm-200 rounded-xl',
+  cardHover: 'hover:border-warm-300 hover:shadow-soft',
+  cardSelected: 'border-teal-500 bg-teal-50/30 ring-1 ring-teal-500/20',
+
+  // Button base styles
+  buttonBase: 'inline-flex items-center justify-center gap-2 font-medium transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed',
+  buttonAccent: 'bg-teal-500 text-white rounded-full hover:bg-teal-600 active:bg-teal-700 focus-visible:ring-teal-500',
+  buttonMinimal: 'text-warm-800 hover:text-warm-900',
+  buttonIcon: 'rounded-full bg-warm-100 hover:bg-warm-200 text-warm-600',
+
+  // Text styles
+  textPrimary: 'text-warm-900',
+  textSecondary: 'text-warm-700',
+  textMuted: 'text-warm-500',
+  textAccent: 'text-teal-600',
+
+  // Heading styles
+  heading1: 'text-5xl font-light text-warm-900 tracking-tight',
+  heading2: 'text-4xl font-light text-warm-900 tracking-tight',
+  heading3: 'text-2xl font-normal text-warm-900',
+  heading4: 'text-xl font-medium text-warm-900',
+
+  // Label styles
+  label: 'text-sm font-medium text-warm-500 uppercase tracking-wider',
+  labelAccent: 'text-sm font-medium text-teal-600 uppercase tracking-wider',
+
+  // Input styles
+  input: 'w-full px-4 py-3 bg-white border border-warm-200 rounded-lg text-warm-900 placeholder:text-warm-400 focus:outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-100 transition-colors',
+
+  // Focus ring
+  focusRing: 'focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2',
+
+  // Transitions
+  transition: 'transition-all duration-200 ease-out',
+  transitionFast: 'transition-all duration-150 ease-out',
+  transitionSlow: 'transition-all duration-300 ease-out',
+} as const;
+
+// ============================================================================
+// Type Utilities
+// ============================================================================
+
+export type TealShade = keyof typeof colors.teal;
+export type WarmShade = keyof typeof colors.warm;
+export type FontSize = keyof typeof typography.fontSize;
+export type FontWeight = keyof typeof typography.fontWeight;
+export type Spacing = keyof typeof spacing;
+export type BorderRadius = keyof typeof borderRadius;
+export type Shadow = keyof typeof shadows;
+export type Breakpoint = keyof typeof breakpoints;
+export type ZIndex = keyof typeof zIndex;
+
 export default theme;

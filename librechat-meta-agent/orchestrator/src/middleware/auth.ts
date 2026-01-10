@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { Pool } from 'pg';
-import crypto from 'crypto';
+import * as crypto from 'crypto';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import pino from 'pino';
 
 // ============================================================================
 // Types
@@ -12,6 +14,7 @@ export interface AuthenticatedUser {
   name: string | null;
   role: string;
   permissions: string[];
+  authMethod: 'supabase' | 'session' | 'apikey';
 }
 
 export interface AuthenticatedRequest extends Request {
@@ -39,18 +42,184 @@ interface ApiKeyResult {
   usage_count: number;
 }
 
+interface SupabaseUserMetadata {
+  name?: string;
+  full_name?: string;
+  avatar_url?: string;
+  [key: string]: unknown;
+}
+
 // ============================================================================
-// Auth Middleware Factory
+// Logger for Auth
 // ============================================================================
 
-export function createAuthMiddleware(db: Pool, options: {
+const authLogger = pino({
+  name: 'auth-middleware',
+  level: process.env.LOG_LEVEL || 'info',
+});
+
+// ============================================================================
+// Route Configuration
+// ============================================================================
+
+/**
+ * Routes that don't require authentication
+ */
+export const PUBLIC_ROUTES: string[] = [
+  '/health',
+  '/api/health',
+  '/api/models',
+  '/api/auth/login',
+  '/api/auth/register',
+  '/api/auth/refresh',
+  '/api/auth/forgot-password',
+  '/api/auth/reset-password',
+  '/api/auth/callback',
+  '/api/auth/verify',
+];
+
+/**
+ * Route patterns that don't require authentication (regex patterns)
+ */
+export const PUBLIC_ROUTE_PATTERNS: RegExp[] = [
+  /^\/api\/auth\/.*/,  // All auth routes are public
+  /^\/api\/public\/.*/,  // Any route under /api/public
+];
+
+/**
+ * Routes that require admin access
+ */
+export const ADMIN_ROUTES: string[] = [
+  '/api/admin',
+  '/api/users',
+  '/api/settings',
+];
+
+/**
+ * Route patterns that require admin access
+ */
+export const ADMIN_ROUTE_PATTERNS: RegExp[] = [
+  /^\/api\/admin\/.*/,
+  /^\/api\/users\/.*/,
+];
+
+// ============================================================================
+// Supabase Client Singleton
+// ============================================================================
+
+let supabaseAdmin: SupabaseClient | null = null;
+
+function getSupabaseAdmin(): SupabaseClient {
+  if (supabaseAdmin) return supabaseAdmin;
+
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseServiceKey) {
+    throw new Error(
+      'SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required for authentication. ' +
+      'Please set these environment variables.'
+    );
+  }
+
+  supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+
+  return supabaseAdmin;
+}
+
+// ============================================================================
+// Route Matching Helpers
+// ============================================================================
+
+function isPublicRoute(path: string): boolean {
+  // Check exact matches
+  if (PUBLIC_ROUTES.includes(path)) {
+    return true;
+  }
+
+  // Check pattern matches
+  return PUBLIC_ROUTE_PATTERNS.some(pattern => pattern.test(path));
+}
+
+function isAdminRoute(path: string): boolean {
+  // Check exact matches
+  if (ADMIN_ROUTES.some(route => path.startsWith(route))) {
+    return true;
+  }
+
+  // Check pattern matches
+  return ADMIN_ROUTE_PATTERNS.some(pattern => pattern.test(path));
+}
+
+// ============================================================================
+// Supabase JWT Validation
+// ============================================================================
+
+async function validateSupabaseToken(token: string): Promise<AuthenticatedUser | null> {
+  try {
+    const supabase = getSupabaseAdmin();
+
+    // Get user from Supabase using the JWT
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+
+    if (error || !user) {
+      authLogger.debug({ error: error?.message }, 'Supabase token validation failed');
+      return null;
+    }
+
+    const metadata = user.user_metadata as SupabaseUserMetadata;
+
+    return {
+      id: user.id,
+      email: user.email || '',
+      name: metadata?.name || metadata?.full_name || null,
+      role: user.role || 'authenticated',
+      permissions: [], // Supabase doesn't have built-in permissions, can be extended
+      authMethod: 'supabase',
+    };
+  } catch (error: unknown) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    authLogger.error({ error: errorMessage }, 'Error validating Supabase token');
+    return null;
+  }
+}
+
+// ============================================================================
+// Auth Middleware Factory (Supabase + Legacy Support)
+// ============================================================================
+
+export interface AuthMiddlewareOptions {
   requireAuth?: boolean;
   allowApiKeys?: boolean;
+  allowSupabase?: boolean;
   requiredPermissions?: string[];
-} = {}) {
-  const { requireAuth = true, allowApiKeys = true, requiredPermissions = [] } = options;
+  requiredRoles?: string[];
+  db?: Pool; // Optional: for legacy session/API key support
+}
+
+export function createAuthMiddleware(options: AuthMiddlewareOptions = {}) {
+  const {
+    requireAuth = true,
+    allowApiKeys = true,
+    allowSupabase = true,
+    requiredPermissions = [],
+    requiredRoles = [],
+    db,
+  } = options;
 
   return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const path = req.path;
+
+    // Check if route is public
+    if (isPublicRoute(path)) {
+      return next();
+    }
+
     const authHeader = req.headers.authorization;
 
     // No auth header
@@ -58,62 +227,131 @@ export function createAuthMiddleware(db: Pool, options: {
       if (!requireAuth) {
         return next();
       }
+
+      authLogger.warn({
+        path,
+        ip: req.ip,
+        userAgent: req.headers['user-agent'],
+      }, 'Missing authorization header');
+
       return res.status(401).json({
         error: {
           code: 'UNAUTHORIZED',
-          message: 'No authorization header provided',
+          message: 'Authentication required. Please provide a valid token.',
         },
       });
     }
 
     try {
-      // Handle Bearer token (session)
+      // Handle Bearer token (Supabase JWT or session token)
       if (authHeader.startsWith('Bearer ')) {
         const token = authHeader.slice(7);
-        const user = await validateSessionToken(db, token);
 
-        if (!user) {
-          return res.status(401).json({
-            error: {
-              code: 'INVALID_TOKEN',
-              message: 'Invalid or expired session token',
-            },
-          });
-        }
+        // Try Supabase JWT validation first
+        if (allowSupabase) {
+          const supabaseUser = await validateSupabaseToken(token);
 
-        // Check required permissions
-        if (requiredPermissions.length > 0) {
-          const hasPermissions = await checkPermissions(db, user.id, requiredPermissions);
-          if (!hasPermissions) {
-            return res.status(403).json({
-              error: {
-                code: 'FORBIDDEN',
-                message: 'Insufficient permissions',
-                required: requiredPermissions,
-              },
-            });
+          if (supabaseUser) {
+            // Check required roles
+            if (requiredRoles.length > 0 && !requiredRoles.includes(supabaseUser.role)) {
+              authLogger.warn({
+                userId: supabaseUser.id,
+                requiredRoles,
+                userRole: supabaseUser.role,
+              }, 'Insufficient role');
+
+              return res.status(403).json({
+                error: {
+                  code: 'FORBIDDEN',
+                  message: 'Insufficient permissions',
+                  required: requiredRoles,
+                },
+              });
+            }
+
+            // Check for admin routes
+            if (isAdminRoute(path) && !['admin', 'super_admin', 'service_role'].includes(supabaseUser.role)) {
+              authLogger.warn({
+                userId: supabaseUser.id,
+                path,
+                role: supabaseUser.role,
+              }, 'Non-admin user attempted to access admin route');
+
+              return res.status(403).json({
+                error: {
+                  code: 'ADMIN_REQUIRED',
+                  message: 'Admin access required for this endpoint',
+                },
+              });
+            }
+
+            req.user = supabaseUser;
+
+            authLogger.debug({
+              userId: supabaseUser.id,
+              email: supabaseUser.email,
+              path,
+            }, 'Supabase authentication successful');
+
+            return next();
           }
         }
 
-        // Get user permissions
-        const permissions = await getUserPermissions(db, user.id);
+        // Fall back to legacy session token if database is available
+        if (db) {
+          const user = await validateSessionToken(db, token);
 
-        req.user = {
-          id: user.user_id,
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          permissions,
-        };
+          if (user) {
+            // Check required permissions
+            if (requiredPermissions.length > 0) {
+              const hasPermissions = await checkPermissions(db, user.user_id, requiredPermissions);
+              if (!hasPermissions) {
+                return res.status(403).json({
+                  error: {
+                    code: 'FORBIDDEN',
+                    message: 'Insufficient permissions',
+                    required: requiredPermissions,
+                  },
+                });
+              }
+            }
 
-        // Update last activity
-        await updateSessionActivity(db, token);
+            // Get user permissions
+            const permissions = await getUserPermissions(db, user.user_id);
 
-        return next();
+            req.user = {
+              id: user.user_id,
+              email: user.email,
+              name: user.name,
+              role: user.role,
+              permissions,
+              authMethod: 'session',
+            };
+
+            // Update last activity
+            await updateSessionActivity(db, token);
+
+            return next();
+          }
+        }
+
+        // Token validation failed
+        authLogger.warn({
+          path,
+          ip: req.ip,
+          tokenPrefix: token.substring(0, 10) + '...',
+        }, 'Invalid or expired token');
+
+        return res.status(401).json({
+          error: {
+            code: 'INVALID_TOKEN',
+            message: 'Invalid or expired authentication token',
+          },
+        });
       }
 
       // Handle API Key authentication
-      if (authHeader.startsWith('ApiKey ') || authHeader.startsWith('X-API-Key ')) {
+      if ((authHeader.startsWith('ApiKey ') || authHeader.startsWith('X-API-Key ')) && db) {
         if (!allowApiKeys) {
           return res.status(401).json({
             error: {
@@ -130,6 +368,11 @@ export function createAuthMiddleware(db: Pool, options: {
         const keyData = await validateApiKey(db, apiKey);
 
         if (!keyData) {
+          authLogger.warn({
+            path,
+            ip: req.ip,
+          }, 'Invalid API key');
+
           return res.status(401).json({
             error: {
               code: 'INVALID_API_KEY',
@@ -140,6 +383,11 @@ export function createAuthMiddleware(db: Pool, options: {
 
         // Check rate limits
         if (keyData.usage_count >= keyData.rate_limit) {
+          authLogger.warn({
+            keyId: keyData.id,
+            limit: keyData.rate_limit,
+          }, 'API key rate limit exceeded');
+
           return res.status(429).json({
             error: {
               code: 'RATE_LIMIT_EXCEEDED',
@@ -153,7 +401,7 @@ export function createAuthMiddleware(db: Pool, options: {
         // Check scopes against required permissions
         if (requiredPermissions.length > 0) {
           const hasScopes = requiredPermissions.every(perm => {
-            const [category, action] = perm.split(':');
+            const [, action] = perm.split(':');
             return keyData.scopes.includes(action) || keyData.scopes.includes('*');
           });
 
@@ -192,6 +440,7 @@ export function createAuthMiddleware(db: Pool, options: {
           name: user.name,
           role: user.role,
           permissions: keyData.scopes,
+          authMethod: 'apikey',
         };
 
         req.apiKey = {
@@ -207,6 +456,11 @@ export function createAuthMiddleware(db: Pool, options: {
       }
 
       // Unknown auth scheme
+      authLogger.warn({
+        path,
+        authScheme: authHeader.split(' ')[0],
+      }, 'Invalid authorization scheme');
+
       return res.status(401).json({
         error: {
           code: 'INVALID_AUTH_SCHEME',
@@ -214,8 +468,10 @@ export function createAuthMiddleware(db: Pool, options: {
         },
       });
 
-    } catch (error: any) {
-      console.error('Auth middleware error:', error);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      authLogger.error({ error: errorMessage, path }, 'Auth middleware error');
+
       return res.status(500).json({
         error: {
           code: 'AUTH_ERROR',
@@ -227,7 +483,84 @@ export function createAuthMiddleware(db: Pool, options: {
 }
 
 // ============================================================================
-// Helper Functions
+// Convenience Middleware Factories
+// ============================================================================
+
+/**
+ * Create Supabase-only auth middleware (recommended for new deployments)
+ */
+export function supabaseAuth(options: Omit<AuthMiddlewareOptions, 'allowSupabase'> = {}) {
+  return createAuthMiddleware({
+    ...options,
+    allowSupabase: true,
+    allowApiKeys: false,
+  });
+}
+
+/**
+ * Optional authentication - attaches user if token present, but doesn't require it
+ */
+export function optionalAuth(options: Omit<AuthMiddlewareOptions, 'requireAuth'> = {}) {
+  return createAuthMiddleware({
+    ...options,
+    requireAuth: false,
+  });
+}
+
+/**
+ * Require specific roles
+ */
+export function requireRole(...roles: string[]) {
+  return createAuthMiddleware({
+    requireAuth: true,
+    requiredRoles: roles,
+  });
+}
+
+/**
+ * Require admin role
+ */
+export function requireAdmin() {
+  return createAuthMiddleware({
+    requireAuth: true,
+    requiredRoles: ['admin', 'super_admin'],
+  });
+}
+
+/**
+ * Require specific permissions (for legacy DB-based permissions)
+ */
+export function requirePermission(db: Pool, permission: string) {
+  return createAuthMiddleware({
+    db,
+    requireAuth: true,
+    requiredPermissions: [permission],
+  });
+}
+
+// ============================================================================
+// Express Router-Level Middleware
+// ============================================================================
+
+/**
+ * Apply authentication to all routes except public ones
+ * Use this at the app level for global auth
+ */
+export function globalAuthMiddleware(options: AuthMiddlewareOptions = {}) {
+  const authMiddleware = createAuthMiddleware(options);
+
+  return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    // Skip for OPTIONS requests (CORS preflight)
+    if (req.method === 'OPTIONS') {
+      return next();
+    }
+
+    return authMiddleware(req, res, next);
+  };
+}
+
+// ============================================================================
+// Helper Functions (Legacy DB Support)
 // ============================================================================
 
 async function validateSessionToken(db: Pool, token: string): Promise<SessionResult | null> {
@@ -302,39 +635,6 @@ async function updateApiKeyUsage(db: Pool, keyId: string): Promise<void> {
      WHERE id = $1`,
     [keyId]
   );
-}
-
-// ============================================================================
-// Permission Middleware Shortcuts
-// ============================================================================
-
-export function requirePermission(db: Pool, permission: string) {
-  return createAuthMiddleware(db, {
-    requireAuth: true,
-    requiredPermissions: [permission],
-  });
-}
-
-export function requireAdmin(db: Pool) {
-  return async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const authMiddleware = createAuthMiddleware(db, { requireAuth: true });
-
-    await authMiddleware(req, res, async () => {
-      if (!req.user || !['admin', 'super_admin'].includes(req.user.role)) {
-        return res.status(403).json({
-          error: {
-            code: 'ADMIN_REQUIRED',
-            message: 'Admin access required',
-          },
-        });
-      }
-      next();
-    });
-  };
-}
-
-export function optionalAuth(db: Pool) {
-  return createAuthMiddleware(db, { requireAuth: false });
 }
 
 // ============================================================================
@@ -475,4 +775,21 @@ function detectDeviceType(userAgent: string): string {
   }
 
   return 'desktop';
+}
+
+/**
+ * Extract user from request (for use in route handlers)
+ */
+export function getUserFromRequest(req: AuthenticatedRequest): AuthenticatedUser | null {
+  return req.user || null;
+}
+
+/**
+ * Assert user is authenticated (throws if not)
+ */
+export function assertAuthenticated(req: AuthenticatedRequest): AuthenticatedUser {
+  if (!req.user) {
+    throw new Error('User is not authenticated');
+  }
+  return req.user;
 }

@@ -37,35 +37,14 @@ import {
   Bot,
 } from 'lucide-react';
 import clsx from 'clsx';
+import { ConversationSidebar } from '@/components/Chat';
+import { useChatPersistence } from '@/hooks/useConversations';
+import type { ChatMessage, ChatAttachment, ChatArtifact } from '@/types/conversations';
 
 // Types
-type Message = {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-  attachments?: Attachment[];
-  artifact?: Artifact;
-  isStreaming?: boolean;
-  model?: string;
-  tools?: string[];
-};
-
-type Attachment = {
-  id: string;
-  type: 'image' | 'file' | 'code';
-  name: string;
-  url?: string;
-  content?: string;
-};
-
-type Artifact = {
-  id: string;
-  type: 'code' | 'document' | 'diagram';
-  title: string;
-  content: string;
-  language?: string;
-};
+type Attachment = ChatAttachment;
+type Artifact = ChatArtifact;
+type Message = ChatMessage;
 
 type Model = {
   id: string;
@@ -120,7 +99,8 @@ const TIER_CONFIG: Record<string, { label: string; icon: any; color: string }> =
 };
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  // Local UI state for current conversation messages
+  const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
@@ -137,6 +117,53 @@ export default function ChatPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Chat persistence hook
+  const {
+    currentConversationId,
+    conversations,
+    messages: persistedMessages,
+    isLoadingConversations,
+    isLoadingMessages,
+    isSaving,
+    startNewConversation,
+    loadConversation,
+    saveUserMessage,
+    saveAssistantMessage,
+    updateTitle,
+    deleteConversation,
+    archive,
+    pin,
+    refreshConversations,
+  } = useChatPersistence({
+    modelId: selectedModel?.id,
+    agentType: 'general',
+  });
+
+  // Sync persisted messages to local state when conversation loads
+  useEffect(() => {
+    if (!isLoadingMessages && persistedMessages.length > 0) {
+      setLocalMessages(persistedMessages);
+    }
+  }, [persistedMessages, isLoadingMessages]);
+
+  // Clear local messages when starting new conversation
+  const handleNewConversation = useCallback(async () => {
+    await startNewConversation();
+    setLocalMessages([]);
+  }, [startNewConversation]);
+
+  // Load conversation and its messages
+  const handleSelectConversation = useCallback(async (conversationId: string) => {
+    await loadConversation(conversationId);
+  }, [loadConversation]);
+
+  // Handle rename conversation
+  const handleRenameConversation = useCallback(async (id: string, title: string) => {
+    if (id === currentConversationId) {
+      await updateTitle(title);
+    }
+  }, [currentConversationId, updateTitle]);
 
   // Fetch models from API
   useEffect(() => {
@@ -163,7 +190,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages]);
+  }, [localMessages]);
 
   // Auto-resize textarea
   useEffect(() => {
@@ -189,22 +216,39 @@ export default function ChatPage() {
     if (!input.trim() && attachments.length === 0) return;
     if (!selectedModel) return;
 
+    const userContent = input.trim();
     const userMessage: Message = {
       id: crypto.randomUUID(),
       role: 'user',
-      content: input,
+      content: userContent,
       timestamp: new Date(),
       attachments: attachments.length > 0 ? [...attachments] : undefined,
       tools: Array.from(enabledTools),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    // Add user message to local state immediately
+    setLocalMessages(prev => [...prev, userMessage]);
     setInput('');
     setAttachments([]);
     setIsLoading(true);
 
+    // Save user message to database (creates conversation if needed)
+    let conversationId: string;
+    try {
+      const result = await saveUserMessage(userContent, {
+        tools: Array.from(enabledTools),
+        attachments: attachments.length > 0 ? attachments : undefined,
+      });
+      conversationId = result.conversationId;
+    } catch (error) {
+      console.error('Failed to save user message:', error);
+      // Continue with chat even if save fails
+      conversationId = currentConversationId || '';
+    }
+
+    // Create placeholder for assistant message
     const assistantId = crypto.randomUUID();
-    setMessages(prev => [...prev, {
+    setLocalMessages(prev => [...prev, {
       id: assistantId,
       role: 'assistant',
       content: '',
@@ -218,7 +262,7 @@ export default function ChatPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          messages: [...messages, userMessage].map(m => ({
+          messages: [...localMessages, userMessage].map(m => ({
             role: m.role,
             content: m.content,
           })),
@@ -247,7 +291,7 @@ export default function ChatPage() {
               const data = JSON.parse(line.slice(6));
               if (data.content) {
                 fullContent += data.content;
-                setMessages(prev => prev.map(m =>
+                setLocalMessages(prev => prev.map(m =>
                   m.id === assistantId ? { ...m, content: fullContent } : m
                 ));
               }
@@ -259,12 +303,25 @@ export default function ChatPage() {
         }
       }
 
-      setMessages(prev => prev.map(m =>
+      // Update message to not streaming
+      setLocalMessages(prev => prev.map(m =>
         m.id === assistantId ? { ...m, isStreaming: false } : m
       ));
+
+      // Save assistant message to database
+      if (fullContent && conversationId) {
+        try {
+          await saveAssistantMessage(fullContent, {
+            model: selectedModel.id,
+          });
+        } catch (error) {
+          console.error('Failed to save assistant message:', error);
+        }
+      }
+
     } catch (error) {
       console.error('Chat error:', error);
-      setMessages(prev => prev.map(m =>
+      setLocalMessages(prev => prev.map(m =>
         m.id === assistantId ? {
           ...m,
           content: 'Sorry, something went wrong. Please try again.',
@@ -327,65 +384,27 @@ export default function ChatPage() {
     : null;
 
   return (
-    <div className="h-screen flex bg-stone-100">
-      {/* Sidebar */}
-      <div className={clsx(
-        'fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-stone-200 transform transition-transform duration-300 lg:relative lg:translate-x-0 shadow-soft',
-        showSidebar ? 'translate-x-0' : '-translate-x-full'
-      )}>
-        <div className="flex flex-col h-full">
-          {/* Logo */}
-          <div className="p-4 border-b border-stone-200">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-teal-500 flex items-center justify-center shadow-soft">
-                <Sparkles className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="font-bold text-lg text-stone-900">Meta Agent</h1>
-                <p className="text-xs text-stone-500">AI Orchestrator</p>
-              </div>
-            </div>
-            <button className="w-full py-3 px-4 bg-teal-500 hover:bg-teal-600 text-white rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-2 shadow-soft">
-              <Plus className="w-5 h-5" />
-              New Chat
-            </button>
-          </div>
-
-          {/* Conversations */}
-          <div className="flex-1 overflow-y-auto p-3 scroll-container">
-            <div className="text-xs font-medium text-stone-400 px-2 py-2 uppercase tracking-wider">Recent</div>
-            <div className="space-y-1">
-              {['Code review assistant', 'API design discussion', 'Debug React hooks'].map((title, i) => (
-                <button
-                  key={i}
-                  className="w-full text-left px-3 py-2.5 rounded-lg hover:bg-stone-100 transition-colors text-sm text-stone-700 truncate"
-                >
-                  {title}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Settings */}
-          <div className="p-3 border-t border-stone-200">
-            <button className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-stone-100 transition-colors">
-              <Settings className="w-5 h-5 text-stone-500" />
-              <span className="text-stone-700">Settings</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Overlay */}
-      {showSidebar && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-40 lg:hidden" onClick={() => setShowSidebar(false)} />
-      )}
+    <div className="h-screen flex bg-stone-100 dark:bg-stone-900">
+      {/* Conversation Sidebar */}
+      <ConversationSidebar
+        conversations={conversations}
+        currentConversationId={currentConversationId}
+        isLoading={isLoadingConversations}
+        onNewConversation={handleNewConversation}
+        onSelectConversation={handleSelectConversation}
+        onDeleteConversation={deleteConversation}
+        onArchiveConversation={archive}
+        onPinConversation={pin}
+        onRenameConversation={handleRenameConversation}
+        isOpen={showSidebar}
+        onClose={() => setShowSidebar(false)}
+      />
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
-        <header className="bg-white border-b border-stone-200 px-4 py-3 flex items-center gap-3 shadow-soft">
-          <button onClick={() => setShowSidebar(!showSidebar)} className="p-2 hover:bg-stone-100 rounded-lg lg:hidden text-stone-600">
+        <header className="bg-white dark:bg-stone-800 border-b border-stone-200 dark:border-stone-700 px-4 py-3 flex items-center gap-3 shadow-sm">
+          <button onClick={() => setShowSidebar(!showSidebar)} className="p-2 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg lg:hidden text-stone-600 dark:text-stone-400">
             <Menu className="w-5 h-5" />
           </button>
 
@@ -393,14 +412,14 @@ export default function ChatPage() {
           <div className="relative">
             <button
               onClick={() => setShowModelSelector(!showModelSelector)}
-              className="flex items-center gap-2.5 px-4 py-2.5 bg-stone-50 hover:bg-stone-100 border border-stone-200 rounded-xl transition-all duration-200"
+              className="flex items-center gap-2.5 px-4 py-2.5 bg-stone-50 dark:bg-stone-700 hover:bg-stone-100 dark:hover:bg-stone-600 border border-stone-200 dark:border-stone-600 rounded-xl transition-all duration-200"
             >
               {selectedModel && (
                 <>
                   <span className="text-lg">{PROVIDER_CONFIG[selectedModel.provider]?.icon || '🤖'}</span>
-                  <span className="font-medium text-stone-900">{selectedModel.name}</span>
+                  <span className="font-medium text-stone-900 dark:text-white">{selectedModel.name}</span>
                   {selectedModel.tier && TIER_CONFIG[selectedModel.tier] && (
-                    <span className={clsx('text-xs px-2 py-0.5 rounded-full', TIER_CONFIG[selectedModel.tier].color, 'bg-stone-100')}>
+                    <span className={clsx('text-xs px-2 py-0.5 rounded-full', TIER_CONFIG[selectedModel.tier].color, 'bg-stone-100 dark:bg-stone-600')}>
                       {TIER_CONFIG[selectedModel.tier].label}
                     </span>
                   )}
@@ -411,9 +430,9 @@ export default function ChatPage() {
 
             {/* Model Dropdown */}
             {showModelSelector && (
-              <div className="absolute top-full mt-2 left-0 w-96 bg-white rounded-2xl border border-stone-200 shadow-card z-50 overflow-hidden">
+              <div className="absolute top-full mt-2 left-0 w-96 bg-white dark:bg-stone-800 rounded-2xl border border-stone-200 dark:border-stone-700 shadow-xl z-50 overflow-hidden">
                 {/* Search */}
-                <div className="p-3 border-b border-stone-200">
+                <div className="p-3 border-b border-stone-200 dark:border-stone-700">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-stone-400" />
                     <input
@@ -421,7 +440,7 @@ export default function ChatPage() {
                       placeholder="Search models..."
                       value={modelSearchQuery}
                       onChange={(e) => setModelSearchQuery(e.target.value)}
-                      className="w-full bg-stone-50 border border-stone-200 rounded-lg pl-10 pr-4 py-2 text-sm text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
+                      className="w-full bg-stone-50 dark:bg-stone-700 border border-stone-200 dark:border-stone-600 rounded-lg pl-10 pr-4 py-2 text-sm text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors"
                     />
                   </div>
                 </div>
@@ -471,14 +490,22 @@ export default function ChatPage() {
 
           <div className="flex-1" />
 
+          {/* Saving indicator */}
+          {isSaving && (
+            <div className="flex items-center gap-2 text-xs text-stone-500 dark:text-stone-400">
+              <div className="w-3 h-3 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+              Saving...
+            </div>
+          )}
+
           {/* Tools Toggle */}
           <button
             onClick={() => setShowTools(!showTools)}
             className={clsx(
               'flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 border',
               enabledTools.size > 0
-                ? 'bg-teal-50 border-teal-300 text-teal-700'
-                : 'bg-stone-50 border-stone-200 text-stone-600 hover:bg-stone-100'
+                ? 'bg-teal-50 dark:bg-teal-900/30 border-teal-300 dark:border-teal-700 text-teal-700 dark:text-teal-300'
+                : 'bg-stone-50 dark:bg-stone-700 border-stone-200 dark:border-stone-600 text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-600'
             )}
           >
             <Sparkles className="w-4 h-4" />
@@ -493,7 +520,7 @@ export default function ChatPage() {
 
         {/* Tools Panel */}
         {showTools && (
-          <div className="bg-white border-b border-stone-200 p-4 shadow-soft">
+          <div className="bg-white dark:bg-stone-800 border-b border-stone-200 dark:border-stone-700 p-4 shadow-sm">
             <div className="flex flex-wrap gap-2 max-w-4xl mx-auto">
               {TOOLS.map(tool => {
                 const Icon = tool.icon;
@@ -505,12 +532,12 @@ export default function ChatPage() {
                     className={clsx(
                       'flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 border',
                       isEnabled
-                        ? 'bg-stone-100 border-stone-300 shadow-soft'
-                        : 'bg-stone-50 border-stone-200 hover:bg-stone-100'
+                        ? 'bg-stone-100 dark:bg-stone-700 border-stone-300 dark:border-stone-600 shadow-sm'
+                        : 'bg-stone-50 dark:bg-stone-800 border-stone-200 dark:border-stone-700 hover:bg-stone-100 dark:hover:bg-stone-700'
                     )}
                   >
                     <Icon className={clsx('w-4 h-4', isEnabled ? tool.color : 'text-stone-400')} />
-                    <span className={clsx('text-sm', isEnabled ? 'text-stone-900' : 'text-stone-500')}>
+                    <span className={clsx('text-sm', isEnabled ? 'text-stone-900 dark:text-white' : 'text-stone-500 dark:text-stone-400')}>
                       {tool.name}
                     </span>
                     {isEnabled && <Check className="w-4 h-4 text-green-500" />}
@@ -523,20 +550,27 @@ export default function ChatPage() {
 
         {/* Messages */}
         <div className="flex-1 overflow-y-auto scroll-container">
-          {messages.length === 0 ? (
+          {isLoadingMessages ? (
+            <div className="h-full flex items-center justify-center">
+              <div className="flex flex-col items-center gap-3">
+                <div className="w-8 h-8 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                <p className="text-sm text-stone-500 dark:text-stone-400">Loading conversation...</p>
+              </div>
+            </div>
+          ) : localMessages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center px-4">
               <div className="relative mb-6">
-                <div className="w-24 h-24 rounded-3xl bg-teal-500 flex items-center justify-center shadow-card">
+                <div className="w-24 h-24 rounded-3xl bg-teal-500 flex items-center justify-center shadow-lg">
                   <Sparkles className="w-12 h-12 text-white" />
                 </div>
-                <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-lg bg-teal-600 flex items-center justify-center shadow-soft">
+                <div className="absolute -bottom-2 -right-2 w-8 h-8 rounded-lg bg-teal-600 flex items-center justify-center shadow-md">
                   <Zap className="w-4 h-4 text-white" />
                 </div>
               </div>
-              <h2 className="text-3xl font-bold text-center mb-3 text-stone-900">
+              <h2 className="text-3xl font-bold text-center mb-3 text-stone-900 dark:text-white">
                 How can I help you today?
               </h2>
-              <p className="text-stone-500 text-center max-w-lg mb-8">
+              <p className="text-stone-500 dark:text-stone-400 text-center max-w-lg mb-8">
                 I'm powered by {selectedModel?.name || 'multiple AI models'}. Toggle tools above to enable web search, code execution, image generation, and more.
               </p>
 
@@ -551,12 +585,12 @@ export default function ChatPage() {
                   <button
                     key={label}
                     onClick={() => setInput(prompt)}
-                    className="group flex flex-col items-center gap-3 p-5 bg-white hover:bg-stone-50 border border-stone-200 hover:border-stone-300 rounded-2xl transition-all duration-200 shadow-soft"
+                    className="group flex flex-col items-center gap-3 p-5 bg-white dark:bg-stone-800 hover:bg-stone-50 dark:hover:bg-stone-700 border border-stone-200 dark:border-stone-700 hover:border-stone-300 dark:hover:border-stone-600 rounded-2xl transition-all duration-200 shadow-sm"
                   >
-                    <div className={clsx('w-12 h-12 rounded-xl flex items-center justify-center shadow-soft', color)}>
+                    <div className={clsx('w-12 h-12 rounded-xl flex items-center justify-center shadow-md', color)}>
                       <Icon className="w-6 h-6 text-white" />
                     </div>
-                    <span className="text-sm font-medium text-stone-600 group-hover:text-stone-900 transition-colors">
+                    <span className="text-sm font-medium text-stone-600 dark:text-stone-400 group-hover:text-stone-900 dark:group-hover:text-white transition-colors">
                       {label}
                     </span>
                   </button>
@@ -565,7 +599,7 @@ export default function ChatPage() {
             </div>
           ) : (
               <div className="max-w-4xl mx-auto py-6 px-4">
-              {messages.map((message) => (
+              {localMessages.map((message) => (
                 <MessageBubble
                   key={message.id}
                   message={message}
@@ -579,7 +613,7 @@ export default function ChatPage() {
         </div>
 
         {/* Input Area */}
-        <div className="border-t border-stone-200 bg-white p-4 shadow-soft">
+        <div className="border-t border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 p-4 shadow-lg">
           <div className="max-w-4xl mx-auto">
             {/* Attachments Preview */}
             {attachments.length > 0 && (
@@ -587,9 +621,9 @@ export default function ChatPage() {
                 {attachments.map(att => (
                   <div key={att.id} className="relative flex-shrink-0 group">
                     {att.type === 'image' ? (
-                      <img src={att.url} alt={att.name} className="h-20 w-20 object-cover rounded-xl border border-stone-200" />
+                      <img src={att.url} alt={att.name} className="h-20 w-20 object-cover rounded-xl border border-stone-200 dark:border-stone-600" />
                     ) : (
-                      <div className="h-20 w-20 bg-stone-100 rounded-xl border border-stone-200 flex items-center justify-center">
+                      <div className="h-20 w-20 bg-stone-100 dark:bg-stone-700 rounded-xl border border-stone-200 dark:border-stone-600 flex items-center justify-center">
                         <FileSearch className="w-8 h-8 text-stone-400" />
                       </div>
                     )}
@@ -614,10 +648,10 @@ export default function ChatPage() {
                   return (
                     <span
                       key={toolId}
-                      className="flex items-center gap-1.5 px-2.5 py-1 bg-stone-100 border border-stone-200 rounded-lg text-xs"
+                      className="flex items-center gap-1.5 px-2.5 py-1 bg-stone-100 dark:bg-stone-700 border border-stone-200 dark:border-stone-600 rounded-lg text-xs"
                     >
                       <Icon className={clsx('w-3 h-3', tool.color)} />
-                      <span className="text-stone-600">{tool.name}</span>
+                      <span className="text-stone-600 dark:text-stone-400">{tool.name}</span>
                     </span>
                   );
                 })}
@@ -626,7 +660,7 @@ export default function ChatPage() {
 
             {/* Input Box */}
             <div className="flex items-end gap-3">
-              <div className="flex-1 bg-stone-50 rounded-2xl border border-stone-200 focus-within:border-teal-500 focus-within:ring-2 focus-within:ring-teal-500/20 transition-all duration-200">
+              <div className="flex-1 bg-stone-50 dark:bg-stone-700 rounded-2xl border border-stone-200 dark:border-stone-600 focus-within:border-teal-500 focus-within:ring-2 focus-within:ring-teal-500/20 transition-all duration-200">
                 <textarea
                   ref={inputRef}
                   value={input}
@@ -634,7 +668,7 @@ export default function ChatPage() {
                   onKeyDown={handleKeyDown}
                   placeholder="Message Meta Agent..."
                   rows={1}
-                  className="w-full bg-transparent px-4 py-3.5 resize-none focus:outline-none text-stone-900 placeholder:text-stone-400 max-h-48"
+                  className="w-full bg-transparent px-4 py-3.5 resize-none focus:outline-none text-stone-900 dark:text-white placeholder:text-stone-400 max-h-48"
                 />
                 <div className="flex items-center justify-between px-3 pb-3">
                   <div className="flex items-center gap-1">
@@ -648,7 +682,7 @@ export default function ChatPage() {
                     />
                     <button
                       onClick={() => fileInputRef.current?.click()}
-                      className="p-2 hover:bg-stone-200 rounded-lg transition-colors"
+                      className="p-2 hover:bg-stone-200 dark:hover:bg-stone-600 rounded-lg transition-colors"
                       title="Attach files"
                     >
                       <Paperclip className="w-5 h-5 text-stone-500" />
@@ -657,7 +691,7 @@ export default function ChatPage() {
                       onClick={toggleVoice}
                       className={clsx(
                         'p-2 rounded-lg transition-colors',
-                        isRecording ? 'bg-red-100 text-red-500' : 'hover:bg-stone-200 text-stone-500'
+                        isRecording ? 'bg-red-100 dark:bg-red-900/30 text-red-500' : 'hover:bg-stone-200 dark:hover:bg-stone-600 text-stone-500'
                       )}
                       title="Voice input"
                     >
@@ -673,12 +707,12 @@ export default function ChatPage() {
               <button
                 onClick={isLoading ? undefined : handleSend}
                 className={clsx(
-                  'p-4 rounded-xl transition-all duration-200 shadow-soft text-white',
+                  'p-4 rounded-xl transition-all duration-200 shadow-md text-white',
                   isLoading
                     ? 'bg-red-500 hover:bg-red-600'
                     : input.trim() || attachments.length > 0
                       ? 'bg-teal-500 hover:bg-teal-600'
-                      : 'bg-stone-300 text-stone-500'
+                      : 'bg-stone-300 dark:bg-stone-600 text-stone-500 dark:text-stone-400'
                 )}
               >
                 {isLoading ? (
@@ -698,20 +732,20 @@ export default function ChatPage() {
 
       {/* Artifact Panel */}
       {activeArtifact && (
-        <div className="w-[480px] border-l border-stone-200 bg-white flex flex-col hidden lg:flex shadow-soft">
-          <div className="p-4 border-b border-stone-200 flex items-center justify-between">
+        <div className="w-[480px] border-l border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 flex flex-col hidden lg:flex shadow-lg">
+          <div className="p-4 border-b border-stone-200 dark:border-stone-700 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center">
-                <Code2 className="w-4 h-4 text-teal-600" />
+              <div className="w-8 h-8 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
+                <Code2 className="w-4 h-4 text-teal-600 dark:text-teal-400" />
               </div>
-              <h3 className="font-medium text-stone-900">{activeArtifact.title}</h3>
+              <h3 className="font-medium text-stone-900 dark:text-white">{activeArtifact.title}</h3>
             </div>
-            <button onClick={() => setActiveArtifact(null)} className="p-2 hover:bg-stone-100 rounded-lg text-stone-500">
+            <button onClick={() => setActiveArtifact(null)} className="p-2 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg text-stone-500">
               <X className="w-4 h-4" />
             </button>
           </div>
-          <div className="flex-1 overflow-auto p-4 bg-stone-50">
-            <pre className="text-sm font-mono bg-stone-900 text-stone-100 p-4 rounded-xl overflow-x-auto border border-stone-200">
+          <div className="flex-1 overflow-auto p-4 bg-stone-50 dark:bg-stone-900">
+            <pre className="text-sm font-mono bg-stone-900 dark:bg-black text-stone-100 p-4 rounded-xl overflow-x-auto border border-stone-200 dark:border-stone-700">
               <code>{activeArtifact.content}</code>
             </pre>
           </div>
@@ -731,13 +765,13 @@ function ModelItem({ model, isSelected, onClick }: { model: Model; isSelected: b
       onClick={onClick}
       className={clsx(
         'w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200',
-        isSelected ? 'bg-teal-50 border border-teal-300' : 'hover:bg-stone-100'
+        isSelected ? 'bg-teal-50 dark:bg-teal-900/30 border border-teal-300 dark:border-teal-700' : 'hover:bg-stone-100 dark:hover:bg-stone-700'
       )}
     >
       <span className="text-lg">{PROVIDER_CONFIG[model.provider]?.icon || '🤖'}</span>
       <div className="flex-1 text-left">
         <div className="flex items-center gap-2">
-          <span className={clsx('font-medium text-sm', isSelected ? 'text-teal-700' : 'text-stone-700')}>
+          <span className={clsx('font-medium text-sm', isSelected ? 'text-teal-700 dark:text-teal-300' : 'text-stone-700 dark:text-stone-300')}>
             {model.name}
           </span>
           {tier && TierIcon && (
@@ -748,7 +782,7 @@ function ModelItem({ model, isSelected, onClick }: { model: Model; isSelected: b
           )}
         </div>
         {model.description && (
-          <p className="text-xs text-stone-500 truncate">{model.description}</p>
+          <p className="text-xs text-stone-500 dark:text-stone-400 truncate">{model.description}</p>
         )}
       </div>
       {model.supports_vision && (
@@ -786,10 +820,10 @@ function MessageBubble({
       )}>
         {/* Avatar */}
         <div className={clsx(
-          'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-soft',
+          'w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md',
           message.role === 'user'
             ? 'bg-teal-500'
-            : 'bg-white border border-stone-200'
+            : 'bg-white dark:bg-stone-700 border border-stone-200 dark:border-stone-600'
         )}>
           {message.role === 'user' ? (
             <span className="text-white font-medium">U</span>
@@ -803,8 +837,8 @@ function MessageBubble({
           <div className={clsx(
             'inline-block max-w-full',
             message.role === 'user'
-              ? 'bg-teal-500 text-white rounded-2xl rounded-tr-md px-4 py-3 shadow-soft'
-              : 'bg-white rounded-2xl rounded-tl-md px-4 py-3 border border-stone-200 shadow-soft'
+              ? 'bg-teal-500 text-white rounded-2xl rounded-tr-md px-4 py-3 shadow-md'
+              : 'bg-white dark:bg-stone-800 rounded-2xl rounded-tl-md px-4 py-3 border border-stone-200 dark:border-stone-700 shadow-sm'
           )}>
             {/* Model badge */}
             {message.role === 'assistant' && message.model && (
@@ -836,7 +870,7 @@ function MessageBubble({
             ) : (
               <div className={clsx(
                 'prose prose-sm max-w-none whitespace-pre-wrap',
-                message.role === 'user' ? 'prose-invert' : 'prose-stone'
+                message.role === 'user' ? 'prose-invert' : 'prose-stone dark:prose-invert'
               )}>
                 {message.content}
               </div>
@@ -847,10 +881,10 @@ function MessageBubble({
           {message.artifact && (
             <button
               onClick={() => onArtifactClick(message.artifact!)}
-              className="mt-3 inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-stone-200 rounded-xl hover:bg-stone-50 transition-colors shadow-soft"
+              className="mt-3 inline-flex items-center gap-2 px-4 py-2.5 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-700 transition-colors shadow-sm"
             >
               <Code2 className="w-4 h-4 text-teal-500" />
-              <span className="text-sm text-stone-700">{message.artifact.title}</span>
+              <span className="text-sm text-stone-700 dark:text-stone-300">{message.artifact.title}</span>
             </button>
           )}
 
@@ -859,7 +893,7 @@ function MessageBubble({
             <div className="flex gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
               <button
                 onClick={handleCopy}
-                className="p-2 hover:bg-stone-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg transition-colors"
                 title="Copy"
               >
                 {copied ? (
@@ -868,13 +902,13 @@ function MessageBubble({
                   <Copy className="w-4 h-4 text-stone-400" />
                 )}
               </button>
-              <button className="p-2 hover:bg-stone-100 rounded-lg transition-colors" title="Regenerate">
+              <button className="p-2 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg transition-colors" title="Regenerate">
                 <RefreshCw className="w-4 h-4 text-stone-400" />
               </button>
-              <button className="p-2 hover:bg-stone-100 rounded-lg transition-colors" title="Good response">
+              <button className="p-2 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg transition-colors" title="Good response">
                 <ThumbsUp className="w-4 h-4 text-stone-400" />
               </button>
-              <button className="p-2 hover:bg-stone-100 rounded-lg transition-colors" title="Bad response">
+              <button className="p-2 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg transition-colors" title="Bad response">
                 <ThumbsDown className="w-4 h-4 text-stone-400" />
               </button>
             </div>

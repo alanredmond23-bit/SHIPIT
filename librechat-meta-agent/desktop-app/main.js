@@ -348,6 +348,246 @@ ipcMain.handle('get-theme', () => {
   return nativeTheme.shouldUseDarkColors ? 'dark' : 'light';
 });
 
+//=============================================================================
+// WINDOW CONTROL IPC HANDLERS
+//=============================================================================
+
+// Window controls for custom titlebar (if needed)
+ipcMain.on('window-minimize', () => {
+  if (mainWindow) {
+    mainWindow.minimize();
+  }
+});
+
+ipcMain.on('window-maximize', () => {
+  if (mainWindow) {
+    if (mainWindow.isMaximized()) {
+      mainWindow.unmaximize();
+    } else {
+      mainWindow.maximize();
+    }
+  }
+});
+
+ipcMain.on('window-close', () => {
+  if (mainWindow) {
+    mainWindow.close();
+  }
+});
+
+// Get window state for UI updates
+ipcMain.handle('window-is-maximized', () => {
+  return mainWindow ? mainWindow.isMaximized() : false;
+});
+
+//=============================================================================
+// FILE DIALOG IPC HANDLERS
+//=============================================================================
+
+// Supported file types for document uploads
+const FILE_FILTERS = {
+  documents: [
+    { name: 'Documents', extensions: ['pdf', 'doc', 'docx', 'txt', 'rtf', 'md'] },
+    { name: 'Spreadsheets', extensions: ['xls', 'xlsx', 'csv'] },
+    { name: 'Presentations', extensions: ['ppt', 'pptx'] },
+    { name: 'All Files', extensions: ['*'] }
+  ],
+  images: [
+    { name: 'Images', extensions: ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'] },
+    { name: 'All Files', extensions: ['*'] }
+  ],
+  code: [
+    { name: 'Code Files', extensions: ['js', 'ts', 'jsx', 'tsx', 'py', 'json', 'html', 'css'] },
+    { name: 'All Files', extensions: ['*'] }
+  ],
+  all: [
+    { name: 'All Files', extensions: ['*'] }
+  ]
+};
+
+// Open file dialog
+ipcMain.handle('show-open-dialog', async (event, options = {}) => {
+  const {
+    title = 'Open File',
+    filterType = 'documents',
+    multiSelections = false,
+    defaultPath
+  } = options;
+
+  const dialogOptions = {
+    title,
+    defaultPath: defaultPath || app.getPath('documents'),
+    filters: FILE_FILTERS[filterType] || FILE_FILTERS.all,
+    properties: ['openFile']
+  };
+
+  if (multiSelections) {
+    dialogOptions.properties.push('multiSelections');
+  }
+
+  const result = await dialog.showOpenDialog(mainWindow, dialogOptions);
+
+  if (result.canceled) {
+    return { canceled: true, filePaths: [] };
+  }
+
+  // Read file metadata for each selected file
+  const files = await Promise.all(result.filePaths.map(async (filePath) => {
+    const stats = fs.statSync(filePath);
+    return {
+      path: filePath,
+      name: path.basename(filePath),
+      size: stats.size,
+      extension: path.extname(filePath).toLowerCase().slice(1),
+      modifiedAt: stats.mtime.toISOString()
+    };
+  }));
+
+  return { canceled: false, files };
+});
+
+// Save file dialog
+ipcMain.handle('show-save-dialog', async (event, options = {}) => {
+  const {
+    title = 'Save File',
+    defaultPath,
+    defaultName = 'untitled',
+    filterType = 'documents'
+  } = options;
+
+  const dialogOptions = {
+    title,
+    defaultPath: defaultPath || path.join(app.getPath('documents'), defaultName),
+    filters: FILE_FILTERS[filterType] || FILE_FILTERS.all
+  };
+
+  const result = await dialog.showSaveDialog(mainWindow, dialogOptions);
+
+  if (result.canceled) {
+    return { canceled: true, filePath: null };
+  }
+
+  return { canceled: false, filePath: result.filePath };
+});
+
+// Select directory dialog
+ipcMain.handle('show-directory-dialog', async (event, options = {}) => {
+  const {
+    title = 'Select Folder',
+    defaultPath
+  } = options;
+
+  const result = await dialog.showOpenDialog(mainWindow, {
+    title,
+    defaultPath: defaultPath || app.getPath('documents'),
+    properties: ['openDirectory', 'createDirectory']
+  });
+
+  if (result.canceled) {
+    return { canceled: true, path: null };
+  }
+
+  return { canceled: false, path: result.filePaths[0] };
+});
+
+// Read file content (for uploaded files)
+ipcMain.handle('read-file', async (event, filePath) => {
+  try {
+    const stats = fs.statSync(filePath);
+
+    // Limit file size to 50MB for safety
+    if (stats.size > 50 * 1024 * 1024) {
+      return { error: 'File too large (max 50MB)' };
+    }
+
+    const content = fs.readFileSync(filePath);
+    const ext = path.extname(filePath).toLowerCase();
+
+    // Return base64 for binary files, string for text
+    const textExtensions = ['.txt', '.md', '.json', '.js', '.ts', '.jsx', '.tsx', '.py', '.html', '.css', '.csv', '.xml'];
+    const isText = textExtensions.includes(ext);
+
+    return {
+      name: path.basename(filePath),
+      path: filePath,
+      size: stats.size,
+      content: isText ? content.toString('utf8') : content.toString('base64'),
+      encoding: isText ? 'utf8' : 'base64',
+      mimeType: getMimeType(ext)
+    };
+  } catch (err) {
+    return { error: err.message };
+  }
+});
+
+// Write file content
+ipcMain.handle('write-file', async (event, { filePath, content, encoding = 'utf8' }) => {
+  try {
+    const data = encoding === 'base64' ? Buffer.from(content, 'base64') : content;
+    fs.writeFileSync(filePath, data);
+    return { success: true };
+  } catch (err) {
+    return { error: err.message };
+  }
+});
+
+// Helper: Get MIME type from extension
+function getMimeType(ext) {
+  const mimeTypes = {
+    '.pdf': 'application/pdf',
+    '.doc': 'application/msword',
+    '.docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    '.xls': 'application/vnd.ms-excel',
+    '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    '.ppt': 'application/vnd.ms-powerpoint',
+    '.pptx': 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+    '.txt': 'text/plain',
+    '.md': 'text/markdown',
+    '.json': 'application/json',
+    '.js': 'application/javascript',
+    '.ts': 'application/typescript',
+    '.html': 'text/html',
+    '.css': 'text/css',
+    '.csv': 'text/csv',
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.gif': 'image/gif',
+    '.webp': 'image/webp',
+    '.svg': 'image/svg+xml'
+  };
+  return mimeTypes[ext] || 'application/octet-stream';
+}
+
+//=============================================================================
+// APP INFO AND UTILITIES
+//=============================================================================
+
+// Get app info
+ipcMain.handle('get-app-info', () => {
+  return {
+    name: app.getName(),
+    version: app.getVersion(),
+    platform: process.platform,
+    arch: process.arch,
+    electron: process.versions.electron,
+    node: process.versions.node,
+    chrome: process.versions.chrome
+  };
+});
+
+// Open external URL
+ipcMain.handle('open-external', async (event, url) => {
+  await shell.openExternal(url);
+  return true;
+});
+
+// Show item in folder
+ipcMain.handle('show-in-folder', async (event, filePath) => {
+  shell.showItemInFolder(filePath);
+  return true;
+});
+
 // App events
 app.whenReady().then(async () => {
   // Check setup before launching
