@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+// vitest import removed - Jest globals used
 
 describe('Settings Component', () => {
   describe('Settings Categories', () => {

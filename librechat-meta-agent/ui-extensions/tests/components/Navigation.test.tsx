@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+// vitest import removed - Jest globals used
 import { render, screen, fireEvent, within } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { UnifiedNav, MainContent } from '../../components/Navigation/UnifiedNav';

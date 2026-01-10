@@ -19,6 +19,13 @@ export {
 } from './useTasks';
 export { usePersonas } from './usePersonas';
 
+// Auto-save Hooks
+export {
+  useAutoSave,
+  useAutoSaveForm,
+  DraftRecoveryBanner,
+} from './useAutoSave';
+
 // Project Management Hooks
 export {
   useProjectsList,
@@ -120,3 +127,12 @@ export type {
   UsePersonasOptions,
   UsePersonasReturn,
 } from './usePersonas';
+
+export type {
+  AutoSaveOptions,
+  AutoSaveReturn,
+  SavedData,
+  FormAutoSaveOptions,
+  FormAutoSaveReturn,
+  DraftRecoveryBannerProps,
+} from './useAutoSave';

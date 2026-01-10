@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+// vitest import removed - Jest globals used
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import ExtendedThinking from '../../components/ThinkingPanel/ExtendedThinking';

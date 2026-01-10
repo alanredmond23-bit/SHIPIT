@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+// vitest import removed - Jest globals used
 
 // Types for testing
 interface Message {
