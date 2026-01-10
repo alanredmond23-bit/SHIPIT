@@ -107,39 +107,54 @@ SHIPIT/
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Node.js 18+
-- PostgreSQL 15+ with pgvector
-- API Keys: Anthropic, OpenAI (optional), Google (optional)
-
-### Installation
+### One-Command Setup
 
 ```bash
-# Clone the repository
+# Clone and setup (handles EVERYTHING)
 git clone https://github.com/alanredmond23-bit/SHIPIT.git
-cd SHIPIT/librechat-meta-agent
+cd SHIPIT
+./setup.sh
+```
 
-# Install orchestrator dependencies
-cd orchestrator && npm install
+That's it. The setup script will:
+- ✅ Check Node.js version (requires 18+)
+- ✅ Install all dependencies (4 packages)
+- ✅ Create environment files
+- ✅ Fix symlinks
+- ✅ Validate installation
 
-# Install UI dependencies
-cd ../ui-extensions && npm install
+### After Setup
 
-# Set up environment variables
-cp .env.example .env.local
-# Edit .env.local with your API keys
+```bash
+# Edit your environment variables (add Supabase keys)
+nano librechat-meta-agent/.env
 
-# Run database migrations
-psql -f ../schemas/*.sql
+# Launch the Electron app
+cd librechat-meta-agent/desktop-app && npm run dev
 
-# Start the orchestrator
-cd ../orchestrator && npm run dev
-
-# Start the UI (in another terminal)
-cd ../ui-extensions && npm run dev
+# Or just the web UI
+cd librechat-meta-agent/ui-extensions && npm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000)
+
+### Setup Options
+
+```bash
+./setup.sh --clean      # Fresh install (removes node_modules first)
+./setup.sh --skip-env   # Skip .env creation (use existing)
+./setup.sh --dev        # Setup AND launch app automatically
+./setup.sh --help       # Show all options
+```
+
+### Troubleshooting
+
+**Having issues on a new machine?** Just run:
+```bash
+./setup.sh --clean
+```
+
+This removes all `node_modules`, clears Electron cache, and reinstalls everything fresh for your platform.
 
 ## 🗄️ Database Schema
 

@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -24,6 +25,7 @@ const config = {
     database: process.env.DATABASE_NAME || 'librechat_meta',
     user: process.env.DATABASE_USER || 'postgres',
     password: process.env.DATABASE_PASSWORD || 'postgres',
+    ssl: process.env.DATABASE_HOST?.includes('supabase') || false,
   },
   anthropicApiKey: process.env.ANTHROPIC_API_KEY || '',
 };
