@@ -725,3 +725,431 @@ export async function saveMessageExchange(
 
   return { userMessage, assistantMessage };
 }
+
+// ============================================================================
+// Branching Operations
+// ============================================================================
+
+import type {
+  CreateBranchRequest,
+  SwitchBranchRequest,
+  BranchOperationResult,
+  ConversationBranch,
+} from '@/types/branching';
+
+/**
+ * Create a new branch from an edited message
+ * This creates a new message as a sibling to the original and marks it as active
+ */
+export async function createBranchFromEdit(
+  request: CreateBranchRequest
+): Promise<BranchOperationResult> {
+  try {
+    const branchName = request.branchName || `branch-${Date.now()}`;
+
+    // First, mark the current active sibling messages as inactive (from the branch point forward)
+    const { error: deactivateError } = await db()
+      .from('meta_messages')
+      .update({ is_active_branch: false })
+      .eq('conversation_id', request.conversationId)
+      .eq('parent_message_id', request.parentMessageId)
+      .eq('is_active_branch', true);
+
+    if (deactivateError) {
+      // Non-fatal - there may not be existing siblings
+      console.warn('Could not deactivate sibling messages:', deactivateError.message);
+    }
+
+    // Create the new message as part of the new branch
+    const { data: newMessage, error: createError } = await db()
+      .from('meta_messages')
+      .insert({
+        conversation_id: request.conversationId,
+        parent_message_id: request.parentMessageId,
+        role: request.role,
+        content: request.content,
+        content_type: 'text',
+        branch_name: branchName,
+        is_active_branch: true,
+        tokens_used: 0,
+        metadata: {
+          branch_created_at: new Date().toISOString(),
+          is_edit: true,
+        },
+      })
+      .select()
+      .single();
+
+    if (createError) {
+      throw new Error(`Failed to create branch message: ${createError.message}`);
+    }
+
+    // Update conversation timestamp
+    await db()
+      .from('meta_conversations')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', request.conversationId);
+
+    return {
+      success: true,
+      branchId: branchName,
+      messageId: newMessage.id,
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Failed to create branch',
+    };
+  }
+}
+
+/**
+ * Switch to a different branch
+ * Updates which messages are marked as active in the conversation
+ */
+export async function switchBranch(
+  request: SwitchBranchRequest
+): Promise<BranchOperationResult> {
+  try {
+    const { conversationId, branchId } = request;
+
+    // First, get all messages for this conversation
+    const { data: allMessages, error: fetchError } = await db()
+      .from('meta_messages')
+      .select('id, parent_message_id, branch_name, is_active_branch')
+      .eq('conversation_id', conversationId)
+      .order('created_at', { ascending: true });
+
+    if (fetchError) {
+      throw new Error(`Failed to fetch messages: ${fetchError.message}`);
+    }
+
+    if (!allMessages || allMessages.length === 0) {
+      return { success: true }; // No messages to switch
+    }
+
+    // Find the target branch messages
+    const targetBranchMessages = allMessages.filter(
+      (m: any) => m.branch_name === branchId || (branchId === 'main' && !m.branch_name)
+    );
+
+    if (targetBranchMessages.length === 0) {
+      return {
+        success: false,
+        error: `Branch "${branchId}" not found`,
+      };
+    }
+
+    // Build the path from root to the target branch
+    const pathMessageIds = new Set<string>();
+    const targetMessageIds = new Set(targetBranchMessages.map((m: any) => m.id));
+
+    // Add target branch messages to path
+    targetBranchMessages.forEach((m: any) => pathMessageIds.add(m.id));
+
+    // Trace back from each target message to root
+    for (const msg of targetBranchMessages) {
+      let currentMsg = msg;
+      while (currentMsg.parent_message_id) {
+        pathMessageIds.add(currentMsg.parent_message_id);
+        const parentMsg = allMessages.find((m: any) => m.id === currentMsg.parent_message_id);
+        if (!parentMsg) break;
+        currentMsg = parentMsg;
+      }
+    }
+
+    // Deactivate all messages not in the path
+    const messagesToDeactivate = allMessages
+      .filter((m: any) => !pathMessageIds.has(m.id) && m.is_active_branch)
+      .map((m: any) => m.id);
+
+    if (messagesToDeactivate.length > 0) {
+      const { error: deactivateError } = await db()
+        .from('meta_messages')
+        .update({ is_active_branch: false })
+        .in('id', messagesToDeactivate);
+
+      if (deactivateError) {
+        throw new Error(`Failed to deactivate messages: ${deactivateError.message}`);
+      }
+    }
+
+    // Activate all messages in the path
+    const messagesToActivate = allMessages
+      .filter((m: any) => pathMessageIds.has(m.id) && !m.is_active_branch)
+      .map((m: any) => m.id);
+
+    if (messagesToActivate.length > 0) {
+      const { error: activateError } = await db()
+        .from('meta_messages')
+        .update({ is_active_branch: true })
+        .in('id', messagesToActivate);
+
+      if (activateError) {
+        throw new Error(`Failed to activate messages: ${activateError.message}`);
+      }
+    }
+
+    return {
+      success: true,
+      branchId,
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Failed to switch branch',
+    };
+  }
+}
+
+/**
+ * Get all branches for a conversation
+ */
+export async function getBranchesForConversation(
+  conversationId: string
+): Promise<ConversationBranch[]> {
+  const { data: messages, error } = await db()
+    .from('meta_messages')
+    .select('id, branch_name, parent_message_id, is_active_branch, created_at')
+    .eq('conversation_id', conversationId)
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    throw new Error(`Failed to get branches: ${error.message}`);
+  }
+
+  if (!messages || messages.length === 0) {
+    return [];
+  }
+
+  // Group messages by branch
+  const branchMap = new Map<string, ConversationBranch>();
+
+  for (const msg of messages) {
+    const branchId = msg.branch_name || 'main';
+
+    if (!branchMap.has(branchId)) {
+      branchMap.set(branchId, {
+        id: branchId,
+        name: branchId === 'main' ? 'Main' : branchId,
+        parentMessageId: msg.parent_message_id || '',
+        messageIds: [],
+        isActive: msg.is_active_branch,
+        createdAt: new Date(msg.created_at),
+      });
+    }
+
+    const branch = branchMap.get(branchId)!;
+    branch.messageIds.push(msg.id);
+    // A branch is active if any of its messages are active
+    if (msg.is_active_branch) {
+      branch.isActive = true;
+    }
+  }
+
+  return Array.from(branchMap.values());
+}
+
+/**
+ * Get messages for a specific branch
+ */
+export async function getMessagesForBranch(
+  conversationId: string,
+  branchId: string
+): Promise<Message[]> {
+  // For 'main' branch, get messages without branch_name or with branch_name = 'main'
+  let query = db()
+    .from('meta_messages')
+    .select('*')
+    .eq('conversation_id', conversationId)
+    .order('created_at', { ascending: true });
+
+  if (branchId === 'main') {
+    query = query.or('branch_name.is.null,branch_name.eq.main');
+  } else {
+    query = query.eq('branch_name', branchId);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    throw new Error(`Failed to get branch messages: ${error.message}`);
+  }
+
+  return (data || []) as Message[];
+}
+
+/**
+ * Regenerate a response from a specific message
+ * Creates a new branch with a regenerated assistant response
+ */
+export async function regenerateResponse(
+  request: { conversationId: string; messageId: string }
+): Promise<BranchOperationResult> {
+  try {
+    const { conversationId, messageId } = request;
+
+    // Get the message to regenerate from
+    const { data: message, error: fetchError } = await db()
+      .from('meta_messages')
+      .select('*')
+      .eq('id', messageId)
+      .single();
+
+    if (fetchError) {
+      throw new Error(`Failed to get message: ${fetchError.message}`);
+    }
+
+    // The message to regenerate from should be a user message
+    // We'll create a new assistant response as a sibling to any existing responses
+    const branchName = `regenerate-${Date.now()}`;
+
+    // Deactivate the current assistant response (if it's the next message)
+    const { data: nextMessages, error: nextError } = await db()
+      .from('meta_messages')
+      .select('id')
+      .eq('parent_message_id', messageId)
+      .eq('role', 'assistant')
+      .eq('is_active_branch', true);
+
+    if (!nextError && nextMessages && nextMessages.length > 0) {
+      await db()
+        .from('meta_messages')
+        .update({ is_active_branch: false })
+        .in('id', nextMessages.map((m: any) => m.id));
+    }
+
+    // Note: The actual regeneration would be done by the chat API
+    // This function just sets up the branch structure
+    // Return a placeholder that indicates regeneration is ready
+
+    return {
+      success: true,
+      branchId: branchName,
+      // The messageId will be filled in when the actual response is generated
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Failed to prepare regeneration',
+    };
+  }
+}
+
+/**
+ * Get conversation with all messages including branches
+ */
+export async function getConversationWithAllBranches(
+  conversationId: string
+): Promise<{
+  conversation: Conversation;
+  messages: Message[];
+  branches: ConversationBranch[];
+} | null> {
+  // Get conversation
+  const { data: conversation, error: convError } = await db()
+    .from('meta_conversations')
+    .select('*')
+    .eq('id', conversationId)
+    .single();
+
+  if (convError) {
+    if (convError.code === 'PGRST116') {
+      return null;
+    }
+    throw new Error(`Failed to get conversation: ${convError.message}`);
+  }
+
+  // Get ALL messages (including inactive branches)
+  const { data: messages, error: msgError } = await db()
+    .from('meta_messages')
+    .select('*')
+    .eq('conversation_id', conversationId)
+    .order('created_at', { ascending: true });
+
+  if (msgError) {
+    throw new Error(`Failed to get messages: ${msgError.message}`);
+  }
+
+  // Get branch information
+  const branches = await getBranchesForConversation(conversationId);
+
+  return {
+    conversation: conversation as Conversation,
+    messages: (messages || []) as Message[],
+    branches,
+  };
+}
+
+/**
+ * Delete a branch (and all its messages)
+ * Cannot delete the 'main' branch
+ */
+export async function deleteBranch(
+  conversationId: string,
+  branchId: string
+): Promise<BranchOperationResult> {
+  if (branchId === 'main') {
+    return {
+      success: false,
+      error: 'Cannot delete the main branch',
+    };
+  }
+
+  try {
+    const { error } = await db()
+      .from('meta_messages')
+      .delete()
+      .eq('conversation_id', conversationId)
+      .eq('branch_name', branchId);
+
+    if (error) {
+      throw new Error(`Failed to delete branch: ${error.message}`);
+    }
+
+    return { success: true };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Failed to delete branch',
+    };
+  }
+}
+
+/**
+ * Rename a branch
+ */
+export async function renameBranch(
+  conversationId: string,
+  oldBranchId: string,
+  newBranchId: string
+): Promise<BranchOperationResult> {
+  if (oldBranchId === 'main') {
+    return {
+      success: false,
+      error: 'Cannot rename the main branch',
+    };
+  }
+
+  try {
+    const { error } = await db()
+      .from('meta_messages')
+      .update({ branch_name: newBranchId })
+      .eq('conversation_id', conversationId)
+      .eq('branch_name', oldBranchId);
+
+    if (error) {
+      throw new Error(`Failed to rename branch: ${error.message}`);
+    }
+
+    return {
+      success: true,
+      branchId: newBranchId,
+    };
+  } catch (err) {
+    return {
+      success: false,
+      error: err instanceof Error ? err.message : 'Failed to rename branch',
+    };
+  }
+}

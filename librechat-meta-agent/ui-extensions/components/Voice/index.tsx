@@ -1,3 +1,5 @@
 import VoiceChat from './VoiceChat';
-export { VoiceChat };
+import { VoiceChatPanel } from './VoiceChatPanel';
+
+export { VoiceChat, VoiceChatPanel };
 export default VoiceChat;

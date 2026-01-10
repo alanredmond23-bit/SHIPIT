@@ -71,6 +71,24 @@ export interface StreamingResult {
   aborted: boolean;
 }
 
+// Thinking event types
+export interface ThinkingStartEvent {
+  blockId: string;
+  timestamp: string;
+}
+
+export interface ThinkingChunkEvent {
+  content: string;
+  tokenCount: number;
+  chunkIndex: number;
+}
+
+export interface ThinkingStopEvent {
+  tokenCount: number;
+  durationMs: number;
+  totalThinkingContent: number;
+}
+
 export interface UseStreamingChatOptions {
   apiUrl?: string;
   config?: StreamingConfig;
@@ -80,6 +98,10 @@ export interface UseStreamingChatOptions {
   onError?: (error: StreamingError) => void;
   onStatusChange?: (status: ConnectionStatus) => void;
   onComplete?: (result: StreamingResult) => void;
+  // Extended thinking callbacks
+  onThinkingStart?: (event: ThinkingStartEvent) => void;
+  onThinking?: (event: ThinkingChunkEvent, fullThinkingContent: string) => void;
+  onThinkingStop?: (event: ThinkingStopEvent) => void;
 }
 
 // ============================================================================
@@ -172,6 +194,9 @@ export function useStreamingChat(options: UseStreamingChatOptions = {}) {
     onError,
     onStatusChange,
     onComplete,
+    onThinkingStart,
+    onThinking,
+    onThinkingStop,
   } = options;
 
   const config = { ...DEFAULT_CONFIG, ...userConfig };
@@ -184,12 +209,16 @@ export function useStreamingChat(options: UseStreamingChatOptions = {}) {
   const [usage, setUsage] = useState<TokenUsage | null>(null);
   const [artifacts, setArtifacts] = useState<ChatArtifact[]>([]);
   const [retryCount, setRetryCount] = useState(0);
+  // Thinking state
+  const [isThinking, setIsThinking] = useState(false);
+  const [thinkingContent, setThinkingContent] = useState('');
 
   // Refs
   const abortControllerRef = useRef<AbortController | null>(null);
   const heartbeatTimerRef = useRef<NodeJS.Timeout | null>(null);
   const lastActivityRef = useRef<number>(Date.now());
   const reconnectTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const thinkingContentRef = useRef<string>('');
 
   // Update status and notify
   const updateStatus = useCallback((newStatus: ConnectionStatus) => {
@@ -228,6 +257,10 @@ export function useStreamingChat(options: UseStreamingChatOptions = {}) {
     setUsage(null);
     setArtifacts([]);
     setRetryCount(0);
+    // Reset thinking state
+    setIsThinking(false);
+    setThinkingContent('');
+    thinkingContentRef.current = '';
   }, [abort]);
 
   // Start heartbeat monitoring
@@ -274,6 +307,10 @@ export function useStreamingChat(options: UseStreamingChatOptions = {}) {
     let finalArtifacts: ChatArtifact[] = [];
     let streamError: StreamingError | null = null;
     let wasAborted = false;
+    // Reset thinking state
+    thinkingContentRef.current = '';
+    setThinkingContent('');
+    setIsThinking(false);
 
     updateStatus('connecting');
     setIsStreaming(true);
@@ -406,9 +443,61 @@ export function useStreamingChat(options: UseStreamingChatOptions = {}) {
               wasAborted = true;
               break;
             }
+
+            // Thinking events
+            if (parsed.event === 'thinking_start') {
+              continue; // Data will come in next line
+            }
+
+            if (parsed.event === 'thinking') {
+              continue; // Data will come in next line
+            }
+
+            if (parsed.event === 'thinking_stop') {
+              continue; // Data will come in next line
+            }
           }
 
           if (parsed.data !== undefined) {
+            // Handle thinking events
+            if (currentEvent === 'thinking_start') {
+              setIsThinking(true);
+              setThinkingContent('');
+              onThinkingStart?.({
+                blockId: parsed.data.blockId,
+                timestamp: parsed.data.timestamp,
+              });
+              currentEvent = '';
+              continue;
+            }
+
+            if (currentEvent === 'thinking') {
+              const newContent = thinkingContentRef.current + (parsed.data.content || '');
+              thinkingContentRef.current = newContent;
+              setThinkingContent(newContent);
+              onThinking?.(
+                {
+                  content: parsed.data.content || '',
+                  tokenCount: parsed.data.tokenCount || 0,
+                  chunkIndex: parsed.data.chunkIndex || 0,
+                },
+                newContent
+              );
+              currentEvent = '';
+              continue;
+            }
+
+            if (currentEvent === 'thinking_stop') {
+              setIsThinking(false);
+              onThinkingStop?.({
+                tokenCount: parsed.data.tokenCount || 0,
+                durationMs: parsed.data.durationMs || 0,
+                totalThinkingContent: parsed.data.totalThinkingContent || 0,
+              });
+              currentEvent = '';
+              continue;
+            }
+
             // Handle different event types
             if (currentEvent === 'error') {
               streamError = createError(
@@ -523,7 +612,10 @@ export function useStreamingChat(options: UseStreamingChatOptions = {}) {
     onUsage,
     onArtifacts,
     onError,
-    onComplete
+    onComplete,
+    onThinkingStart,
+    onThinking,
+    onThinkingStop,
   ]);
 
   // Stream with automatic retry
@@ -599,6 +691,9 @@ export function useStreamingChat(options: UseStreamingChatOptions = {}) {
     usage,
     artifacts,
     retryCount,
+    // Thinking state
+    isThinking,
+    thinkingContent,
 
     // Actions
     streamChat: streamWithRetry,

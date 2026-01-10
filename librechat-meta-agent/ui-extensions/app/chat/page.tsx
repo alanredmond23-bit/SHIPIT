@@ -39,13 +39,18 @@ import {
   WifiOff,
   AlertCircle,
   Loader2,
+  PanelRightClose,
+  PanelRightOpen,
 } from 'lucide-react';
 import clsx from 'clsx';
-import { ConversationSidebar } from '@/components/Chat';
+import { ConversationSidebar, ThinkingPanel } from '@/components/Chat';
+import { ArtifactPanel } from '@/components/Artifacts';
 import { useChatPersistence } from '@/hooks/useConversations';
 import { useStreamingChat, getStatusDisplay } from '@/hooks/useStreamingChat';
-import type { ConnectionStatus, StreamingError } from '@/hooks/useStreamingChat';
-import type { ChatMessage, ChatAttachment, ChatArtifact } from '@/types/conversations';
+import { useArtifacts } from '@/hooks/useArtifacts';
+import type { ConnectionStatus, StreamingError, ThinkingStartEvent, ThinkingChunkEvent, ThinkingStopEvent } from '@/hooks/useStreamingChat';
+import type { ChatMessage, ChatAttachment, ChatArtifact, ThinkingBlockData } from '@/types/conversations';
+import type { ThinkingBlock } from '@/types/thinking';
 
 // Types
 type Attachment = ChatAttachment;
@@ -114,23 +119,49 @@ export default function ChatPage() {
   const [showModelSelector, setShowModelSelector] = useState(false);
   const [showSidebar, setShowSidebar] = useState(false);
   const [attachments, setAttachments] = useState<Attachment[]>([]);
-  const [activeArtifact, setActiveArtifact] = useState<Artifact | null>(null);
   const [enabledTools, setEnabledTools] = useState<Set<string>>(new Set(['artifacts']));
   const [showTools, setShowTools] = useState(false);
   const [modelSearchQuery, setModelSearchQuery] = useState('');
   const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
   const [showErrorToast, setShowErrorToast] = useState(false);
   const [lastError, setLastError] = useState<StreamingError | null>(null);
+  // Extended thinking state
+  const [currentThinkingBlocks, setCurrentThinkingBlocks] = useState<ThinkingBlock[]>([]);
+  const [thinkingStartTime, setThinkingStartTime] = useState<Date | null>(null);
+  const [currentThinkingTokenCount, setCurrentThinkingTokenCount] = useState(0);
+  const [showThinking, setShowThinking] = useState(true); // Global toggle for showing thinking
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Artifacts management hook
+  const {
+    artifacts,
+    activeArtifact,
+    selectedVersion,
+    isPanelOpen,
+    isFullscreen,
+    addArtifact,
+    updateArtifact,
+    removeArtifact,
+    selectArtifact,
+    closeArtifact,
+    openPanel,
+    closePanel,
+    togglePanel,
+    toggleFullscreen,
+    selectVersion,
+    revertToVersion,
+    clearAll,
+  } = useArtifacts();
 
   // Streaming chat hook with reconnection and error handling
   const {
     status: connectionStatus,
     error: streamingError,
     isStreaming,
+    isThinking,
     retryCount,
     streamChat,
     abort: abortStream,
@@ -144,9 +175,19 @@ export default function ChatPage() {
         ));
       }
     },
-    onArtifacts: (artifacts) => {
-      if (artifacts.length > 0) {
-        setActiveArtifact(artifacts[0]);
+    onArtifacts: (receivedArtifacts) => {
+      // Add each received artifact to the artifacts panel
+      receivedArtifacts.forEach((artifact) => {
+        addArtifact({
+          title: artifact.title || 'Untitled',
+          content: artifact.content,
+          type: artifact.type as any,
+          language: artifact.language as any,
+        });
+      });
+      // Open the panel if we received artifacts
+      if (receivedArtifacts.length > 0) {
+        openPanel();
       }
     },
     onError: (error) => {
@@ -156,12 +197,84 @@ export default function ChatPage() {
       setTimeout(() => setShowErrorToast(false), 5000);
     },
     onComplete: (result) => {
-      // Mark message as no longer streaming
+      // Mark message as no longer streaming and save thinking blocks
       if (streamingMessageId) {
         setLocalMessages(prev => prev.map(m =>
-          m.id === streamingMessageId ? { ...m, isStreaming: false } : m
+          m.id === streamingMessageId ? {
+            ...m,
+            isStreaming: false,
+            isThinking: false,
+            thinkingBlocks: currentThinkingBlocks.length > 0 ? currentThinkingBlocks.map(b => ({
+              id: b.id,
+              content: b.content,
+              timestamp: b.timestamp,
+              tokenCount: b.tokenCount,
+              durationMs: b.durationMs,
+              isStreaming: false,
+            })) : undefined,
+          } : m
         ));
         setStreamingMessageId(null);
+        // Reset thinking state
+        setCurrentThinkingBlocks([]);
+        setThinkingStartTime(null);
+        setCurrentThinkingTokenCount(0);
+      }
+    },
+    // Extended thinking callbacks
+    onThinkingStart: (event: ThinkingStartEvent) => {
+      const newBlock: ThinkingBlock = {
+        id: event.blockId,
+        content: '',
+        timestamp: new Date(event.timestamp),
+        tokenCount: 0,
+        durationMs: 0,
+        isStreaming: true,
+      };
+      setCurrentThinkingBlocks(prev => [...prev, newBlock]);
+      setThinkingStartTime(new Date());
+      setCurrentThinkingTokenCount(0);
+      // Update message to show thinking
+      if (streamingMessageId) {
+        setLocalMessages(prev => prev.map(m =>
+          m.id === streamingMessageId ? { ...m, isThinking: true, thinkingStartTime: new Date() } : m
+        ));
+      }
+    },
+    onThinking: (event: ThinkingChunkEvent, fullThinkingContent: string) => {
+      setCurrentThinkingTokenCount(event.tokenCount);
+      // Update the last thinking block with new content
+      setCurrentThinkingBlocks(prev => {
+        if (prev.length === 0) return prev;
+        const updated = [...prev];
+        const lastIndex = updated.length - 1;
+        updated[lastIndex] = {
+          ...updated[lastIndex],
+          content: fullThinkingContent,
+          tokenCount: event.tokenCount,
+        };
+        return updated;
+      });
+    },
+    onThinkingStop: (event: ThinkingStopEvent) => {
+      // Finalize the last thinking block
+      setCurrentThinkingBlocks(prev => {
+        if (prev.length === 0) return prev;
+        const updated = [...prev];
+        const lastIndex = updated.length - 1;
+        updated[lastIndex] = {
+          ...updated[lastIndex],
+          tokenCount: event.tokenCount,
+          durationMs: event.durationMs,
+          isStreaming: false,
+        };
+        return updated;
+      });
+      // Update message thinking state
+      if (streamingMessageId) {
+        setLocalMessages(prev => prev.map(m =>
+          m.id === streamingMessageId ? { ...m, isThinking: false, thinkingTokenCount: event.tokenCount } : m
+        ));
       }
     },
   });
@@ -561,6 +674,33 @@ export default function ChatPage() {
               </span>
             )}
           </button>
+
+          {/* Artifact Panel Toggle */}
+          <button
+            onClick={togglePanel}
+            className={clsx(
+              'flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 border',
+              isPanelOpen
+                ? 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-300 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300'
+                : 'bg-stone-50 dark:bg-stone-700 border-stone-200 dark:border-stone-600 text-stone-600 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-600'
+            )}
+            title={isPanelOpen ? 'Hide artifacts panel' : 'Show artifacts panel'}
+          >
+            {isPanelOpen ? (
+              <PanelRightClose className="w-4 h-4" />
+            ) : (
+              <PanelRightOpen className="w-4 h-4" />
+            )}
+            <span className="text-sm font-medium hidden sm:inline">Artifacts</span>
+            {artifacts.length > 0 && (
+              <span className={clsx(
+                'px-1.5 py-0.5 text-white text-xs rounded-full',
+                isPanelOpen ? 'bg-indigo-500' : 'bg-stone-500'
+              )}>
+                {artifacts.length}
+              </span>
+            )}
+          </button>
         </header>
 
         {/* Tools Panel */}
@@ -649,7 +789,29 @@ export default function ChatPage() {
                   key={message.id}
                   message={message}
                   onCopy={copyToClipboard}
-                  onArtifactClick={setActiveArtifact}
+                  onArtifactClick={(artifact) => {
+                    // Add the artifact if it's not already in the list, then select it
+                    const existingArtifact = artifacts.find(a =>
+                      a.title === artifact.title && a.content === artifact.content
+                    );
+                    if (existingArtifact) {
+                      selectArtifact(existingArtifact.id);
+                    } else {
+                      addArtifact({
+                        title: artifact.title || 'Untitled',
+                        content: artifact.content,
+                        type: artifact.type as any,
+                        language: artifact.language as any,
+                      });
+                    }
+                    openPanel();
+                  }}
+                  // Pass thinking props for the currently streaming message
+                  thinkingBlocks={message.id === streamingMessageId ? currentThinkingBlocks : undefined}
+                  isThinkingActive={message.id === streamingMessageId ? isThinking : false}
+                  thinkingStartTime={message.id === streamingMessageId ? thinkingStartTime : null}
+                  currentThinkingTokenCount={message.id === streamingMessageId ? currentThinkingTokenCount : 0}
+                  showThinking={showThinking}
                 />
               ))}
               <div ref={messagesEndRef} />
@@ -785,27 +947,21 @@ export default function ChatPage() {
         onRetry={lastError?.retryable ? handleSend : undefined}
       />
 
-      {/* Artifact Panel */}
-      {activeArtifact && (
-        <div className="w-[480px] border-l border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 flex flex-col hidden lg:flex shadow-lg">
-          <div className="p-4 border-b border-stone-200 dark:border-stone-700 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-teal-100 dark:bg-teal-900/30 flex items-center justify-center">
-                <Code2 className="w-4 h-4 text-teal-600 dark:text-teal-400" />
-              </div>
-              <h3 className="font-medium text-stone-900 dark:text-white">{activeArtifact.title}</h3>
-            </div>
-            <button onClick={() => setActiveArtifact(null)} className="p-2 hover:bg-stone-100 dark:hover:bg-stone-700 rounded-lg text-stone-500">
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-          <div className="flex-1 overflow-auto p-4 bg-stone-50 dark:bg-stone-900">
-            <pre className="text-sm font-mono bg-stone-900 dark:bg-black text-stone-100 p-4 rounded-xl overflow-x-auto border border-stone-200 dark:border-stone-700">
-              <code>{activeArtifact.content}</code>
-            </pre>
-          </div>
-        </div>
-      )}
+      {/* Artifact Panel - Split Pane */}
+      <ArtifactPanel
+        artifacts={artifacts}
+        activeArtifact={activeArtifact}
+        selectedVersion={selectedVersion}
+        isOpen={isPanelOpen}
+        isFullscreen={isFullscreen}
+        onClose={closePanel}
+        onSelectArtifact={selectArtifact}
+        onCloseArtifact={closeArtifact}
+        onRemoveArtifact={removeArtifact}
+        onToggleFullscreen={toggleFullscreen}
+        onSelectVersion={selectVersion}
+        onRevertToVersion={revertToVersion}
+      />
     </div>
   );
 }
@@ -951,10 +1107,20 @@ function MessageBubble({
   message,
   onCopy,
   onArtifactClick,
+  thinkingBlocks,
+  isThinkingActive,
+  thinkingStartTime,
+  currentThinkingTokenCount,
+  showThinking,
 }: {
   message: Message;
   onCopy: (text: string) => void;
   onArtifactClick: (artifact: Artifact) => void;
+  thinkingBlocks?: ThinkingBlock[];
+  isThinkingActive?: boolean;
+  thinkingStartTime?: Date | null;
+  currentThinkingTokenCount?: number;
+  showThinking?: boolean;
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -963,6 +1129,23 @@ function MessageBubble({
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
+
+  // Determine if we should show the thinking panel
+  const hasThinkingContent = (thinkingBlocks && thinkingBlocks.length > 0) ||
+    (message.thinkingBlocks && message.thinkingBlocks.length > 0) ||
+    isThinkingActive;
+
+  // Get thinking blocks - use passed props for streaming, or message data for completed
+  const displayThinkingBlocks: ThinkingBlock[] = thinkingBlocks && thinkingBlocks.length > 0
+    ? thinkingBlocks
+    : (message.thinkingBlocks || []).map(b => ({
+        id: b.id,
+        content: b.content,
+        timestamp: new Date(b.timestamp),
+        tokenCount: b.tokenCount,
+        durationMs: b.durationMs,
+        isStreaming: b.isStreaming,
+      }));
 
   return (
     <div className={clsx('mb-6 group', message.role === 'user' ? 'pl-12' : 'pr-12')}>
@@ -986,6 +1169,20 @@ function MessageBubble({
 
         {/* Content */}
         <div className={clsx('flex-1 min-w-0', message.role === 'user' ? 'text-right' : 'text-left')}>
+          {/* Thinking Panel - shown above the message for assistant messages */}
+          {message.role === 'assistant' && showThinking !== false && hasThinkingContent && (
+            <div className="mb-3">
+              <ThinkingPanel
+                thinkingBlocks={displayThinkingBlocks}
+                isThinking={isThinkingActive || message.isThinking || false}
+                thinkingStartTime={thinkingStartTime || message.thinkingStartTime || null}
+                currentTokenCount={currentThinkingTokenCount || message.thinkingTokenCount || 0}
+                defaultExpanded={false}
+                maxHeight="400px"
+              />
+            </div>
+          )}
+
           <div className={clsx(
             'inline-block max-w-full',
             message.role === 'user'

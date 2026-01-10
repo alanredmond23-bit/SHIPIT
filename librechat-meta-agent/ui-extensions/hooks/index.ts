@@ -4,6 +4,9 @@ export { useBenchmarkEngine } from './useBenchmarkEngine';
 export { useMCPManager } from './useMCPManager';
 export { useStreamingChat, getStatusDisplay } from './useStreamingChat';
 export { useModelPreferences, useModelPreferencesWithSupabase } from './useModelPreferences';
+export { useVoiceChat } from './useVoiceChat';
+export { useArtifacts } from './useArtifacts';
+export { useImageGeneration } from './useImageGeneration';
 
 // Re-export types
 export type {
@@ -40,3 +43,32 @@ export type {
   UseModelPreferencesReturn,
   UseModelPreferencesWithSupabaseOptions,
 } from './useModelPreferences';
+
+export type {
+  VoiceStatus,
+  VoiceMessage,
+  VoiceConfig,
+  VoiceMetrics,
+  WaveformData,
+  UseVoiceChatOptions,
+  UseVoiceChatReturn,
+} from './useVoiceChat';
+
+export type {
+  Artifact,
+  ArtifactVersion,
+  UseArtifactsReturn,
+} from './useArtifacts';
+
+export type {
+  GeneratedImage,
+  ImageProvider,
+  ImageStyle,
+  ImageSize,
+  ImageGenerationRequest,
+  GenerationStatus,
+  GenerationError,
+  GenerationCost,
+  UseImageGenerationOptions,
+  UseImageGenerationReturn,
+} from './useImageGeneration';

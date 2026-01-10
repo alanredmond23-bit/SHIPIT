@@ -65,6 +65,32 @@ interface Artifact {
 }
 
 // ============================================================================
+// Tool Use Types
+// ============================================================================
+
+type ToolStatus = 'pending' | 'running' | 'success' | 'error';
+
+interface ToolCall {
+  id: string;
+  name: string;
+  type?: string;
+  status: ToolStatus;
+  inputs: Record<string, any>;
+  outputs?: Record<string, any> | string | null;
+  error?: string;
+  startTime?: number;
+  endTime?: number;
+  duration?: number;
+}
+
+interface ToolUseBlock {
+  type: 'tool_use';
+  id: string;
+  name: string;
+  input: Record<string, any>;
+}
+
+// ============================================================================
 // Model Provider Detection
 // ============================================================================
 
@@ -164,7 +190,7 @@ class AnthropicProvider {
     logger: Logger,
     signal?: AbortSignal
   ): AsyncGenerator<{
-    type: 'content' | 'usage' | 'error' | 'done';
+    type: 'content' | 'thinking' | 'thinking_start' | 'thinking_stop' | 'tool_use_start' | 'tool_use_delta' | 'tool_use_complete' | 'tool_result' | 'usage' | 'error' | 'done';
     data?: any;
     error?: string;
   }> {
@@ -182,14 +208,34 @@ class AnthropicProvider {
         content: msg.content,
       }));
 
-      const stream = await this.client.messages.stream({
+      // Check if model supports extended thinking (Claude 3.5+ models)
+      const supportsExtendedThinking = request.model.includes('claude-3') ||
+        request.model.includes('opus') ||
+        request.model.includes('sonnet') ||
+        request.model.includes('haiku');
+
+      // Build request options with optional extended thinking
+      const requestOptions: any = {
         model: request.model,
         max_tokens: request.max_tokens || 4096,
         temperature: request.temperature,
         system: systemPrompt || undefined,
         messages: anthropicMessages as any,
         stop_sequences: request.stop_sequences,
-      });
+      };
+
+      // Enable extended thinking for supported models when budget allows
+      // Extended thinking requires a thinking budget parameter
+      if (supportsExtendedThinking && (request as any).enable_thinking !== false) {
+        // Set thinking budget - can be configured via request
+        const thinkingBudget = (request as any).thinking_budget || 10000;
+        requestOptions.thinking = {
+          type: 'enabled',
+          budget_tokens: thinkingBudget,
+        };
+      }
+
+      const stream = await this.client.messages.stream(requestOptions);
 
       // Handle abort signal
       if (signal) {
@@ -198,19 +244,150 @@ class AnthropicProvider {
         });
       }
 
+      let currentBlockType: 'thinking' | 'text' | 'tool_use' | null = null;
+      let thinkingTokenCount = 0;
+      let thinkingStartTime: number | null = null;
+
+      // Tool use tracking
+      let currentToolCall: ToolCall | null = null;
+      let toolInputBuffer = '';
+
       for await (const chunk of stream) {
         if (signal?.aborted) {
           yield { type: 'error', error: 'Request aborted by client' };
           break;
         }
 
-        if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
-          yield {
-            type: 'content',
-            data: { content: chunk.delta.text },
-          };
-        } else if (chunk.type === 'message_start') {
-          // Initial message metadata
+        // Handle content block start - detect thinking, text, or tool_use blocks
+        if (chunk.type === 'content_block_start') {
+          const block = (chunk as any).content_block;
+          const blockType = block?.type;
+
+          if (blockType === 'thinking') {
+            currentBlockType = 'thinking';
+            thinkingStartTime = Date.now();
+            yield {
+              type: 'thinking_start',
+              data: {
+                blockId: crypto.randomUUID(),
+                timestamp: new Date().toISOString(),
+              },
+            };
+          } else if (blockType === 'text') {
+            currentBlockType = 'text';
+          } else if (blockType === 'tool_use') {
+            // Tool use block detected
+            currentBlockType = 'tool_use';
+            const toolId = block.id || crypto.randomUUID();
+            const toolName = block.name || 'unknown_tool';
+
+            currentToolCall = {
+              id: toolId,
+              name: toolName,
+              status: 'running',
+              inputs: {},
+              startTime: Date.now(),
+            };
+            toolInputBuffer = '';
+
+            yield {
+              type: 'tool_use_start',
+              data: {
+                id: toolId,
+                name: toolName,
+                status: 'running',
+                startTime: currentToolCall.startTime,
+              },
+            };
+          }
+        }
+
+        // Handle content block deltas
+        if (chunk.type === 'content_block_delta') {
+          const delta = chunk.delta as any;
+
+          if (delta.type === 'thinking_delta' && delta.thinking) {
+            // Stream thinking tokens
+            thinkingTokenCount++;
+            yield {
+              type: 'thinking',
+              data: {
+                content: delta.thinking,
+                tokenCount: thinkingTokenCount,
+              },
+            };
+          } else if (delta.type === 'text_delta' && delta.text) {
+            // Stream regular content tokens
+            yield {
+              type: 'content',
+              data: { content: delta.text },
+            };
+          } else if (delta.type === 'input_json_delta' && delta.partial_json) {
+            // Tool input is being streamed
+            toolInputBuffer += delta.partial_json;
+
+            if (currentToolCall) {
+              yield {
+                type: 'tool_use_delta',
+                data: {
+                  id: currentToolCall.id,
+                  name: currentToolCall.name,
+                  partial_input: delta.partial_json,
+                  accumulated_input: toolInputBuffer,
+                },
+              };
+            }
+          }
+        }
+
+        // Handle content block stop
+        if (chunk.type === 'content_block_stop') {
+          if (currentBlockType === 'thinking') {
+            const thinkingDuration = thinkingStartTime ? Date.now() - thinkingStartTime : 0;
+            yield {
+              type: 'thinking_stop',
+              data: {
+                tokenCount: thinkingTokenCount,
+                durationMs: thinkingDuration,
+              },
+            };
+            thinkingTokenCount = 0;
+            thinkingStartTime = null;
+          } else if (currentBlockType === 'tool_use' && currentToolCall) {
+            // Parse the accumulated tool input
+            let parsedInputs = {};
+            try {
+              if (toolInputBuffer) {
+                parsedInputs = JSON.parse(toolInputBuffer);
+              }
+            } catch (e) {
+              logger.warn({ toolInputBuffer }, 'Failed to parse tool input JSON');
+            }
+
+            const endTime = Date.now();
+            const duration = endTime - (currentToolCall.startTime || endTime);
+
+            yield {
+              type: 'tool_use_complete',
+              data: {
+                id: currentToolCall.id,
+                name: currentToolCall.name,
+                status: 'success',
+                inputs: parsedInputs,
+                startTime: currentToolCall.startTime,
+                endTime,
+                duration,
+              },
+            };
+
+            currentToolCall = null;
+            toolInputBuffer = '';
+          }
+          currentBlockType = null;
+        }
+
+        // Handle message start (initial metadata)
+        if (chunk.type === 'message_start') {
           const usage = chunk.message.usage;
           if (usage) {
             yield {
@@ -221,13 +398,17 @@ class AnthropicProvider {
               },
             };
           }
-        } else if (chunk.type === 'message_delta') {
-          // Final usage stats
+        }
+
+        // Handle message delta (final usage stats)
+        if (chunk.type === 'message_delta') {
           if (chunk.usage) {
             yield {
               type: 'usage',
               data: {
                 output_tokens: chunk.usage.output_tokens,
+                // Include thinking tokens in usage if available
+                thinking_tokens: (chunk as any).usage?.thinking_tokens,
               },
             };
           }
@@ -1234,12 +1415,14 @@ export async function handleChatStream(req: Request, res: Response, logger: Logg
     }, 15000); // Send heartbeat every 15 seconds
 
     let fullContent = '';
-    let finalUsage: TokenUsage = {
+    let fullThinkingContent = '';
+    let finalUsage: TokenUsage & { thinking_tokens?: number } = {
       input_tokens: 0,
       output_tokens: 0,
       total_tokens: 0,
     };
     let chunkCount = 0;
+    let thinkingChunkCount = 0;
     const startTime = Date.now();
 
     // Stream from provider
@@ -1256,11 +1439,35 @@ export async function handleChatStream(req: Request, res: Response, logger: Logg
           res.write(`data: ${JSON.stringify({
             message: 'Stream aborted',
             contentLength: fullContent.length,
+            thinkingContentLength: fullThinkingContent.length,
           })}\n\n`);
           break;
         }
 
-        if (chunk.type === 'content') {
+        // Handle thinking events (extended thinking from Claude)
+        if (chunk.type === 'thinking_start') {
+          res.write('event: thinking_start\n');
+          res.write(`data: ${JSON.stringify({
+            blockId: chunk.data.blockId,
+            timestamp: chunk.data.timestamp,
+          })}\n\n`);
+        } else if (chunk.type === 'thinking') {
+          fullThinkingContent += chunk.data.content;
+          thinkingChunkCount++;
+          res.write('event: thinking\n');
+          res.write(`data: ${JSON.stringify({
+            content: chunk.data.content,
+            tokenCount: chunk.data.tokenCount,
+            chunkIndex: thinkingChunkCount,
+          })}\n\n`);
+        } else if (chunk.type === 'thinking_stop') {
+          res.write('event: thinking_stop\n');
+          res.write(`data: ${JSON.stringify({
+            tokenCount: chunk.data.tokenCount,
+            durationMs: chunk.data.durationMs,
+            totalThinkingContent: fullThinkingContent.length,
+          })}\n\n`);
+        } else if (chunk.type === 'content') {
           fullContent += chunk.data.content;
           chunkCount++;
           res.write(`data: ${JSON.stringify({
@@ -1274,6 +1481,7 @@ export async function handleChatStream(req: Request, res: Response, logger: Logg
             total_tokens: chunk.data.total_tokens ||
               (chunk.data.input_tokens || 0) + (chunk.data.output_tokens || 0) ||
               finalUsage.total_tokens || 0,
+            thinking_tokens: chunk.data.thinking_tokens || finalUsage.thinking_tokens,
           };
           res.write('event: usage\n');
           res.write(`data: ${JSON.stringify(finalUsage)}\n\n`);
@@ -1300,6 +1508,8 @@ export async function handleChatStream(req: Request, res: Response, logger: Logg
             usage: finalUsage,
             artifacts_count: artifacts.length,
             chunk_count: chunkCount,
+            thinking_chunk_count: thinkingChunkCount,
+            thinking_content_length: fullThinkingContent.length,
             duration_ms: duration,
             model: chatRequest.model,
           })}\n\n`);

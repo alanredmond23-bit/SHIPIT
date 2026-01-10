@@ -121,6 +121,21 @@ export interface ChatMessage {
   isStreaming?: boolean;
   model?: string;
   tools?: string[];
+  // Extended thinking support
+  thinkingBlocks?: ThinkingBlockData[];
+  isThinking?: boolean;
+  thinkingStartTime?: Date;
+  thinkingTokenCount?: number;
+}
+
+// Extended thinking block data
+export interface ThinkingBlockData {
+  id: string;
+  content: string;
+  timestamp: Date;
+  tokenCount: number;
+  durationMs: number;
+  isStreaming: boolean;
 }
 
 export interface ChatAttachment {
