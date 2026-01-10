@@ -893,15 +893,220 @@ class ProviderFactory {
 }
 
 // ============================================================================
+// Token Estimation & Limits
+// ============================================================================
+
+const MODEL_CONTEXT_LIMITS: Record<string, number> = {
+  // Anthropic
+  'claude-opus-4-5-20251101': 200000,
+  'claude-sonnet-4-5-20250929': 200000,
+  'claude-haiku-4-5-20251022': 200000,
+  'claude-3-5-sonnet-20241022': 200000,
+  'claude-3-5-haiku-20241022': 200000,
+  // OpenAI
+  'gpt-5.2': 400000,
+  'gpt-5.2-pro': 400000,
+  'gpt-4.1': 1000000,
+  'o3': 200000,
+  'o3-pro': 200000,
+  'o4-mini': 200000,
+  'gpt-4o': 128000,
+  'gpt-4o-mini': 128000,
+  // Google
+  'gemini-3-pro': 1000000,
+  'gemini-3-flash': 1000000,
+  'gemini-2.5-pro': 2000000,
+  // DeepSeek
+  'deepseek-v3.2-exp': 128000,
+  'deepseek-r1': 128000,
+  // Default
+  'default': 128000,
+};
+
+function estimateTokens(text: string): number {
+  // Rough estimation: ~4 characters per token for English text
+  // More accurate would require tiktoken or similar
+  return Math.ceil(text.length / 4);
+}
+
+function estimateRequestTokens(messages: Array<{ role: string; content: any }>): number {
+  let total = 0;
+  for (const msg of messages) {
+    if (typeof msg.content === 'string') {
+      total += estimateTokens(msg.content);
+    } else if (Array.isArray(msg.content)) {
+      for (const item of msg.content) {
+        if (item.type === 'text' && item.text) {
+          total += estimateTokens(item.text);
+        } else if (item.type === 'image') {
+          // Images typically cost ~1000 tokens for small, more for large
+          total += 1500;
+        }
+      }
+    }
+  }
+  // Add overhead for message formatting
+  return total + messages.length * 10;
+}
+
+function getModelContextLimit(model: string): number {
+  // Check exact match first
+  if (MODEL_CONTEXT_LIMITS[model]) {
+    return MODEL_CONTEXT_LIMITS[model];
+  }
+  // Check partial matches
+  for (const [key, limit] of Object.entries(MODEL_CONTEXT_LIMITS)) {
+    if (model.toLowerCase().includes(key.toLowerCase())) {
+      return limit;
+    }
+  }
+  return MODEL_CONTEXT_LIMITS['default'];
+}
+
+// ============================================================================
+// Error Classification
+// ============================================================================
+
+interface ClassifiedError {
+  code: string;
+  message: string;
+  retryable: boolean;
+  statusCode: number;
+  details?: Record<string, any>;
+}
+
+function classifyError(error: any, model: string): ClassifiedError {
+  const errorMessage = error.message?.toLowerCase() || '';
+  const errorCode = error.code?.toLowerCase() || '';
+
+  // Token/context limit errors
+  if (
+    errorMessage.includes('token') ||
+    errorMessage.includes('context') ||
+    errorMessage.includes('too long') ||
+    errorMessage.includes('maximum') ||
+    errorCode.includes('context_length')
+  ) {
+    return {
+      code: 'TOKEN_LIMIT_EXCEEDED',
+      message: 'The conversation is too long for this model. Try removing some messages or starting a new conversation.',
+      retryable: false,
+      statusCode: 413,
+      details: {
+        model,
+        limit: getModelContextLimit(model),
+      },
+    };
+  }
+
+  // Rate limiting
+  if (
+    errorMessage.includes('rate limit') ||
+    errorMessage.includes('too many requests') ||
+    error.status === 429
+  ) {
+    return {
+      code: 'RATE_LIMITED',
+      message: 'Too many requests. Please wait a moment before trying again.',
+      retryable: true,
+      statusCode: 429,
+      details: {
+        retryAfter: error.headers?.get?.('retry-after') || 30,
+      },
+    };
+  }
+
+  // Authentication errors
+  if (
+    errorMessage.includes('api key') ||
+    errorMessage.includes('unauthorized') ||
+    errorMessage.includes('authentication') ||
+    error.status === 401
+  ) {
+    return {
+      code: 'AUTHENTICATION_ERROR',
+      message: 'API authentication failed. Please check your configuration.',
+      retryable: false,
+      statusCode: 401,
+    };
+  }
+
+  // Model not found
+  if (
+    errorMessage.includes('model') &&
+    (errorMessage.includes('not found') || errorMessage.includes('does not exist'))
+  ) {
+    return {
+      code: 'MODEL_NOT_FOUND',
+      message: `The model "${model}" is not available. Please select a different model.`,
+      retryable: false,
+      statusCode: 404,
+    };
+  }
+
+  // Server errors (retryable)
+  if (error.status >= 500 || errorMessage.includes('server error')) {
+    return {
+      code: 'SERVER_ERROR',
+      message: 'The AI service is temporarily unavailable. Please try again.',
+      retryable: true,
+      statusCode: error.status || 503,
+    };
+  }
+
+  // Network errors (retryable)
+  if (
+    errorMessage.includes('network') ||
+    errorMessage.includes('fetch') ||
+    errorMessage.includes('connection') ||
+    errorCode.includes('econnrefused')
+  ) {
+    return {
+      code: 'NETWORK_ERROR',
+      message: 'Network error. Please check your connection and try again.',
+      retryable: true,
+      statusCode: 503,
+    };
+  }
+
+  // Default unknown error
+  return {
+    code: 'UNKNOWN_ERROR',
+    message: error.message || 'An unexpected error occurred.',
+    retryable: false,
+    statusCode: 500,
+    details: {
+      originalError: error.message,
+    },
+  };
+}
+
+// ============================================================================
 // Chat Handler
 // ============================================================================
 
 export async function handleChatStream(req: Request, res: Response, logger: Logger) {
   const abortController = new AbortController();
+  let heartbeatInterval: NodeJS.Timeout | null = null;
+  let isClientConnected = true;
 
   // Handle client disconnect
   req.on('close', () => {
+    logger.debug('Client disconnected');
+    isClientConnected = false;
     abortController.abort();
+    if (heartbeatInterval) {
+      clearInterval(heartbeatInterval);
+    }
+  });
+
+  req.on('error', (err) => {
+    logger.error({ error: err }, 'Request error');
+    isClientConnected = false;
+    abortController.abort();
+    if (heartbeatInterval) {
+      clearInterval(heartbeatInterval);
+    }
   });
 
   try {
@@ -910,8 +1115,10 @@ export async function handleChatStream(req: Request, res: Response, logger: Logg
     if (!validationResult.success) {
       res.status(400).json({
         error: {
-          message: 'Invalid request',
+          code: 'INVALID_REQUEST',
+          message: 'Invalid request format',
           details: validationResult.error.errors,
+          retryable: false,
         },
       });
       return;
@@ -919,32 +1126,112 @@ export async function handleChatStream(req: Request, res: Response, logger: Logg
 
     const chatRequest = validationResult.data;
 
-    // Get appropriate provider
-    const provider = ProviderFactory.getProvider(chatRequest.model);
+    // Check token limit before making request
+    const estimatedTokens = estimateRequestTokens(chatRequest.messages);
+    const contextLimit = getModelContextLimit(chatRequest.model);
+    const safeLimit = contextLimit * 0.9; // Leave 10% buffer for response
 
-    // Non-streaming response
-    if (!chatRequest.stream) {
-      const result = await provider.chat(chatRequest, logger);
-      res.json({
-        data: {
-          content: result.content,
-          usage: result.usage,
-          artifacts: result.artifacts,
-          model: chatRequest.model,
+    if (estimatedTokens > safeLimit) {
+      logger.warn({
+        estimatedTokens,
+        contextLimit,
+        model: chatRequest.model,
+      }, 'Request may exceed context limit');
+
+      // If way over limit, reject immediately
+      if (estimatedTokens > contextLimit) {
+        res.status(413).json({
+          error: {
+            code: 'TOKEN_LIMIT_EXCEEDED',
+            message: 'The conversation is too long for this model. Try removing some messages or starting a new conversation.',
+            retryable: false,
+            details: {
+              estimatedTokens,
+              contextLimit,
+              model: chatRequest.model,
+            },
+          },
+        });
+        return;
+      }
+    }
+
+    // Get appropriate provider
+    let provider;
+    try {
+      provider = ProviderFactory.getProvider(chatRequest.model);
+    } catch (providerError: any) {
+      res.status(400).json({
+        error: {
+          code: 'PROVIDER_ERROR',
+          message: providerError.message || 'Failed to initialize model provider',
+          retryable: false,
+          details: { model: chatRequest.model },
         },
       });
       return;
     }
 
+    // Non-streaming response
+    if (!chatRequest.stream) {
+      try {
+        const result = await provider.chat(chatRequest, logger);
+        res.json({
+          data: {
+            content: result.content,
+            usage: result.usage,
+            artifacts: result.artifacts,
+            model: chatRequest.model,
+          },
+        });
+      } catch (error: any) {
+        const classified = classifyError(error, chatRequest.model);
+        logger.error({ error, classified }, 'Non-streaming chat error');
+        res.status(classified.statusCode).json({
+          error: {
+            code: classified.code,
+            message: classified.message,
+            retryable: classified.retryable,
+            details: classified.details,
+          },
+        });
+      }
+      return;
+    }
+
     // Streaming response with SSE
     res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Cache-Control', 'no-cache, no-transform');
     res.setHeader('Connection', 'keep-alive');
     res.setHeader('X-Accel-Buffering', 'no'); // Disable nginx buffering
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+
+    // Flush headers immediately
+    res.flushHeaders?.();
 
     // Send initial connected event
     res.write('event: connected\n');
-    res.write('data: {"status":"ready"}\n\n');
+    res.write(`data: ${JSON.stringify({
+      status: 'ready',
+      model: chatRequest.model,
+      estimatedInputTokens: estimatedTokens,
+      contextLimit,
+    })}\n\n`);
+
+    // Start heartbeat to keep connection alive
+    heartbeatInterval = setInterval(() => {
+      if (isClientConnected && !res.writableEnded) {
+        try {
+          res.write('event: heartbeat\n');
+          res.write(`data: ${JSON.stringify({ timestamp: Date.now() })}\n\n`);
+        } catch (err) {
+          logger.debug('Failed to send heartbeat, client may have disconnected');
+          if (heartbeatInterval) {
+            clearInterval(heartbeatInterval);
+          }
+        }
+      }
+    }, 15000); // Send heartbeat every 15 seconds
 
     let fullContent = '';
     let finalUsage: TokenUsage = {
@@ -952,63 +1239,123 @@ export async function handleChatStream(req: Request, res: Response, logger: Logg
       output_tokens: 0,
       total_tokens: 0,
     };
+    let chunkCount = 0;
+    const startTime = Date.now();
 
     // Stream from provider
-    for await (const chunk of provider.streamChat(chatRequest, logger, abortController.signal)) {
-      if (abortController.signal.aborted) {
-        res.write('event: aborted\n');
-        res.write('data: {"message":"Stream aborted"}\n\n');
-        break;
-      }
-
-      if (chunk.type === 'content') {
-        fullContent += chunk.data.content;
-        res.write(`data: ${JSON.stringify(chunk.data)}\n\n`);
-      } else if (chunk.type === 'usage') {
-        finalUsage = {
-          input_tokens: chunk.data.input_tokens || finalUsage.input_tokens || 0,
-          output_tokens: chunk.data.output_tokens || finalUsage.output_tokens || 0,
-          total_tokens: chunk.data.total_tokens ||
-            (chunk.data.input_tokens || 0) + (chunk.data.output_tokens || 0) ||
-            finalUsage.total_tokens || 0,
-        };
-        res.write(`event: usage\n`);
-        res.write(`data: ${JSON.stringify(finalUsage)}\n\n`);
-      } else if (chunk.type === 'error') {
-        res.write('event: error\n');
-        res.write(`data: ${JSON.stringify({ error: chunk.error })}\n\n`);
-      } else if (chunk.type === 'done') {
-        // Extract and send artifacts
-        const artifacts = extractArtifacts(fullContent);
-        if (artifacts.length > 0) {
-          res.write('event: artifacts\n');
-          res.write(`data: ${JSON.stringify({ artifacts })}\n\n`);
+    try {
+      for await (const chunk of provider.streamChat(chatRequest, logger, abortController.signal)) {
+        // Check if client is still connected
+        if (!isClientConnected || res.writableEnded) {
+          logger.debug('Client disconnected, stopping stream');
+          break;
         }
 
-        res.write('event: done\n');
+        if (abortController.signal.aborted) {
+          res.write('event: aborted\n');
+          res.write(`data: ${JSON.stringify({
+            message: 'Stream aborted',
+            contentLength: fullContent.length,
+          })}\n\n`);
+          break;
+        }
+
+        if (chunk.type === 'content') {
+          fullContent += chunk.data.content;
+          chunkCount++;
+          res.write(`data: ${JSON.stringify({
+            content: chunk.data.content,
+            chunkIndex: chunkCount,
+          })}\n\n`);
+        } else if (chunk.type === 'usage') {
+          finalUsage = {
+            input_tokens: chunk.data.input_tokens || finalUsage.input_tokens || 0,
+            output_tokens: chunk.data.output_tokens || finalUsage.output_tokens || 0,
+            total_tokens: chunk.data.total_tokens ||
+              (chunk.data.input_tokens || 0) + (chunk.data.output_tokens || 0) ||
+              finalUsage.total_tokens || 0,
+          };
+          res.write('event: usage\n');
+          res.write(`data: ${JSON.stringify(finalUsage)}\n\n`);
+        } else if (chunk.type === 'error') {
+          const classified = classifyError({ message: chunk.error }, chatRequest.model);
+          res.write('event: error\n');
+          res.write(`data: ${JSON.stringify({
+            code: classified.code,
+            error: classified.message,
+            retryable: classified.retryable,
+            details: classified.details,
+          })}\n\n`);
+        } else if (chunk.type === 'done') {
+          // Extract and send artifacts
+          const artifacts = extractArtifacts(fullContent);
+          if (artifacts.length > 0) {
+            res.write('event: artifacts\n');
+            res.write(`data: ${JSON.stringify({ artifacts })}\n\n`);
+          }
+
+          const duration = Date.now() - startTime;
+          res.write('event: done\n');
+          res.write(`data: ${JSON.stringify({
+            usage: finalUsage,
+            artifacts_count: artifacts.length,
+            chunk_count: chunkCount,
+            duration_ms: duration,
+            model: chatRequest.model,
+          })}\n\n`);
+        }
+      }
+    } catch (streamError: any) {
+      logger.error({ error: streamError }, 'Error during streaming');
+      const classified = classifyError(streamError, chatRequest.model);
+
+      if (!res.writableEnded) {
+        res.write('event: error\n');
         res.write(`data: ${JSON.stringify({
-          usage: finalUsage,
-          artifacts_count: artifacts.length
+          code: classified.code,
+          error: classified.message,
+          retryable: classified.retryable,
+          details: classified.details,
+          partialContent: fullContent.length > 0,
+          contentLength: fullContent.length,
         })}\n\n`);
       }
     }
 
-    res.end();
+    // Clean up
+    if (heartbeatInterval) {
+      clearInterval(heartbeatInterval);
+    }
+
+    if (!res.writableEnded) {
+      res.end();
+    }
 
   } catch (error: any) {
     logger.error({ error }, 'Chat stream error');
 
+    // Clean up heartbeat
+    if (heartbeatInterval) {
+      clearInterval(heartbeatInterval);
+    }
+
+    const classified = classifyError(error, req.body?.model || 'unknown');
+
     if (!res.headersSent) {
-      res.status(500).json({
+      res.status(classified.statusCode).json({
         error: {
-          message: error.message || 'Internal server error',
-          type: error.constructor.name,
+          code: classified.code,
+          message: classified.message,
+          retryable: classified.retryable,
+          details: classified.details,
         },
       });
-    } else {
+    } else if (!res.writableEnded) {
       res.write('event: error\n');
       res.write(`data: ${JSON.stringify({
-        error: error.message || 'Internal server error'
+        code: classified.code,
+        error: classified.message,
+        retryable: classified.retryable,
       })}\n\n`);
       res.end();
     }

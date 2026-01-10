@@ -2,6 +2,7 @@ import { Pool } from 'pg';
 import { v4 as uuidv4 } from 'uuid';
 import { Logger } from 'pino';
 import Anthropic from '@anthropic-ai/sdk';
+import { EmbeddingService, createEmbeddingService } from './embedding-service';
 
 export interface Memory {
   id: string;
@@ -49,13 +50,30 @@ export interface ExtractMemoriesInput {
 
 export class MemoryService {
   private anthropic: Anthropic;
+  private embeddingService: EmbeddingService | null = null;
 
   constructor(
     private db: Pool,
     private logger: Logger,
-    anthropicApiKey: string
+    anthropicApiKey: string,
+    openaiApiKey?: string
   ) {
     this.anthropic = new Anthropic({ apiKey: anthropicApiKey });
+
+    // Initialize embedding service if OpenAI key is provided
+    if (openaiApiKey) {
+      this.embeddingService = createEmbeddingService(
+        {
+          openaiApiKey,
+          model: 'text-embedding-3-small',
+          dimensions: 1536,
+        },
+        logger
+      );
+      this.logger.info('Initialized OpenAI embedding service for semantic search');
+    } else {
+      this.logger.warn('No OpenAI API key provided - using fallback hash-based embeddings');
+    }
   }
 
   /**
@@ -444,28 +462,66 @@ Only extract memories that are likely to be useful in future conversations. Skip
   }
 
   /**
-   * Generate embedding using Claude's text embedding
-   * Note: Anthropic doesn't provide embeddings, so we'll use a simple approach
-   * In production, integrate with OpenAI's embedding API or a dedicated embedding service
+   * Generate embedding using OpenAI's embedding API
+   * Falls back to hash-based approach if OpenAI is not configured
    */
   private async generateEmbedding(text: string): Promise<number[]> {
-    // This is a placeholder - in production, use a proper embedding service
-    // For now, we'll create a deterministic hash-based embedding
-    // IMPORTANT: Replace this with actual embedding service (OpenAI, Cohere, etc.)
-
-    // For demonstration, create a simple 1536-dimensional vector
-    // In real implementation, call an embedding API
-    const embedding = new Array(1536).fill(0);
-
-    // Simple hash-based approach (NOT suitable for production)
-    for (let i = 0; i < text.length; i++) {
-      const charCode = text.charCodeAt(i);
-      embedding[i % 1536] += charCode / 1000;
+    // Use OpenAI embedding service if available
+    if (this.embeddingService) {
+      try {
+        const result = await this.embeddingService.embed(text);
+        return result.embedding;
+      } catch (error: any) {
+        this.logger.error(
+          { error: error.message },
+          'Failed to generate OpenAI embedding, falling back to hash-based'
+        );
+        // Fall through to hash-based fallback
+      }
     }
 
-    // Normalize
+    // Fallback: Simple hash-based embedding (NOT suitable for production semantic search)
+    // This provides deterministic embeddings but lacks semantic understanding
+    this.logger.debug('Using hash-based embedding fallback');
+
+    const embedding = new Array(1536).fill(0);
+
+    // Create a more sophisticated hash using multiple passes
+    const normalizedText = text.toLowerCase().trim();
+
+    // Pass 1: Character-based hashing
+    for (let i = 0; i < normalizedText.length; i++) {
+      const charCode = normalizedText.charCodeAt(i);
+      const idx = (charCode * 31 + i) % 1536;
+      embedding[idx] += charCode / 1000;
+    }
+
+    // Pass 2: Word-based hashing for better semantic grouping
+    const words = normalizedText.split(/\s+/);
+    for (let w = 0; w < words.length; w++) {
+      const word = words[w];
+      let hash = 0;
+      for (let i = 0; i < word.length; i++) {
+        hash = ((hash << 5) - hash + word.charCodeAt(i)) | 0;
+      }
+      const idx = Math.abs(hash) % 1536;
+      embedding[idx] += 0.1 * (w + 1);
+    }
+
+    // Pass 3: N-gram hashing
+    for (let i = 0; i < normalizedText.length - 2; i++) {
+      const trigram = normalizedText.slice(i, i + 3);
+      let hash = 0;
+      for (let j = 0; j < trigram.length; j++) {
+        hash = ((hash << 5) - hash + trigram.charCodeAt(j)) | 0;
+      }
+      const idx = Math.abs(hash) % 1536;
+      embedding[idx] += 0.05;
+    }
+
+    // Normalize to unit vector
     const magnitude = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
-    return embedding.map(val => val / (magnitude || 1));
+    return embedding.map((val) => val / (magnitude || 1));
   }
 
   /**

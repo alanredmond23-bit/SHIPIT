@@ -112,6 +112,9 @@ export async function getConversationWithMessages(
   };
 }
 
+// Export format type
+export type ExportFormat = 'json' | 'markdown';
+
 /**
  * List conversations for the current user
  */
@@ -120,6 +123,7 @@ export async function listConversations(options?: {
   offset?: number;
   includeArchived?: boolean;
   agentType?: string;
+  search?: string;
 }): Promise<ConversationListItem[]> {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -157,12 +161,110 @@ export async function listConversations(options?: {
     query = query.eq('agent_type', options.agentType);
   }
 
+  // Search filter - performs client-side filtering after query
+  // For production, this should use a full-text search index
+  const searchTerm = options?.search?.toLowerCase().trim();
+
   // Pagination
   if (options?.limit) {
-    query = query.limit(options.limit);
+    query = query.limit(searchTerm ? 200 : options.limit); // Get more for search filtering
   }
-  if (options?.offset) {
+  if (options?.offset && !searchTerm) {
     query = query.range(options.offset, options.offset + (options.limit || 50) - 1);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    throw new Error(`Failed to list conversations: ${error.message}`);
+  }
+
+  let results = (data || []) as ConversationListItem[];
+
+  // Apply search filter client-side
+  if (searchTerm) {
+    results = results.filter((c) => {
+      const title = (c.title || '').toLowerCase();
+      const summary = (c.summary || '').toLowerCase();
+      return title.includes(searchTerm) || summary.includes(searchTerm);
+    });
+
+    // Apply limit after filtering
+    if (options?.limit) {
+      results = results.slice(0, options.limit);
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Search conversations by content (includes message content search)
+ * This performs a more thorough search including message content
+ */
+export async function searchConversations(
+  searchQuery: string,
+  options?: {
+    limit?: number;
+    includeArchived?: boolean;
+  }
+): Promise<ConversationListItem[]> {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // First, search in messages to find matching conversation IDs
+  const messageSearchQuery = db()
+    .from('meta_messages')
+    .select('conversation_id')
+    .ilike('content', `%${searchQuery}%`);
+
+  const { data: messageMatches, error: msgError } = await messageSearchQuery;
+
+  if (msgError) {
+    throw new Error(`Failed to search messages: ${msgError.message}`);
+  }
+
+  const matchingConversationIds = [...new Set((messageMatches || []).map((m: any) => m.conversation_id))];
+
+  // Now get conversations that match title/summary OR have matching messages
+  let query = db()
+    .from('meta_conversations')
+    .select(`
+      id,
+      title,
+      summary,
+      model_used,
+      message_count,
+      is_pinned,
+      is_archived,
+      created_at,
+      updated_at
+    `)
+    .order('is_pinned', { ascending: false })
+    .order('updated_at', { ascending: false });
+
+  // Filter by user
+  if (user?.id) {
+    query = query.or(`user_id.eq.${user.id},user_id.is.null`);
+  } else {
+    query = query.is('user_id', null);
+  }
+
+  // Filter archived
+  if (!options?.includeArchived) {
+    query = query.eq('is_archived', false);
+  }
+
+  // Apply search filter - match title, summary, or conversation ID in message matches
+  const searchPattern = `%${searchQuery}%`;
+  if (matchingConversationIds.length > 0) {
+    query = query.or(`title.ilike.${searchPattern},summary.ilike.${searchPattern},id.in.(${matchingConversationIds.join(',')})`);
+  } else {
+    query = query.or(`title.ilike.${searchPattern},summary.ilike.${searchPattern}`);
+  }
+
+  if (options?.limit) {
+    query = query.limit(options.limit);
   }
 
   const { data, error } = await query;
@@ -230,6 +332,189 @@ export async function pinConversation(
   pin: boolean = true
 ): Promise<Conversation> {
   return updateConversation(conversationId, { is_pinned: pin });
+}
+
+// ============================================================================
+// Export Operations
+// ============================================================================
+
+/**
+ * Export conversation data for download
+ */
+export interface ExportedConversation {
+  conversation: {
+    id: string;
+    title: string | null;
+    summary: string | null;
+    model_used: string | null;
+    agent_type: string | null;
+    message_count: number;
+    total_tokens: number;
+    created_at: string;
+    updated_at: string;
+    metadata: Record<string, any>;
+  };
+  messages: Array<{
+    id: string;
+    role: string;
+    content: string;
+    content_type: string;
+    tool_name: string | null;
+    tool_input: Record<string, any> | null;
+    tool_output: Record<string, any> | null;
+    tokens_used: number;
+    created_at: string;
+    metadata: Record<string, any>;
+  }>;
+  exported_at: string;
+}
+
+/**
+ * Export a conversation as JSON
+ */
+export async function exportConversationAsJson(
+  conversationId: string
+): Promise<ExportedConversation> {
+  // Get conversation
+  const { data: conversation, error: convError } = await db()
+    .from('meta_conversations')
+    .select('*')
+    .eq('id', conversationId)
+    .single();
+
+  if (convError) {
+    throw new Error(`Failed to get conversation: ${convError.message}`);
+  }
+
+  // Get messages
+  const { data: messages, error: msgError } = await db()
+    .from('meta_messages')
+    .select('*')
+    .eq('conversation_id', conversationId)
+    .eq('is_active_branch', true)
+    .order('created_at', { ascending: true });
+
+  if (msgError) {
+    throw new Error(`Failed to get messages: ${msgError.message}`);
+  }
+
+  return {
+    conversation: {
+      id: conversation.id,
+      title: conversation.title,
+      summary: conversation.summary,
+      model_used: conversation.model_used,
+      agent_type: conversation.agent_type,
+      message_count: conversation.message_count,
+      total_tokens: conversation.total_tokens,
+      created_at: conversation.created_at,
+      updated_at: conversation.updated_at,
+      metadata: conversation.metadata,
+    },
+    messages: (messages || []).map((msg: any) => ({
+      id: msg.id,
+      role: msg.role,
+      content: msg.content,
+      content_type: msg.content_type,
+      tool_name: msg.tool_name,
+      tool_input: msg.tool_input,
+      tool_output: msg.tool_output,
+      tokens_used: msg.tokens_used,
+      created_at: msg.created_at,
+      metadata: msg.metadata,
+    })),
+    exported_at: new Date().toISOString(),
+  };
+}
+
+/**
+ * Export a conversation as Markdown string
+ */
+export async function exportConversationAsMarkdown(
+  conversationId: string
+): Promise<string> {
+  // Get conversation
+  const { data: conversation, error: convError } = await db()
+    .from('meta_conversations')
+    .select('*')
+    .eq('id', conversationId)
+    .single();
+
+  if (convError) {
+    throw new Error(`Failed to get conversation: ${convError.message}`);
+  }
+
+  // Get messages
+  const { data: messages, error: msgError } = await db()
+    .from('meta_messages')
+    .select('*')
+    .eq('conversation_id', conversationId)
+    .eq('is_active_branch', true)
+    .order('created_at', { ascending: true });
+
+  if (msgError) {
+    throw new Error(`Failed to get messages: ${msgError.message}`);
+  }
+
+  // Generate Markdown
+  const title = conversation.title || 'Conversation';
+  const createdAt = new Date(conversation.created_at).toLocaleString();
+
+  let markdown = `# ${title}\n\n`;
+  markdown += `**Created:** ${createdAt}\n`;
+  markdown += `**Model:** ${conversation.model_used || 'Unknown'}\n`;
+  markdown += `**Messages:** ${conversation.message_count}\n\n`;
+  markdown += `---\n\n`;
+
+  for (const msg of messages || []) {
+    const timestamp = new Date(msg.created_at).toLocaleString();
+    const roleLabel = msg.role === 'user' ? '**User**' : '**Assistant**';
+
+    markdown += `### ${roleLabel} (${timestamp})\n\n`;
+    markdown += `${msg.content}\n\n`;
+
+    if (msg.tool_name) {
+      markdown += `> Tool used: \`${msg.tool_name}\`\n\n`;
+    }
+
+    markdown += `---\n\n`;
+  }
+
+  return markdown;
+}
+
+/**
+ * Download conversation export - triggers file download in browser
+ */
+export function downloadConversationExport(
+  data: ExportedConversation | string,
+  format: ExportFormat,
+  filename?: string
+): void {
+  let content: string;
+  let mimeType: string;
+  let extension: string;
+
+  if (format === 'markdown') {
+    content = typeof data === 'string' ? data : '';
+    mimeType = 'text/markdown';
+    extension = 'md';
+  } else {
+    content = typeof data === 'object' ? JSON.stringify(data, null, 2) : data;
+    mimeType = 'application/json';
+    extension = 'json';
+  }
+
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename || `conversation-export.${extension}`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // ============================================================================

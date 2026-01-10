@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';">
+  <title>Quick Prompt</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      background: transparent;
+      overflow: hidden;
+    }
+
+    .container {
+      height: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.98) 0%, rgba(30, 41, 59, 0.98) 100%);
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      -webkit-app-region: drag;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      -webkit-app-region: drag;
+    }
+
+    .title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .shortcut-hint {
+      font-size: 11px;
+      color: #64748b;
+      background: rgba(100, 116, 139, 0.2);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    .input-container {
+      flex: 1;
+      display: flex;
+      gap: 8px;
+      -webkit-app-region: no-drag;
+    }
+
+    #prompt-input {
+      flex: 1;
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 14px;
+      color: #f1f5f9;
+      outline: none;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      resize: none;
+    }
+
+    #prompt-input::placeholder {
+      color: #64748b;
+    }
+
+    #prompt-input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+
+    .submit-btn {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.1s ease, box-shadow 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .submit-btn:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    .submit-btn:active {
+      transform: scale(0.98);
+    }
+
+    .submit-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .submit-btn svg {
+      width: 20px;
+      height: 20px;
+      fill: white;
+    }
+
+    .footer {
+      display: flex;
+      justify-content: center;
+      -webkit-app-region: drag;
+    }
+
+    .footer-text {
+      font-size: 11px;
+      color: #475569;
+    }
+
+    /* Loading state */
+    .loading .submit-btn svg {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <span class="title">Quick Prompt</span>
+      <span class="shortcut-hint">Esc to close</span>
+    </div>
+
+    <div class="input-container">
+      <textarea
+        id="prompt-input"
+        placeholder="Type your message and press Enter..."
+        rows="2"
+        autofocus
+      ></textarea>
+      <button class="submit-btn" id="submit-btn" title="Send (Enter)">
+        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="footer">
+      <span class="footer-text">Message will be sent to Meta Agent</span>
+    </div>
+  </div>
+
+  <script>
+    const input = document.getElementById('prompt-input');
+    const submitBtn = document.getElementById('submit-btn');
+
+    // Focus input on load
+    window.addEventListener('load', () => {
+      input.focus();
+    });
+
+    // Handle submit
+    function submitPrompt() {
+      const text = input.value.trim();
+      if (!text) return;
+
+      // Send to main process
+      if (window.quickPromptAPI) {
+        window.quickPromptAPI.submit(text);
+      }
+    }
+
+    // Submit button click
+    submitBtn.addEventListener('click', submitPrompt);
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Escape to close
+      if (e.key === 'Escape') {
+        if (window.quickPromptAPI) {
+          window.quickPromptAPI.close();
+        }
+      }
+
+      // Enter to submit (without shift for multiline)
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        submitPrompt();
+      }
+    });
+
+    // Disable button when input is empty
+    input.addEventListener('input', () => {
+      submitBtn.disabled = !input.value.trim();
+    });
+
+    // Initial state
+    submitBtn.disabled = true;
+  </script>
+</body>
+</html>

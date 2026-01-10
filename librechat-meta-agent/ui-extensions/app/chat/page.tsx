@@ -35,10 +35,16 @@ import {
   Bookmark,
   Cpu,
   Bot,
+  Wifi,
+  WifiOff,
+  AlertCircle,
+  Loader2,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { ConversationSidebar } from '@/components/Chat';
 import { useChatPersistence } from '@/hooks/useConversations';
+import { useStreamingChat, getStatusDisplay } from '@/hooks/useStreamingChat';
+import type { ConnectionStatus, StreamingError } from '@/hooks/useStreamingChat';
 import type { ChatMessage, ChatAttachment, ChatArtifact } from '@/types/conversations';
 
 // Types
@@ -102,7 +108,6 @@ export default function ChatPage() {
   // Local UI state for current conversation messages
   const [localMessages, setLocalMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [models, setModels] = useState<Model[]>([]);
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
@@ -113,10 +118,53 @@ export default function ChatPage() {
   const [enabledTools, setEnabledTools] = useState<Set<string>>(new Set(['artifacts']));
   const [showTools, setShowTools] = useState(false);
   const [modelSearchQuery, setModelSearchQuery] = useState('');
+  const [streamingMessageId, setStreamingMessageId] = useState<string | null>(null);
+  const [showErrorToast, setShowErrorToast] = useState(false);
+  const [lastError, setLastError] = useState<StreamingError | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Streaming chat hook with reconnection and error handling
+  const {
+    status: connectionStatus,
+    error: streamingError,
+    isStreaming,
+    retryCount,
+    streamChat,
+    abort: abortStream,
+    reset: resetStream,
+  } = useStreamingChat({
+    onContent: (chunk, fullContent) => {
+      // Update the streaming message with new content
+      if (streamingMessageId) {
+        setLocalMessages(prev => prev.map(m =>
+          m.id === streamingMessageId ? { ...m, content: fullContent } : m
+        ));
+      }
+    },
+    onArtifacts: (artifacts) => {
+      if (artifacts.length > 0) {
+        setActiveArtifact(artifacts[0]);
+      }
+    },
+    onError: (error) => {
+      setLastError(error);
+      setShowErrorToast(true);
+      // Auto-hide toast after 5 seconds
+      setTimeout(() => setShowErrorToast(false), 5000);
+    },
+    onComplete: (result) => {
+      // Mark message as no longer streaming
+      if (streamingMessageId) {
+        setLocalMessages(prev => prev.map(m =>
+          m.id === streamingMessageId ? { ...m, isStreaming: false } : m
+        ));
+        setStreamingMessageId(null);
+      }
+    },
+  });
 
   // Chat persistence hook
   const {
@@ -215,6 +263,7 @@ export default function ChatPage() {
   const handleSend = async () => {
     if (!input.trim() && attachments.length === 0) return;
     if (!selectedModel) return;
+    if (isStreaming) return; // Prevent sending while streaming
 
     const userContent = input.trim();
     const userMessage: Message = {
@@ -230,7 +279,6 @@ export default function ChatPage() {
     setLocalMessages(prev => [...prev, userMessage]);
     setInput('');
     setAttachments([]);
-    setIsLoading(true);
 
     // Save user message to database (creates conversation if needed)
     let conversationId: string;
@@ -248,6 +296,7 @@ export default function ChatPage() {
 
     // Create placeholder for assistant message
     const assistantId = crypto.randomUUID();
+    setStreamingMessageId(assistantId);
     setLocalMessages(prev => [...prev, {
       id: assistantId,
       role: 'assistant',
@@ -258,61 +307,44 @@ export default function ChatPage() {
     }]);
 
     try {
-      const response = await fetch(`${API_BASE}/api/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          messages: [...localMessages, userMessage].map(m => ({
-            role: m.role,
-            content: m.content,
-          })),
-          model: selectedModel.id,
-          stream: true,
-          tools: Array.from(enabledTools),
-        }),
+      // Use the streaming hook with automatic reconnection
+      const result = await streamChat({
+        messages: [...localMessages, userMessage].map(m => ({
+          role: m.role as 'user' | 'assistant' | 'system',
+          content: m.content,
+        })),
+        model: selectedModel.id,
+        stream: true,
       });
 
-      if (!response.ok) throw new Error('Chat failed');
-
-      const reader = response.body?.getReader();
-      const decoder = new TextDecoder();
-      let fullContent = '';
-
-      while (reader) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.slice(6));
-              if (data.content) {
-                fullContent += data.content;
-                setLocalMessages(prev => prev.map(m =>
-                  m.id === assistantId ? { ...m, content: fullContent } : m
-                ));
-              }
-              if (data.artifact) {
-                setActiveArtifact(data.artifact);
-              }
-            } catch (e) {}
-          }
-        }
+      // Handle the result
+      if (result.error && !result.aborted) {
+        // Update message with error state
+        const errorMessage = result.error?.message || 'Unknown error';
+        setLocalMessages(prev => prev.map(m =>
+          m.id === assistantId ? {
+            ...m,
+            content: result.content || `Error: ${errorMessage}`,
+            isStreaming: false,
+          } : m
+        ));
+      } else if (result.aborted) {
+        // User cancelled - keep partial content if any
+        setLocalMessages(prev => prev.map(m =>
+          m.id === assistantId ? {
+            ...m,
+            content: result.content || 'Message was cancelled.',
+            isStreaming: false,
+          } : m
+        ));
       }
 
-      // Update message to not streaming
-      setLocalMessages(prev => prev.map(m =>
-        m.id === assistantId ? { ...m, isStreaming: false } : m
-      ));
-
-      // Save assistant message to database
-      if (fullContent && conversationId) {
+      // Save assistant message to database if we got content
+      if (result.content && conversationId && !result.aborted) {
         try {
-          await saveAssistantMessage(fullContent, {
+          await saveAssistantMessage(result.content, {
             model: selectedModel.id,
+            usage: result.usage || undefined,
           });
         } catch (error) {
           console.error('Failed to save assistant message:', error);
@@ -329,9 +361,16 @@ export default function ChatPage() {
         } : m
       ));
     } finally {
-      setIsLoading(false);
+      setStreamingMessageId(null);
     }
   };
+
+  // Handle stop/cancel streaming
+  const handleStop = useCallback(() => {
+    if (isStreaming) {
+      abortStream();
+    }
+  }, [isStreaming, abortStream]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -489,6 +528,12 @@ export default function ChatPage() {
           </div>
 
           <div className="flex-1" />
+
+          {/* Connection Status Indicator */}
+          <ConnectionStatusIndicator
+            status={connectionStatus}
+            retryCount={retryCount}
+          />
 
           {/* Saving indicator */}
           {isSaving && (
@@ -705,17 +750,19 @@ export default function ChatPage() {
               </div>
 
               <button
-                onClick={isLoading ? undefined : handleSend}
+                onClick={isStreaming ? handleStop : handleSend}
+                disabled={!isStreaming && !input.trim() && attachments.length === 0}
                 className={clsx(
                   'p-4 rounded-xl transition-all duration-200 shadow-md text-white',
-                  isLoading
+                  isStreaming
                     ? 'bg-red-500 hover:bg-red-600'
                     : input.trim() || attachments.length > 0
                       ? 'bg-teal-500 hover:bg-teal-600'
-                      : 'bg-stone-300 dark:bg-stone-600 text-stone-500 dark:text-stone-400'
+                      : 'bg-stone-300 dark:bg-stone-600 text-stone-500 dark:text-stone-400 cursor-not-allowed'
                 )}
+                title={isStreaming ? 'Stop generation' : 'Send message'}
               >
-                {isLoading ? (
+                {isStreaming ? (
                   <StopCircle className="w-5 h-5" />
                 ) : (
                   <Send className="w-5 h-5" />
@@ -729,6 +776,14 @@ export default function ChatPage() {
           </div>
         </div>
       </div>
+
+      {/* Error Toast */}
+      <ErrorToast
+        error={lastError}
+        show={showErrorToast}
+        onDismiss={() => setShowErrorToast(false)}
+        onRetry={lastError?.retryable ? handleSend : undefined}
+      />
 
       {/* Artifact Panel */}
       {activeArtifact && (
@@ -751,6 +806,103 @@ export default function ChatPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// Connection Status Indicator Component
+function ConnectionStatusIndicator({
+  status,
+  retryCount,
+}: {
+  status: ConnectionStatus;
+  retryCount: number;
+}) {
+  const { text, color, pulse } = getStatusDisplay(status);
+
+  // Only show for relevant states
+  if (status === 'idle') return null;
+
+  const getIcon = () => {
+    switch (status) {
+      case 'connecting':
+      case 'reconnecting':
+        return <Loader2 className={clsx('w-3.5 h-3.5', color, pulse && 'animate-spin')} />;
+      case 'connected':
+      case 'streaming':
+        return <Wifi className={clsx('w-3.5 h-3.5', color)} />;
+      case 'disconnected':
+        return <WifiOff className={clsx('w-3.5 h-3.5', color)} />;
+      case 'error':
+        return <AlertCircle className={clsx('w-3.5 h-3.5', color)} />;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className={clsx(
+      'flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200',
+      status === 'streaming' && 'bg-teal-500/10 border border-teal-500/20',
+      status === 'reconnecting' && 'bg-amber-500/10 border border-amber-500/20',
+      status === 'error' && 'bg-red-500/10 border border-red-500/20',
+      status === 'connected' && 'bg-green-500/10 border border-green-500/20',
+      status === 'connecting' && 'bg-blue-500/10 border border-blue-500/20',
+    )}>
+      {getIcon()}
+      <span className={color}>{text}</span>
+      {retryCount > 0 && status === 'reconnecting' && (
+        <span className="text-amber-400">
+          (attempt {retryCount})
+        </span>
+      )}
+    </div>
+  );
+}
+
+// Error Toast Component
+function ErrorToast({
+  error,
+  show,
+  onDismiss,
+  onRetry,
+}: {
+  error: StreamingError | null;
+  show: boolean;
+  onDismiss: () => void;
+  onRetry?: () => void;
+}) {
+  if (!show || !error) return null;
+
+  return (
+    <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-50 animate-in slide-in-from-bottom-4 fade-in duration-300">
+      <div className="flex items-center gap-3 px-4 py-3 bg-red-500/95 text-white rounded-xl shadow-lg backdrop-blur-sm max-w-md">
+        <AlertCircle className="w-5 h-5 flex-shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium">{error.message}</p>
+          {error.retryable && (
+            <p className="text-xs text-red-200 mt-0.5">This error may be temporary. You can try again.</p>
+          )}
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {error.retryable && onRetry && (
+            <button
+              onClick={onRetry}
+              className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+              title="Retry"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </button>
+          )}
+          <button
+            onClick={onDismiss}
+            className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+            title="Dismiss"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

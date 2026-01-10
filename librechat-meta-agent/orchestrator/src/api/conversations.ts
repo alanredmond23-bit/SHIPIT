@@ -57,6 +57,11 @@ const ListConversationsQuerySchema = z.object({
   include_archived: z.coerce.boolean().default(false),
   agent_type: z.string().optional(),
   project_id: z.string().uuid().optional(),
+  search: z.string().max(500).optional(),
+});
+
+const ExportFormatSchema = z.object({
+  format: z.enum(['json', 'markdown']).default('json'),
 });
 
 const ListMessagesQuerySchema = z.object({
@@ -178,7 +183,7 @@ export function createConversationsRoutes(db: Pool, logger: Logger): Router {
         });
       }
 
-      const { limit, offset, include_archived, agent_type, project_id } = validation.data;
+      const { limit, offset, include_archived, agent_type, project_id, search } = validation.data;
 
       let query = `
         SELECT
@@ -203,6 +208,21 @@ export function createConversationsRoutes(db: Pool, logger: Logger): Router {
       if (project_id) {
         query += ` AND project_id = $${paramIndex}`;
         params.push(project_id);
+        paramIndex++;
+      }
+
+      // Full-text search on title, summary, and message content
+      if (search && search.trim()) {
+        const searchPattern = `%${search.trim().toLowerCase()}%`;
+        query += ` AND (
+          LOWER(title) LIKE $${paramIndex}
+          OR LOWER(summary) LIKE $${paramIndex}
+          OR id IN (
+            SELECT DISTINCT conversation_id FROM meta_messages
+            WHERE LOWER(content) LIKE $${paramIndex}
+          )
+        )`;
+        params.push(searchPattern);
         paramIndex++;
       }
 
@@ -603,6 +623,131 @@ export function createConversationsRoutes(db: Pool, logger: Logger): Router {
       res.status(500).json({
         error: {
           code: 'UNPIN_CONVERSATION_ERROR',
+          message: error.message,
+        },
+      });
+    }
+  });
+
+  /**
+   * GET /api/conversations/:id/export
+   * Export a conversation in JSON or Markdown format
+   */
+  router.get('/:id/export', async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const user = getUserFromRequest(req);
+      const conversationId = req.params.id;
+      const validation = ExportFormatSchema.safeParse(req.query);
+
+      if (!validation.success) {
+        return res.status(400).json({
+          error: {
+            code: 'VALIDATION_ERROR',
+            message: 'Invalid format parameter',
+            details: validation.error.errors,
+          },
+        });
+      }
+
+      const { format } = validation.data;
+
+      // Get conversation
+      const convResult = await db.query<Conversation>(
+        `SELECT * FROM meta_conversations
+         WHERE id = $1 AND (user_id = $2 OR user_id IS NULL)`,
+        [conversationId, user?.id || null]
+      );
+
+      if (convResult.rows.length === 0) {
+        return res.status(404).json({
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Conversation not found',
+          },
+        });
+      }
+
+      const conversation = convResult.rows[0];
+
+      // Get messages
+      const msgResult = await db.query<Message>(
+        `SELECT * FROM meta_messages
+         WHERE conversation_id = $1 AND is_active_branch = TRUE
+         ORDER BY created_at ASC`,
+        [conversationId]
+      );
+
+      const messages = msgResult.rows;
+
+      if (format === 'markdown') {
+        // Generate Markdown export
+        const title = conversation.title || 'Conversation';
+        const createdAt = new Date(conversation.created_at).toLocaleString();
+
+        let markdown = `# ${title}\n\n`;
+        markdown += `**Created:** ${createdAt}\n`;
+        markdown += `**Model:** ${conversation.model_used || 'Unknown'}\n`;
+        markdown += `**Messages:** ${conversation.message_count}\n\n`;
+        markdown += `---\n\n`;
+
+        for (const msg of messages) {
+          const timestamp = new Date(msg.created_at).toLocaleString();
+          const roleLabel = msg.role === 'user' ? '**User**' : '**Assistant**';
+
+          markdown += `### ${roleLabel} (${timestamp})\n\n`;
+          markdown += `${msg.content}\n\n`;
+
+          if (msg.tool_name) {
+            markdown += `> Tool used: \`${msg.tool_name}\`\n\n`;
+          }
+
+          markdown += `---\n\n`;
+        }
+
+        res.setHeader('Content-Type', 'text/markdown');
+        res.setHeader('Content-Disposition', `attachment; filename="conversation-${conversationId}.md"`);
+        res.send(markdown);
+      } else {
+        // Generate JSON export
+        const exportData = {
+          conversation: {
+            id: conversation.id,
+            title: conversation.title,
+            summary: conversation.summary,
+            model_used: conversation.model_used,
+            agent_type: conversation.agent_type,
+            message_count: conversation.message_count,
+            total_tokens: conversation.total_tokens,
+            created_at: conversation.created_at,
+            updated_at: conversation.updated_at,
+            metadata: conversation.metadata,
+          },
+          messages: messages.map((msg) => ({
+            id: msg.id,
+            role: msg.role,
+            content: msg.content,
+            content_type: msg.content_type,
+            tool_name: msg.tool_name,
+            tool_input: msg.tool_input,
+            tool_output: msg.tool_output,
+            tokens_used: msg.tokens_used,
+            created_at: msg.created_at,
+            metadata: msg.metadata,
+          })),
+          exported_at: new Date().toISOString(),
+        };
+
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Content-Disposition', `attachment; filename="conversation-${conversationId}.json"`);
+        res.json(exportData);
+      }
+
+      logger.info({ userId: user?.id, conversationId, format }, 'Conversation exported');
+    } catch (error: any) {
+      logger.error({ error: error.message, id: req.params.id }, 'Failed to export conversation');
+      res.status(500).json({
+        error: {
+          code: 'EXPORT_CONVERSATION_ERROR',
           message: error.message,
         },
       });

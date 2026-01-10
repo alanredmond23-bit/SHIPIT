@@ -16,6 +16,12 @@ import {
   createMessage,
   createConversationWithMessage,
   generateTitleFromMessage,
+  searchConversations,
+  exportConversationAsJson,
+  exportConversationAsMarkdown,
+  downloadConversationExport,
+  type ExportFormat,
+  type ExportedConversation,
 } from '@/lib/api/conversations';
 import type {
   Conversation,
@@ -31,9 +37,17 @@ import type {
 // Query keys
 const QUERY_KEYS = {
   conversations: ['conversations'] as const,
+  conversationsSearch: (search: string) => ['conversations', 'search', search] as const,
   conversation: (id: string) => ['conversation', id] as const,
   messages: (conversationId: string) => ['messages', conversationId] as const,
 };
+
+// Error types for better error handling
+export interface ConversationError {
+  code: string;
+  message: string;
+  details?: unknown;
+}
 
 // ============================================================================
 // Conversation List Hook
@@ -43,6 +57,7 @@ interface UseConversationsListOptions {
   limit?: number;
   includeArchived?: boolean;
   agentType?: string;
+  search?: string;
   enabled?: boolean;
 }
 
@@ -55,16 +70,56 @@ export function useConversationsList(options: UseConversationsListOptions = {}) 
     enabled: options.enabled !== false,
     staleTime: 30000, // 30 seconds
     refetchOnWindowFocus: true,
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
   });
 
   const invalidate = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: QUERY_KEYS.conversations });
   }, [queryClient]);
 
+  // Format error for display
+  const formattedError: ConversationError | null = query.error
+    ? {
+        code: 'FETCH_ERROR',
+        message: query.error instanceof Error ? query.error.message : 'Failed to load conversations',
+        details: query.error,
+      }
+    : null;
+
   return {
     ...query,
     conversations: query.data || [],
+    error: formattedError,
     invalidate,
+  };
+}
+
+// ============================================================================
+// Conversation Search Hook
+// ============================================================================
+
+interface UseConversationSearchOptions {
+  enabled?: boolean;
+  limit?: number;
+  includeArchived?: boolean;
+}
+
+export function useConversationSearch(
+  searchQuery: string,
+  options: UseConversationSearchOptions = {}
+) {
+  const query = useQuery({
+    queryKey: QUERY_KEYS.conversationsSearch(searchQuery),
+    queryFn: () => searchConversations(searchQuery, options),
+    enabled: !!searchQuery.trim() && options.enabled !== false,
+    staleTime: 60000, // 1 minute
+  });
+
+  return {
+    ...query,
+    results: query.data || [],
+    isSearching: query.isLoading,
   };
 }
 
@@ -329,6 +384,44 @@ export function useChatPersistence(options: UseChatPersistenceOptions = {}) {
   }, [pinMutation]);
 
   /**
+   * Export conversation as JSON and trigger download
+   */
+  const exportAsJson = useCallback(async (conversationId?: string) => {
+    const targetId = conversationId || currentConversationId;
+    if (!targetId) {
+      console.warn('No conversation to export');
+      return;
+    }
+
+    try {
+      const data = await exportConversationAsJson(targetId);
+      downloadConversationExport(data, 'json', `conversation-${targetId}.json`);
+    } catch (error) {
+      console.error('Failed to export conversation as JSON:', error);
+      throw error;
+    }
+  }, [currentConversationId]);
+
+  /**
+   * Export conversation as Markdown and trigger download
+   */
+  const exportAsMarkdown = useCallback(async (conversationId?: string) => {
+    const targetId = conversationId || currentConversationId;
+    if (!targetId) {
+      console.warn('No conversation to export');
+      return;
+    }
+
+    try {
+      const markdown = await exportConversationAsMarkdown(targetId);
+      downloadConversationExport(markdown, 'markdown', `conversation-${targetId}.md`);
+    } catch (error) {
+      console.error('Failed to export conversation as Markdown:', error);
+      throw error;
+    }
+  }, [currentConversationId]);
+
+  /**
    * Convert database messages to ChatMessage format
    */
   const chatMessages: ChatMessage[] = (conversationQuery.messages || []).map((msg) => ({
@@ -354,6 +447,11 @@ export function useChatPersistence(options: UseChatPersistenceOptions = {}) {
     isLoadingMessages: conversationQuery.isLoading,
     isSaving: createMessageMutation.isPending || createConversationMutation.isPending,
 
+    // Error states
+    conversationsError: conversationsQuery.error,
+    messagesError: conversationQuery.error,
+    hasError: !!conversationsQuery.error || !!conversationQuery.error,
+
     // Actions
     startNewConversation,
     loadConversation,
@@ -365,9 +463,64 @@ export function useChatPersistence(options: UseChatPersistenceOptions = {}) {
     archive,
     pin,
 
+    // Export actions
+    exportAsJson,
+    exportAsMarkdown,
+
     // Refresh
     refreshConversations: conversationsQuery.invalidate,
     refreshCurrentConversation: conversationQuery.invalidate,
+  };
+}
+
+// ============================================================================
+// Export Hook for standalone use
+// ============================================================================
+
+export function useConversationExport() {
+  const [isExporting, setIsExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  const exportJson = useCallback(async (conversationId: string) => {
+    setIsExporting(true);
+    setExportError(null);
+    try {
+      const data = await exportConversationAsJson(conversationId);
+      downloadConversationExport(data, 'json', `conversation-${conversationId}.json`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Export failed';
+      setExportError(message);
+      throw error;
+    } finally {
+      setIsExporting(false);
+    }
+  }, []);
+
+  const exportMarkdown = useCallback(async (conversationId: string) => {
+    setIsExporting(true);
+    setExportError(null);
+    try {
+      const markdown = await exportConversationAsMarkdown(conversationId);
+      downloadConversationExport(markdown, 'markdown', `conversation-${conversationId}.md`);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Export failed';
+      setExportError(message);
+      throw error;
+    } finally {
+      setIsExporting(false);
+    }
+  }, []);
+
+  const clearError = useCallback(() => {
+    setExportError(null);
+  }, []);
+
+  return {
+    exportJson,
+    exportMarkdown,
+    isExporting,
+    exportError,
+    clearError,
   };
 }
 

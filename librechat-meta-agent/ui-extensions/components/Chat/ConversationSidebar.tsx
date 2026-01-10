@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import {
   Plus,
   Search,
@@ -15,49 +15,85 @@ import {
   X,
   Check,
   Edit2,
+  Download,
+  FileJson,
+  FileText,
+  AlertCircle,
+  RefreshCw,
+  Loader2,
 } from 'lucide-react';
 import clsx from 'clsx';
 import type { ConversationListItem } from '@/types/conversations';
+import { useConversationExport } from '@/hooks/useConversations';
 
 interface ConversationSidebarProps {
   conversations: ConversationListItem[];
   currentConversationId: string | null;
   isLoading: boolean;
+  error?: { code: string; message: string } | null;
   onNewConversation: () => void;
   onSelectConversation: (id: string) => void;
   onDeleteConversation: (id: string) => Promise<void>;
   onArchiveConversation: (id: string, archive: boolean) => Promise<void>;
   onPinConversation: (id: string, pin: boolean) => Promise<void>;
   onRenameConversation?: (id: string, title: string) => Promise<void>;
+  onExportJson?: (id: string) => Promise<void>;
+  onExportMarkdown?: (id: string) => Promise<void>;
+  onRefresh?: () => void;
   isOpen: boolean;
   onClose: () => void;
+  searchDebounceMs?: number;
 }
 
 export function ConversationSidebar({
   conversations,
   currentConversationId,
   isLoading,
+  error,
   onNewConversation,
   onSelectConversation,
   onDeleteConversation,
   onArchiveConversation,
   onPinConversation,
   onRenameConversation,
+  onExportJson,
+  onExportMarkdown,
+  onRefresh,
   isOpen,
   onClose,
+  searchDebounceMs = 300,
 }: ConversationSidebarProps) {
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [exportingId, setExportingId] = useState<string | null>(null);
 
-  // Filter conversations by search
-  const filteredConversations = searchQuery
-    ? conversations.filter((c) =>
-        (c.title || 'New Conversation').toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : conversations;
+  // Use the export hook for standalone export functionality
+  const { exportJson, exportMarkdown, isExporting } = useConversationExport();
+
+  // Debounce search input
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value);
+    // Debounce the actual filtering
+    const timer = setTimeout(() => {
+      setDebouncedSearch(value);
+    }, searchDebounceMs);
+    return () => clearTimeout(timer);
+  }, [searchDebounceMs]);
+
+  // Filter conversations by search - using memoization for performance
+  const filteredConversations = useMemo(() => {
+    if (!debouncedSearch) return conversations;
+    const searchLower = debouncedSearch.toLowerCase();
+    return conversations.filter((c) => {
+      const title = (c.title || 'New Conversation').toLowerCase();
+      const summary = (c.summary || '').toLowerCase();
+      return title.includes(searchLower) || summary.includes(searchLower);
+    });
+  }, [conversations, debouncedSearch]);
 
   // Group by pinned/regular
   const pinnedConversations = filteredConversations.filter((c) => c.is_pinned);
@@ -90,6 +126,36 @@ export function ConversationSidebar({
       setMenuOpenId(null);
     }
   }, [onDeleteConversation]);
+
+  // Handle export as JSON
+  const handleExportJson = useCallback(async (id: string) => {
+    setExportingId(id);
+    try {
+      if (onExportJson) {
+        await onExportJson(id);
+      } else {
+        await exportJson(id);
+      }
+    } finally {
+      setExportingId(null);
+      setMenuOpenId(null);
+    }
+  }, [onExportJson, exportJson]);
+
+  // Handle export as Markdown
+  const handleExportMarkdown = useCallback(async (id: string) => {
+    setExportingId(id);
+    try {
+      if (onExportMarkdown) {
+        await onExportMarkdown(id);
+      } else {
+        await exportMarkdown(id);
+      }
+    } finally {
+      setExportingId(null);
+      setMenuOpenId(null);
+    }
+  }, [onExportMarkdown, exportMarkdown]);
 
   // Handle rename
   const startEditing = (id: string, currentTitle: string) => {
@@ -160,25 +226,70 @@ export function ConversationSidebar({
                 type="text"
                 placeholder="Search conversations..."
                 value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-stone-100 dark:bg-stone-800 border-0 rounded-lg pl-10 pr-4 py-2 text-sm text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="w-full bg-stone-100 dark:bg-stone-800 border-0 rounded-lg pl-10 pr-10 py-2 text-sm text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-teal-500"
               />
+              {searchQuery && (
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setDebouncedSearch('');
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-0.5 hover:bg-stone-200 dark:hover:bg-stone-700 rounded"
+                >
+                  <X className="w-3.5 h-3.5 text-stone-400" />
+                </button>
+              )}
             </div>
+            {debouncedSearch && (
+              <p className="text-xs text-stone-400 mt-1 px-1">
+                {filteredConversations.length} result{filteredConversations.length !== 1 ? 's' : ''}
+              </p>
+            )}
           </div>
 
           {/* Conversation List */}
           <div className="flex-1 overflow-y-auto px-3 pb-3">
+            {/* Error State */}
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-red-700 dark:text-red-300 font-medium">
+                      Failed to load conversations
+                    </p>
+                    <p className="text-xs text-red-600 dark:text-red-400 mt-0.5 truncate">
+                      {error.message}
+                    </p>
+                  </div>
+                  {onRefresh && (
+                    <button
+                      onClick={onRefresh}
+                      className="p-1 hover:bg-red-100 dark:hover:bg-red-800/30 rounded"
+                      title="Retry"
+                    >
+                      <RefreshCw className="w-4 h-4 text-red-500" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+
             {isLoading ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="w-6 h-6 border-2 border-teal-500 border-t-transparent rounded-full animate-spin" />
+              <div className="flex flex-col items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 text-teal-500 animate-spin" />
+                <p className="text-xs text-stone-400 mt-2">Loading conversations...</p>
               </div>
             ) : filteredConversations.length === 0 ? (
               <div className="text-center py-8 text-stone-500 dark:text-stone-400">
                 <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-50" />
                 <p className="text-sm">
-                  {searchQuery ? 'No conversations found' : 'No conversations yet'}
+                  {debouncedSearch ? 'No conversations found' : 'No conversations yet'}
                 </p>
-                <p className="text-xs mt-1">Start a new chat to begin</p>
+                <p className="text-xs mt-1">
+                  {debouncedSearch ? 'Try a different search term' : 'Start a new chat to begin'}
+                </p>
               </div>
             ) : (
               <>
@@ -196,6 +307,7 @@ export function ConversationSidebar({
                           conversation={conversation}
                           isSelected={conversation.id === currentConversationId}
                           isDeleting={conversation.id === deletingId}
+                          isExporting={conversation.id === exportingId}
                           isEditing={conversation.id === editingId}
                           editTitle={editTitle}
                           onEditTitleChange={setEditTitle}
@@ -213,6 +325,8 @@ export function ConversationSidebar({
                           onArchive={() => onArchiveConversation(conversation.id, true)}
                           onPin={() => onPinConversation(conversation.id, false)}
                           onRename={() => startEditing(conversation.id, conversation.title || '')}
+                          onExportJson={() => handleExportJson(conversation.id)}
+                          onExportMarkdown={() => handleExportMarkdown(conversation.id)}
                           formatDate={formatDate}
                         />
                       ))}
@@ -235,6 +349,7 @@ export function ConversationSidebar({
                           conversation={conversation}
                           isSelected={conversation.id === currentConversationId}
                           isDeleting={conversation.id === deletingId}
+                          isExporting={conversation.id === exportingId}
                           isEditing={conversation.id === editingId}
                           editTitle={editTitle}
                           onEditTitleChange={setEditTitle}
@@ -252,6 +367,8 @@ export function ConversationSidebar({
                           onArchive={() => onArchiveConversation(conversation.id, true)}
                           onPin={() => onPinConversation(conversation.id, true)}
                           onRename={() => startEditing(conversation.id, conversation.title || '')}
+                          onExportJson={() => handleExportJson(conversation.id)}
+                          onExportMarkdown={() => handleExportMarkdown(conversation.id)}
                           formatDate={formatDate}
                         />
                       ))}
@@ -291,6 +408,7 @@ interface ConversationItemProps {
   conversation: ConversationListItem;
   isSelected: boolean;
   isDeleting: boolean;
+  isExporting: boolean;
   isEditing: boolean;
   editTitle: string;
   onEditTitleChange: (title: string) => void;
@@ -301,6 +419,8 @@ interface ConversationItemProps {
   onSelect: () => void;
   onDelete: () => void;
   onArchive: () => void;
+  onExportJson: () => void;
+  onExportMarkdown: () => void;
   onPin: () => void;
   onRename: () => void;
   formatDate: (date: string) => string;
@@ -310,6 +430,7 @@ function ConversationItem({
   conversation,
   isSelected,
   isDeleting,
+  isExporting,
   isEditing,
   editTitle,
   onEditTitleChange,
@@ -320,6 +441,8 @@ function ConversationItem({
   onSelect,
   onDelete,
   onArchive,
+  onExportJson,
+  onExportMarkdown,
   onPin,
   onRename,
   formatDate,
@@ -360,13 +483,13 @@ function ConversationItem({
     <div className="relative group">
       <button
         onClick={onSelect}
-        disabled={isDeleting}
+        disabled={isDeleting || isExporting}
         className={clsx(
           'w-full text-left px-3 py-2.5 rounded-lg transition-all duration-150',
           isSelected
             ? 'bg-teal-50 dark:bg-teal-900/30 border border-teal-200 dark:border-teal-800'
             : 'hover:bg-stone-100 dark:hover:bg-stone-800',
-          isDeleting && 'opacity-50 pointer-events-none'
+          (isDeleting || isExporting) && 'opacity-50 pointer-events-none'
         )}
       >
         <div className="flex items-start gap-3">
@@ -455,6 +578,43 @@ function ConversationItem({
             >
               <Archive className="w-4 h-4" />
               Archive
+            </button>
+            <hr className="my-1 border-stone-200 dark:border-stone-700" />
+            {/* Export Section */}
+            <div className="px-4 py-1">
+              <p className="text-xs font-medium text-stone-400 dark:text-stone-500 uppercase tracking-wider">
+                Export
+              </p>
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onExportJson();
+              }}
+              disabled={isExporting}
+              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 disabled:opacity-50"
+            >
+              {isExporting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <FileJson className="w-4 h-4" />
+              )}
+              Export as JSON
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onExportMarkdown();
+              }}
+              disabled={isExporting}
+              className="w-full flex items-center gap-3 px-4 py-2 text-sm text-stone-700 dark:text-stone-300 hover:bg-stone-100 dark:hover:bg-stone-700 disabled:opacity-50"
+            >
+              {isExporting ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <FileText className="w-4 h-4" />
+              )}
+              Export as Markdown
             </button>
             <hr className="my-1 border-stone-200 dark:border-stone-700" />
             <button

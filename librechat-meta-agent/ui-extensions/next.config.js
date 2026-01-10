@@ -1,9 +1,15 @@
 /** @type {import('next').NextConfig} */
+
+// Only use static export for production Electron builds
+// Development mode needs dynamic features (middleware, API routes)
+const isStaticExport = process.env.NEXT_STATIC_EXPORT === 'true';
+
 const nextConfig = {
   reactStrictMode: true,
 
-  // Enable static export for Electron production build
-  output: 'export',
+  // Enable static export ONLY for Electron production build
+  // Development uses dynamic server for middleware support
+  ...(isStaticExport && { output: 'export' }),
 
   // Disable image optimization for static export (not compatible)
   images: {

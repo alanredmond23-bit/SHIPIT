@@ -19,14 +19,19 @@
     "dev:next": "cd ../ui-extensions && npm run dev",
     "prebuild": "npm run build:next && npm run copy-renderer",
     "build": "electron-builder",
-    "build:next": "cd ../ui-extensions && npm run build",
+    "build:next": "cd ../ui-extensions && NEXT_STATIC_EXPORT=true npm run build",
     "copy-renderer": "node scripts/copy-renderer.js",
     "build:mac": "npm run prebuild && electron-builder --mac",
     "build:win": "npm run prebuild && electron-builder --win",
     "build:linux": "npm run prebuild && electron-builder --linux",
+    "build:all": "npm run prebuild && electron-builder --mac --win --linux",
     "pack": "npm run prebuild && electron-builder --dir",
     "generate-icons": "node scripts/generate-icons.js",
-    "clean": "rm -rf dist renderer"
+    "clean": "rm -rf dist renderer",
+    "publish": "npm run prebuild && electron-builder --publish always",
+    "publish:mac": "npm run prebuild && electron-builder --mac --publish always",
+    "publish:win": "npm run prebuild && electron-builder --win --publish always",
+    "publish:linux": "npm run prebuild && electron-builder --linux --publish always"
   },
   "build": {
     "appId": "com.metaagent.desktop",
@@ -54,6 +59,12 @@
     ],
     "asar": true,
     "compression": "maximum",
+    "publish": {
+      "provider": "github",
+      "owner": "alanredmond23-bit",
+      "repo": "SHIPIT",
+      "releaseType": "release"
+    },
     "mac": {
       "category": "public.app-category.developer-tools",
       "icon": "resources/icon.icns",
@@ -71,7 +82,8 @@
       "gatekeeperAssess": false,
       "darkModeSupport": true,
       "entitlements": "build/entitlements.mac.plist",
-      "entitlementsInherit": "build/entitlements.mac.plist"
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "notarize": false
     },
     "win": {
       "icon": "resources/icon.ico",
@@ -85,14 +97,21 @@
           "arch": ["x64"]
         }
       ],
-      "publisherName": "Meta Agent Team"
+      "publisherName": "Meta Agent Team",
+      "signAndEditExecutable": false,
+      "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "installerIcon": "resources/icon.ico",
       "uninstallerIcon": "resources/icon.ico",
-      "installerHeaderIcon": "resources/icon.ico"
+      "installerHeaderIcon": "resources/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Meta Agent",
+      "differentialPackage": true,
+      "deleteAppDataOnUninstall": false
     },
     "linux": {
       "icon": "resources/icon.png",
@@ -102,12 +121,29 @@
         "rpm"
       ],
       "category": "Development",
-      "maintainer": "Meta Agent Team",
+      "maintainer": "Meta Agent Team <team@metaagent.app>",
+      "vendor": "Meta Agent Team",
+      "synopsis": "Multi-LLM AI Orchestration Platform",
       "desktop": {
         "Name": "Meta Agent",
         "Comment": "Multi-LLM AI Orchestration Platform",
-        "Categories": "Development;Utility;"
+        "Categories": "Development;Utility;Network;AI;",
+        "Keywords": "AI;LLM;Claude;GPT;Orchestration;Agent;",
+        "StartupWMClass": "meta-agent-desktop",
+        "MimeType": "x-scheme-handler/meta-agent;"
       }
+    },
+    "deb": {
+      "depends": ["libnotify4", "libxtst6", "libnss3"],
+      "priority": "optional",
+      "afterInstall": "build/linux/after-install.sh",
+      "afterRemove": "build/linux/after-remove.sh"
+    },
+    "rpm": {
+      "depends": ["libnotify", "libXtst", "nss"]
+    },
+    "appImage": {
+      "artifactName": "${productName}-${version}-${arch}.${ext}"
     },
     "dmg": {
       "title": "Meta Agent",
@@ -132,7 +168,8 @@
     }
   },
   "dependencies": {
-    "electron-store": "^8.1.0"
+    "electron-store": "^8.1.0",
+    "electron-updater": "^6.1.7"
   },
   "devDependencies": {
     "concurrently": "^8.2.2",
