@@ -7,6 +7,40 @@ export { useModelPreferences, useModelPreferencesWithSupabase } from './useModel
 export { useVoiceChat } from './useVoiceChat';
 export { useArtifacts } from './useArtifacts';
 export { useImageGeneration } from './useImageGeneration';
+export {
+  useTasks,
+  useTaskExecutions,
+  useTaskStatistics,
+  useCalendarTasks,
+  parseCronExpression,
+  getNextRunTime,
+  formatDuration,
+  formatRelativeTime,
+} from './useTasks';
+export { usePersonas } from './usePersonas';
+
+// Project Management Hooks
+export {
+  useProjectsList,
+  useRecentProjects,
+  useProject,
+  useCreateProject,
+  useUpdateProject,
+  useDeleteProject,
+  useArchiveProject,
+  usePinProject,
+  useAddConversationToProject,
+  useRemoveConversationFromProject,
+  useProjectConversations,
+  useProjectMemories,
+  useCreateProjectMemory,
+  useUpdateProjectMemory,
+  useDeleteProjectMemory,
+  useProjectContext,
+  useActiveProject,
+  ActiveProjectProvider,
+  useProjectsManagement,
+} from './useProjects';
 
 // Re-export types
 export type {
@@ -72,3 +106,17 @@ export type {
   UseImageGenerationOptions,
   UseImageGenerationReturn,
 } from './useImageGeneration';
+
+export type {
+  Persona,
+  PersonaCategory,
+  PersonaCapabilities,
+  PersonaPersonality,
+  PersonaVoiceConfig,
+  PersonaStats,
+  PersonaSampleResponse,
+  CreatePersonaInput,
+  UpdatePersonaInput,
+  UsePersonasOptions,
+  UsePersonasReturn,
+} from './usePersonas';

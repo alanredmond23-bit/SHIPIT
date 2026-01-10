@@ -15,3 +15,6 @@ export { EditMessage, InlineEditMessage } from './EditMessage';
 export { ToolCall } from './ToolCall';
 export { ToolCallList } from './ToolCallList';
 export type { ToolCallData, ToolStatus } from './ToolCall';
+
+// Persona selector for chat
+export { PersonaSelector } from './PersonaSelector';

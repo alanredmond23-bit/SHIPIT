@@ -45,9 +45,11 @@ import {
 import clsx from 'clsx';
 import { ConversationSidebar, ThinkingPanel } from '@/components/Chat';
 import { ArtifactPanel } from '@/components/Artifacts';
+import { ProjectSelector, ProjectCreator } from '@/components/Projects';
 import { useChatPersistence } from '@/hooks/useConversations';
 import { useStreamingChat, getStatusDisplay } from '@/hooks/useStreamingChat';
 import { useArtifacts } from '@/hooks/useArtifacts';
+import { useActiveProject, useRecentProjects, useAddConversationToProject, useCreateProject } from '@/hooks/useProjects';
 import type { ConnectionStatus, StreamingError, ThinkingStartEvent, ThinkingChunkEvent, ThinkingStopEvent } from '@/hooks/useStreamingChat';
 import type { ChatMessage, ChatAttachment, ChatArtifact, ThinkingBlockData } from '@/types/conversations';
 import type { ThinkingBlock } from '@/types/thinking';
@@ -130,6 +132,7 @@ export default function ChatPage() {
   const [thinkingStartTime, setThinkingStartTime] = useState<Date | null>(null);
   const [currentThinkingTokenCount, setCurrentThinkingTokenCount] = useState(0);
   const [showThinking, setShowThinking] = useState(true); // Global toggle for showing thinking
+  const [showProjectCreator, setShowProjectCreator] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -155,6 +158,19 @@ export default function ChatPage() {
     revertToVersion,
     clearAll,
   } = useArtifacts();
+
+  // Project management hooks
+  const {
+    activeProject,
+    activeProjectId,
+    setActiveProjectId,
+    context: activeProjectContext,
+    isLoading: isLoadingProject,
+  } = useActiveProject();
+
+  const { recentProjects, isLoading: isLoadingRecentProjects } = useRecentProjects(10);
+  const addToProjectMutation = useAddConversationToProject();
+  const createProjectMutation = useCreateProject();
 
   // Streaming chat hook with reconnection and error handling
   const {
@@ -299,6 +315,7 @@ export default function ChatPage() {
   } = useChatPersistence({
     modelId: selectedModel?.id,
     agentType: 'general',
+    projectId: activeProjectId || undefined, // Auto-associate with active project
   });
 
   // Sync persisted messages to local state when conversation loads
@@ -420,12 +437,23 @@ export default function ChatPage() {
     }]);
 
     try {
+      // Build messages array with optional project context
+      const chatMessages = [...localMessages, userMessage].map(m => ({
+        role: m.role as 'user' | 'assistant' | 'system',
+        content: m.content,
+      }));
+
+      // Prepend project context as system message if active project has context
+      if (activeProjectContext) {
+        chatMessages.unshift({
+          role: 'system' as const,
+          content: activeProjectContext,
+        });
+      }
+
       // Use the streaming hook with automatic reconnection
       const result = await streamChat({
-        messages: [...localMessages, userMessage].map(m => ({
-          role: m.role as 'user' | 'assistant' | 'system',
-          content: m.content,
-        })),
+        messages: chatMessages,
         model: selectedModel.id,
         stream: true,
       });
@@ -639,6 +667,15 @@ export default function ChatPage() {
               </div>
             )}
           </div>
+
+          {/* Project Selector */}
+          <ProjectSelector
+            activeProject={activeProject}
+            recentProjects={recentProjects}
+            onSelectProject={setActiveProjectId}
+            onNewProject={() => setShowProjectCreator(true)}
+            isLoading={isLoadingProject || isLoadingRecentProjects}
+          />
 
           <div className="flex-1" />
 
@@ -961,6 +998,18 @@ export default function ChatPage() {
         onToggleFullscreen={toggleFullscreen}
         onSelectVersion={selectVersion}
         onRevertToVersion={revertToVersion}
+      />
+
+      {/* Project Creator Modal */}
+      <ProjectCreator
+        isOpen={showProjectCreator}
+        onClose={() => setShowProjectCreator(false)}
+        onSubmit={async (request) => {
+          const project = await createProjectMutation.mutateAsync(request);
+          setActiveProjectId(project.id);
+          setShowProjectCreator(false);
+        }}
+        isSubmitting={createProjectMutation.isPending}
       />
     </div>
   );

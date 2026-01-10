@@ -246,6 +246,7 @@ export function useCreateMessage() {
 interface UseChatPersistenceOptions {
   modelId?: string;
   agentType?: string;
+  projectId?: string;
 }
 
 export function useChatPersistence(options: UseChatPersistenceOptions = {}) {
@@ -303,6 +304,7 @@ export function useChatPersistence(options: UseChatPersistenceOptions = {}) {
         title: generateTitleFromMessage(content),
         model_used: options.modelId,
         agent_type: options.agentType || 'general',
+        project_id: options.projectId,
       });
       conversationId = conversation.id;
       setCurrentConversationId(conversationId);
